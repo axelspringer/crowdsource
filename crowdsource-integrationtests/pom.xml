@@ -14,6 +14,7 @@
 
     <properties>
         <cucumber.version>1.2.0</cucumber.version>
+        <mongodb.test.port>27021</mongodb.test.port>
     </properties>
 
     <build>
@@ -28,26 +29,6 @@
             </testResource>
         </testResources>
         <plugins>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>port-allocator-maven-plugin</artifactId>
-                <version>1.2</version>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>allocate-ports</goal>
-                        </goals>
-                        <configuration>
-                            <ports>
-                                <port>
-                                    <name>mongodb.test.port</name>
-                                </port>
-                            </ports>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>com.github.joelittlejohn.embedmongo</groupId>
                 <artifactId>embedmongo-maven-plugin</artifactId>

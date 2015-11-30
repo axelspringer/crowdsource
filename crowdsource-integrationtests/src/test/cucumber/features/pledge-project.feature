@@ -33,8 +33,6 @@ Feature: Pledge project
     And the project detail page of this project is requested
     And the user enters 240 as his desired pledge amount
     And the user submits the pledging form
-    And the project detail page of this project is requested again
-    Then there is no notification message
     And the number of backers is displayed with a value of 1
     When the user enters 200 as his desired pledge amount
     Then the displayed budget and financing infos are updated
