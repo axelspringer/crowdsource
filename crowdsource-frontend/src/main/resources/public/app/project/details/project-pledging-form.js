@@ -110,6 +110,9 @@ angular.module('crowdsource')
                     }else {
                         budgetAvailableForUser = vm.user.budget;
                     }
+                    if(budgetAvailableForUser == 0 && !FinancingRound.currentFinancingRound().active){
+                        return 0;
+                    }
                     return budgetAvailableForUser - vm.pledge.amount + vm.currentlyPledgedAmountByUser();
                 };
 
