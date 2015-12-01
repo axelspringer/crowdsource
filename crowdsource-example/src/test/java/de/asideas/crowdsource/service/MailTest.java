@@ -101,7 +101,7 @@ public class MailTest {
     public void testSendUserNotificationMailForPublished() {
         UserEntity user = new UserEntity("some.one@email.com");
 
-        userNotificationService.notifyCreatorOnProjectUpdate(project("proj3ctId", ProjectStatus.PUBLISHED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.PUBLISHED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -121,7 +121,7 @@ public class MailTest {
     public void testSendUserNotificationMailForRejected() {
         UserEntity user = new UserEntity("some.one@email.com");
 
-        userNotificationService.notifyCreatorOnProjectUpdate(project("proj3ctId", ProjectStatus.REJECTED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.REJECTED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -140,7 +140,7 @@ public class MailTest {
     public void testSendUserNotificationMailForFallback() {
         UserEntity user = new UserEntity("some.one@email.com");
 
-        userNotificationService.notifyCreatorOnProjectUpdate(project("proj3ctId", ProjectStatus.PROPOSED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.PROPOSED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));

@@ -1,6 +1,7 @@
 package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
+import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
 import de.asideas.crowdsource.domain.presentation.Pledge;
 import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
@@ -18,6 +19,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.util.Assert;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -184,6 +186,45 @@ public class ProjectEntity {
 
         setStatus(newStatus);
         return true;
+    }
+
+    public boolean modifyMasterdata(Project updatedProject, UserEntity requestingUser) {
+        if( !requestingUser.getRoles().contains(Roles.ROLE_ADMIN) && !requestingUser.equals(this.creator)){
+            throw new NotAuthorizedException("You are neither admin nor creator of that project");
+        }
+        if(!masterdataModificationAllowed()){
+            throw InvalidRequestException.masterdataChangeNotAllowed();
+        }
+        if (!masterdataChanged(updatedProject)) {
+            return false;
+        }
+        setTitle(updatedProject.getTitle());
+        setDescription(updatedProject.getDescription());
+        setShortDescription(updatedProject.getShortDescription());
+        setPledgeGoal(updatedProject.getPledgeGoal());
+        return true;
+    }
+
+    boolean masterdataModificationAllowed() {
+        if(ProjectStatus.FULLY_PLEDGED == this.status){
+            return false;
+        }
+        if(this.financingRound == null){
+            return true;
+        }
+        if( this.financingRound.active() ) {
+            return false;
+        }
+        return true;
+    }
+
+    boolean masterdataChanged(Project updatedProject) {
+        boolean changed = false;
+        changed |= !Objects.equals(updatedProject.getTitle(), this.title);
+        changed |= !Objects.equals(updatedProject.getDescription(), this.description);
+        changed |= !Objects.equals(updatedProject.getShortDescription(), this.shortDescription);
+        changed |= updatedProject.getPledgeGoal() != this.pledgeGoal;
+        return changed;
     }
 
     /**

@@ -25,7 +25,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.internal.exceptions.ExceptionIncludingMockitoWarnings;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -35,8 +34,7 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -81,7 +79,6 @@ public class ProjectServiceTest {
     @Mock
     private ProjectService thisInstance;
 
-
     @Before
     public void init() {
         ReflectionTestUtils.setField(projectService, "thisInstance", thisInstance);
@@ -89,7 +86,6 @@ public class ProjectServiceTest {
         when(pledgeRepository.findByProjectAndFinancingRound(any(ProjectEntity.class), any(FinancingRoundEntity.class))).thenReturn(new ArrayList<>());
         when(userRepository.findAll()).thenReturn(Arrays.asList(admin(ADMIN1_EMAIL), admin(ADMIN2_EMAIL), user(USER_EMAIL)));
         when(projectRepository.save(any(ProjectEntity.class))).thenAnswer(invocation -> invocation.getArguments()[0]);
-
     }
 
 
@@ -131,22 +127,6 @@ public class ProjectServiceTest {
         verify(userNotificationService, times(2)).notifyAdminOnProjectCreation(any(ProjectEntity.class), anyString());
     }
 
-//    public void pledgeUsingPostroundBudget_throwsIllegalArgumentExOnNoFinancingRound() {
-//        projectEntity.setFinancingRound(null);
-//        projectEntity.setStatus(ProjectStatus.PUBLISHED);
-//        final int budgetBeforePledge = user2.getBudget();
-//        final Pledge pledge = new Pledge(4);
-//
-//        InvalidRequestException res = null;
-//        try {
-//            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
-//            fail("InvalidRequestException expected!");
-//        } catch (InvalidRequestException e) {
-//            res = e;
-//        }
-//
-//        assertPledgeNotExecuted(res, InvalidRequestException.projectTookNotPartInLastFinancingRond(), user2, budgetBeforePledge, ProjectStatus.PUBLISHED);
-//    }
     @Test
     public void pledge_shouldThrowIllegalArgumentExceptionWhenCurrentRoundAllowsPostPledgesButDoesntEqualsProjectsRound() throws Exception {
         final UserEntity user = admin(USER_EMAIL);
@@ -404,23 +384,64 @@ public class ProjectServiceTest {
     @Test
     public void modifyProjectStatus_updatedStateTriggersUserNotificationAndPeristence() throws Exception {
         final UserEntity user = user(USER_EMAIL);
-        final ProjectEntity projectEntity = project("some_id", ProjectStatus.PROPOSED, user);
+        final ProjectEntity projectEntity = projectEntity("some_id", ProjectStatus.PROPOSED, user);
 
         projectService.modifyProjectStatus("some_id", ProjectStatus.PUBLISHED, user);
 
         verify(projectRepository).save(projectEntity);
-        verify(userNotificationService).notifyCreatorOnProjectUpdate(any(ProjectEntity.class));
+        verify(userNotificationService).notifyCreatorOnProjectStatusUpdate(any(ProjectEntity.class));
     }
 
     @Test
     public void modifyProjectStatus_nonUpdatedStateDoesNotTriggerUserNotificationAndNoPersistence() throws Exception {
         UserEntity user = user(USER_EMAIL);
-        project("some_id", ProjectStatus.PROPOSED, user);
+        projectEntity("some_id", ProjectStatus.PROPOSED, user);
 
         projectService.modifyProjectStatus("some_id", ProjectStatus.PROPOSED, user);
 
         verify(projectRepository, never()).save(any(ProjectEntity.class));
-        verify(userNotificationService, never()).notifyCreatorOnProjectUpdate(any(ProjectEntity.class));
+        verify(userNotificationService, never()).notifyCreatorOnProjectStatusUpdate(any(ProjectEntity.class));
+    }
+
+    @Test
+    public void modifyProjectMasterdata_notifiesAndSavesOnSuccessfulModification() throws Exception {
+        final String projectId = "test_ID";
+        final UserEntity user = user(USER_EMAIL);
+        final ProjectEntity project = projectEntity(projectId, ProjectStatus.PROPOSED, user);
+        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.FULLY_PLEDGED);
+
+        projectService.modifyProjectMasterdata(projectId, projectCmd, user);
+
+        ArgumentCaptor<ProjectEntity> captProject = ArgumentCaptor.forClass(ProjectEntity.class);
+        verify(projectRepository).save(captProject.capture());
+        verify(userNotificationService).notifyUsersOnProjectModification(project);
+        assertThat(captProject.getValue().getDescription(), is(projectCmd.getDescription()));
+        assertThat(captProject.getValue().getStatus(), not(equalTo(projectCmd.getStatus())));
+    }
+
+    @Test
+    public void modifyProjectMasterdata_doesNotNotifyAndSaveOnNoModification() throws Exception {
+        final String projectId = "test_ID";
+        final UserEntity user = user(USER_EMAIL);
+        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.FULLY_PLEDGED);
+        final ProjectEntity project = new ProjectEntity(user, projectCmd, null);
+
+        when(projectRepository.findOne(projectId)).thenReturn(project);
+        projectService.modifyProjectMasterdata(projectId, projectCmd, user);
+
+        verify(projectRepository, never()).save(any(ProjectEntity.class));
+        verify(userNotificationService, never()).notifyUsersOnProjectModification(any(ProjectEntity.class));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void modifyProjectMasterdata_ThrowsResourceNotFoundExOnNotExistingProject() throws Exception {
+        final String projectId = "test_ID";
+        when(projectRepository.findOne(projectId)).thenReturn(null);
+
+        projectService.modifyProjectMasterdata(projectId, project(null, null, null, 17, null), user("blub") );
+
+        verify(projectRepository, never()).save(any(ProjectEntity.class));
+        verify(userNotificationService, never()).notifyUsersOnProjectModification(any(ProjectEntity.class));
     }
 
     private void assertPledgeNotExecuted(RuntimeException actualEx, RuntimeException expEx, ProjectEntity project, UserEntity user, int userBudgetBeforePledge, ProjectStatus expStatus) {
@@ -456,7 +477,7 @@ public class ProjectServiceTest {
         return projectEntity;
     }
 
-    private ProjectEntity project(String id, ProjectStatus status, UserEntity user) {
+    private ProjectEntity projectEntity(String id, ProjectStatus status, UserEntity user) {
         final ProjectEntity project = new ProjectEntity();
         project.setId(id);
         project.setCreator(user);

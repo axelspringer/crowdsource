@@ -65,4 +65,8 @@ public class InvalidRequestException extends RuntimeException {
     public static InvalidRequestException zeroPledgeNotValid() {
         return new InvalidRequestException("zero_pledge_not_valid");
     }
+
+    public static InvalidRequestException masterdataChangeNotAllowed() {
+        return new InvalidRequestException("master_data_change_not_allowed");
+    }
 }

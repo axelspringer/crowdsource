@@ -1,11 +1,13 @@
 package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
+import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
 import de.asideas.crowdsource.domain.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.presentation.Pledge;
 import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.security.Roles;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
@@ -17,7 +19,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -39,10 +43,6 @@ public class ProjectEntityTest {
         UserEntity creator = new UserEntity();
         creator.setId("id");
 
-        Project project = new Project();
-        projectEntity = new ProjectEntity(creator, project, anActiveFinancingRound());
-        projectEntity.setPledgeGoal(PLEDGE_GOAL);
-
         user1 = new UserEntity("user1@xyz.com");
         user1.setId("test_id1");
         user1.setBudget(100);
@@ -52,6 +52,10 @@ public class ProjectEntityTest {
         user2.setRoles(Arrays.asList(Roles.ROLE_USER, Roles.ROLE_ADMIN));
         user3 = new UserEntity("user3@xyz.com");
         user3.setId("test_id3");
+
+        Project project = new Project();
+        projectEntity = new ProjectEntity(user3, project, anActiveFinancingRound());
+        projectEntity.setPledgeGoal(PLEDGE_GOAL);
     }
 
     /**
@@ -506,7 +510,6 @@ public class ProjectEntityTest {
         assertPledgeNotExecuted(res, InvalidRequestException.financingRoundNotPostProcessedYet(), user2, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
-
     @Test
     public void pledgeGoalAchieved_ReturnsFalseIfNotFullyPledged() throws Exception {
         assertThat(projectEntity.pledgeGoalAchieved(), is(false));
@@ -690,6 +693,126 @@ public class ProjectEntityTest {
         assertThat(projectEntity.getStatus(), is(ProjectStatus.PUBLISHED));
     }
 
+
+    @Test
+    public void masterdataModificationAllowed_shouldReturnTrueHavingNoFinancingRound() throws Exception {
+        projectEntity.setFinancingRound(null);
+        assertThat(projectEntity.masterdataModificationAllowed(), is(true));
+    }
+
+    @Test
+    public void masterdataModificationAllowed_shouldReturnTrueHavingNotActiveFinancingRound() throws Exception{
+        projectEntity.setFinancingRound(aTerminatedFinancingRound());
+        assertThat(projectEntity.masterdataModificationAllowed(), is(true));
+
+    }
+
+    @Test
+    public void masterdataModificationAllowed_shouldReturnFalseHavingActiveFinancingRund() throws Exception {
+        assertThat(projectEntity.masterdataModificationAllowed(), is(false));
+    }
+
+    @Test
+    public void masterdataModificationAllowed_shouldReturnFalseHavingStatusFullyPledged() throws Exception{
+        projectEntity.setFinancingRound(aTerminatedFinancingRound());
+        projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
+        assertThat(projectEntity.masterdataModificationAllowed(), is(false));
+    }
+
+    @Test
+    public void masterdataChanged_returnsTrueIfOneFieldChanges() throws Exception{
+        Project modifiedProject;
+        // Given
+        prepareMasterData(projectEntity);
+        modifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        // When
+        modifiedProject.setTitle(projectEntity.getTitle() + "_CHANGED");
+        // Then
+        assertThat(projectEntity.masterdataChanged(modifiedProject), is(true));
+
+        // Given
+        prepareMasterData(projectEntity);
+        modifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        // When
+        modifiedProject.setDescription(null);
+        // Then
+        assertThat(projectEntity.masterdataChanged(modifiedProject), is(true));
+
+        // Given
+        prepareMasterData(projectEntity);
+        modifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        // When
+        modifiedProject.setShortDescription(projectEntity.getShortDescription() + "_CHANGED");
+        // Then
+        assertThat(projectEntity.masterdataChanged(modifiedProject), is(true));
+
+        // Given
+        prepareMasterData(projectEntity);
+        modifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        // When
+        modifiedProject.setPledgeGoal(projectEntity.getPledgeGoal() + 25);
+        // Then
+        assertThat(projectEntity.masterdataChanged(modifiedProject), is(true));
+
+    }
+
+    @Test
+    public void masterdataChanged_returnsFalseOnNoChange()throws Exception{
+        prepareMasterData(projectEntity);
+        Project unmodifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+
+        assertThat(projectEntity.masterdataChanged(unmodifiedProject), is(false));
+    }
+
+    @Test
+    public void modifyMasterData_returnsTrueWhenSuccessfullyModifiedByOwner() throws Exception {
+        projectEntity.setFinancingRound(aTerminatedFinancingRound());
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), user1);
+        modCmd.setDescription("CHANGED_DESCRIPTION");
+
+        assertThat(projectEntity.modifyMasterdata(modCmd, user3), is(true));
+    }
+    @Test
+    public void modifyMasterData_returnsTrueWhenSuccessfullyModifiedByAdmin() throws Exception {
+        projectEntity.setFinancingRound(aTerminatedFinancingRound());
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), user2);
+        modCmd.setDescription("CHANGED_DESCRIPTION");
+
+        assertThat(projectEntity.modifyMasterdata(modCmd, user2), is(true));
+    }
+
+    @Test
+    public void modifyMasterData_returnsFalseWhenNothingChanged() throws Exception {
+        projectEntity.setFinancingRound(aTerminatedFinancingRound());
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), user1);
+
+        assertThat(projectEntity.modifyMasterdata(modCmd, user3), is(false));
+    }
+
+    @Test(expected = NotAuthorizedException.class)
+    public void modifyMasterData_throwsNotAuthorizedExceptionOnIllegalUser() throws Exception {
+        projectEntity.setFinancingRound(aTerminatedFinancingRound());
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), user1);
+
+        assertThat(projectEntity.modifyMasterdata(modCmd, user1), is(false));
+    }
+
+    @Test
+    public void modifyMasterData_throwsInvalidReqExWhenChangeNotAllowed() throws Exception {
+        projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), user1);
+        modCmd.setDescription("CHANGED_DESCR");
+
+        try{
+            projectEntity.modifyMasterdata(modCmd, user3);
+            fail("Exception expected to be thrown");
+        }catch(InvalidRequestException e){
+            assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
+        }
+        assertThat(projectEntity.getDescription(), not(equalTo(modCmd.getDescription())));
+
+    }
+
     @Test
     public void onFinancingRoundTerminated_ProjectPublishedWhenDeferred() throws Exception {
         projectEntity.setStatus(ProjectStatus.DEFERRED);
@@ -805,5 +928,13 @@ public class ProjectEntityTest {
             res.add(pledge);
         }
         return res;
+    }
+
+    private ProjectEntity prepareMasterData(ProjectEntity projectEntity) {
+        projectEntity.setTitle("test_Title");
+        projectEntity.setDescription("test_Description");
+        projectEntity.setShortDescription("test_shortDescription");
+        projectEntity.setPledgeGoal(17);
+        return projectEntity;
     }
 }

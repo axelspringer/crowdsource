@@ -87,7 +87,7 @@ public class UserNotificationService {
         sendMail(user.getEmail(), PASSWORD_FORGOTTEN_SUBJECT, mailContent);
     }
 
-    public void notifyCreatorOnProjectUpdate(ProjectEntity project) {
+    public void notifyCreatorOnProjectStatusUpdate(ProjectEntity project) {
 
         final StandardEvaluationContext context = new StandardEvaluationContext();
         final String projectLink = getProjectLink(project.getId());
@@ -117,6 +117,11 @@ public class UserNotificationService {
                 sendMail(project.getCreator().getEmail(), defaultSubject, defaultMessage);
                 break;
         }
+    }
+
+    public void notifyUsersOnProjectModification(ProjectEntity projectEntity) {
+        //TODO Tom: Implement me!
+        throw new UnsupportedOperationException("Implement Me!");
     }
 
     public void notifyAdminOnProjectCreation(ProjectEntity project, String emailAddress) {
