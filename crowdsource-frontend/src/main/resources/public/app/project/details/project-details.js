@@ -76,6 +76,11 @@ angular.module('crowdsource')
                 });
         };
 
+        vm.goToEdit = function () {
+            var path = '/project/' + vm.project.id + '/edit';
+            $location.path(path);
+        };
+
         vm.isPublishable = function () {
             if (!vm.project.$resolved) {
                 return false;
@@ -102,5 +107,15 @@ angular.module('crowdsource')
             return vm.project.status == 'FULLY_PLEDGED' || vm.project.status == 'REJECTED'
                     || vm.project.status == 'DEFERRED'|| vm.project.status == 'PROPOSED';
         }
+
+        vm.editButtonVisibleForUser = function () {
+            return vm.auth.currentUser.hasRole("ADMIN") || Project.isCreator(vm.project, vm.auth.currentUser);
+        };
+
+        vm.editButtonEnabled = function () {
+            console.log("EditBtnEnabled: " + !FinancingRound.currentFinancingRound().active && vm.project.status !== "FULLY_PLEDGED");
+            return (FinancingRound.currentFinancingRound() == undefined || !FinancingRound.currentFinancingRound().active)
+                && vm.project.status !== "FULLY_PLEDGED";
+        };
 
     });
