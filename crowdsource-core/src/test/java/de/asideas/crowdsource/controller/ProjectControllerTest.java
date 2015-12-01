@@ -55,9 +55,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -395,14 +393,64 @@ public class ProjectControllerTest {
     public void modifyProjectStatus_unknownStatusThrowsBadRequest() throws Exception {
         final String email = "some@mail.com";
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
-        final Project expProject = toCreatedProject(project("title2", "descr2", "shortDescr2", 45, ProjectStatus.PROPOSED), user);
-
-        when(projectService.modifyProjectStatus(anyString(), eq(expProject.getStatus()), eq(user))).thenReturn(expProject);
 
         mockMvc.perform(patch("/project/{projectId}/status", "some_id")
                 .principal(authentication(user))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\": \"UNKNOWN_STATUS\"}") )
+                .andExpect(status().isBadRequest())
+                .andReturn();
+    }
+
+
+    @Test
+    public void modifyProjectMasterdata() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        final Project expProject = toCreatedProject(project("title2", "descr2", "shortDescr2", 45, ProjectStatus.PROPOSED), user);
+
+        when(projectService.modifyProjectMasterdata(anyString(), eq(expProject), eq(user))).thenReturn(expProject);
+
+        MvcResult mvcResult = mockMvc.perform(put("/project/{projectId}", "some_id")
+                .principal(authentication(user))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(expProject)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(mapper.readValue(mvcResult.getResponse().getContentAsString(), Project.class), is(expProject));
+    }
+
+    @Test
+    public void modifyProjectMasterdata_invalidProjectThrowsBadRequestException() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        final Project expProject = toCreatedProject(project(null, "", "shortDescr2", 45, ProjectStatus.PROPOSED), user);
+
+        when(projectService.modifyProjectMasterdata(anyString(), eq(expProject), eq(user))).thenReturn(expProject);
+
+        MvcResult mvcResult = mockMvc.perform(put("/project/{projectId}", "some_id")
+                .principal(authentication(user))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(expProject)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        ErrorResponse errorResponse = mapper.readValue(mvcResult.getResponse().getContentAsString(), ErrorResponse.class);
+        assertThat(errorResponse.getErrorCode(), is("field_errors"));
+        assertThat(errorResponse.getFieldViolations().get("description"), is("may not be empty"));
+        assertThat(errorResponse.getFieldViolations().get("title"), is("may not be empty"));
+    }
+
+    @Test
+    public void modifyProjectMasterdata_emptyUpdateObjectThrowsBadRequest() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+
+        mockMvc.perform(put("/project/{projectId}", "some_id")
+                .principal(authentication(user))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(""))
                 .andExpect(status().isBadRequest())
                 .andReturn();
     }
