@@ -20,7 +20,7 @@ public class ProjectPledgingForm {
 
     private static final String SELECTOR_BUDGET = ".pledging-form .finance__section .budget";
     private static final String SELECTOR_PLEDGED_AMOUNT = ".pledging-form .pledged-amount";
-    private static final String AMOUNT_INPUT_FIELD = ".pledging-form .finance__input";
+    private static final String AMOUNT_INPUT_FIELD = "input.finance__input[type=\"number\"]";
 
     @FindBy(css = ".pledging-form .notification")
     private WebElement notificationBox;

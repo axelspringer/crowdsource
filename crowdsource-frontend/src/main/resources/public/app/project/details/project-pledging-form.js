@@ -15,16 +15,24 @@ angular.module('crowdsource')
                     amount: 0
                 };
                 vm.initslider = false;
+                vm.amountInitialized = false;
 
                 $scope.$watch(function() {
                     return vm.project.pledgedAmountByRequestingUser + vm.project._recentChange;
                 }, function() {
                     // lazy init slider after project data are available;
                     $timeout(function() {
-                        vm.pledge.amount = vm.currentlyPledgedAmountByUser();
                         vm.initslider = true;
+
+                        vm.initAmount();
                     }, 100);
                 });
+
+                vm.initAmount = function () {
+                    if(!vm.amountInitialized){
+                        vm.pledge.amount = vm.currentlyPledgedAmountByUser();
+                    }
+                };
 
                 FinancingRound.reloadCurrentRound();
 
@@ -85,7 +93,6 @@ angular.module('crowdsource')
                     }else {
                         return 0;
                     }
-
                 };
 
                 vm.currentlyPledgedAmountByUser = function () {
@@ -110,9 +117,6 @@ angular.module('crowdsource')
                     }else {
                         budgetAvailableForUser = vm.user.budget;
                     }
-                    if(budgetAvailableForUser == 0 && !FinancingRound.currentFinancingRound().active){
-                        return 0;
-                    }
                     return budgetAvailableForUser - vm.pledge.amount + vm.currentlyPledgedAmountByUser();
                 };
 
@@ -135,6 +139,12 @@ angular.module('crowdsource')
                     }
                     return 'Jetzt finanzieren';
                 };
+
+                function normalizePledge(pledge) {
+                    return {
+                        amount : parseInt(pledge.amount) - vm.currentlyPledgedAmountByUser()
+                    };
+                }
 
                 vm.getNotification = function () {
                     if (isLoading()) {
@@ -176,12 +186,6 @@ angular.module('crowdsource')
                     return null;
                 };
 
-                function normalizePledge(pledge) {
-                    return {
-                        amount : parseInt(pledge.amount) - vm.currentlyPledgedAmountByUser()
-                    };
-                }
-
                 function isLoading() {
                     return !vm.project.$resolved || !vm.user.$resolved || !FinancingRound.current.$resolved;
                 }
@@ -198,6 +202,8 @@ angular.module('crowdsource')
                     promises.then(function (resolvedPromises) {
                         angular.copy(resolvedPromises.project, vm.project);
                         vm.project._recentChange = new Date().getTime();
+                        vm.amountInitialized = false;
+                        vm.initAmount();
                         // the user and financing round are already copied over in their services
                     });
 
