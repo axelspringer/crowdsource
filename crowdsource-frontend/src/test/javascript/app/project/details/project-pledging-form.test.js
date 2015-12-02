@@ -1,6 +1,6 @@
 describe('project pledging form', function () {
 
-    var $scope, $compile, $httpBackend, AuthenticationToken, FinancingRound, $timeout;
+    var $scope, $compile, $httpBackend, AuthenticationToken, FinancingRound, $timeout, root;
 
     beforeEach(function () {
         module('crowdsource');
@@ -24,8 +24,12 @@ describe('project pledging form', function () {
     });
 
     function compileDirective() {
-        var root = $compile('<project-pledging-form project="project"></project-pledging-form>')($scope);
+        root = $compile('<project-pledging-form project="project"></project-pledging-form>')($scope);
         $scope.$digest();
+        return reloadViewAbstraction()
+    }
+
+    function reloadViewAbstraction(){
         return {
             root: root,
             slider: root.find('.range-slider'),
@@ -35,7 +39,8 @@ describe('project pledging form', function () {
             pledgedAmount: root.find('.pledged-amount'),
             pledgeGoal: root.find('.pledge-goal'),
             budget: root.find('.budget'),
-            notification: root.find('.notification')
+            notification: root.find('.notification'),
+            pledgedAmtStatic : root.find('.pledged-amt-static'),
         };
     }
 
@@ -175,10 +180,14 @@ describe('project pledging form', function () {
         $httpBackend.flush();
         $timeout.flush();
 
+        elements = reloadViewAbstraction();
+
         // expect form to be in pristine state and with new values
         expect(elements.notification).not.toHaveClass('ng-hide');
         expect(elements.notification.text().trim()).toBe('Deine Finanzierung war erfolgreich. Das Projekt ist jetzt zu 100% finanziert. Eine weitere Finanzierung ist nicht mehr möglich.');
-        expect(elements.pledgeAmount.getInputField()).toHaveValue("40");
+        expect(elements.pledgeAmount.getInputField()).not.toBeVisible();
+        expect(elements.pledgedAmtStatic).toHaveText("40");
+
         expect(elements.pledgedAmount).toHaveText('100');
         expect(elements.pledgeGoal).toHaveText('100');
         expect(elements.budget).toHaveText('160 €');
@@ -329,6 +338,37 @@ describe('project pledging form', function () {
         expect(elements.notification).toHaveText('Momentan läuft keine Finanzierungsrunde. Bitte versuche es nochmal, wenn die Finanzierungsrunde gestartet worden ist.');
     });
 
+    it("should display correct financing and budget values when financing round terminated, project is fully pledged and user has pledged sth", function () {
+        prepareMocks({
+            project: {$resolved: true, id: 123, pledgeGoal: 500, pledgedAmount: 500, pledgedAmountByRequestingUser: 30, status: 'FULLY_PLEDGED'},
+            isLoggedIn: true,
+            userResponse: {statusCode: 200, body: {budget: 0, roles: ['ROLE_USER']} },
+            financingRoundResponse: {statusCode: 200, body: {
+                $resolved : true,
+                active: false,
+                postRoundBudgetDistributable: true,
+                postRoundBudget: 1000,
+                postRoundBudgetRemaining: 800
+            }}
+        });
+
+        var elements = compileDirective();
+        $httpBackend.flush();
+        $timeout.flush();
+
+        expectNoValidationError(elements.pledgeAmount);
+
+        expect(elements.pledgeButton).toBeDisabled();
+        expect(elements.pledgeButton).toHaveText("Jetzt finanzieren");
+        expect(elements.notification).not.toHaveClass('ng-hide');
+        expect(elements.pledgeAmount.getInputField()).not.toBeVisible();
+        expect(elements.pledgedAmtStatic).toHaveText("30");
+        expect(elements.pledgedAmount).toHaveText("500");
+        expect(elements.pledgeGoal).toHaveText("500");
+        expect(elements.budget).toHaveText("0 €");
+        expect(elements.pledgableAmount).toHaveText("0 €");
+    });
+
     it("should show no validation error message and disable button if zero pledge is is entered and user has NOT pledged before", function () {
 
         prepareMocks({
@@ -477,6 +517,7 @@ describe('project pledging form', function () {
 
         $httpBackend.flush();
         $timeout.flush();
+        elements = reloadViewAbstraction();
 
         expect(elements.root.find('.general-error')).not.toExist();
         expect(getGeneralError(elements, 'remote_pledge_goal_exceeded')).not.toExist();
@@ -484,7 +525,8 @@ describe('project pledging form', function () {
         // expect form to be in pristine state and with new values
         expect(elements.notification).not.toHaveClass('ng-hide');
         expect(elements.notification).toHaveText('Deine Finanzierung war erfolgreich. Das Projekt ist jetzt zu 100% finanziert. Eine weitere Finanzierung ist nicht mehr möglich.');
-        expect(elements.pledgeAmount.getInputField()).toHaveValue("20");
+        expect(elements.pledgeAmount.getInputField()).not.toBeVisible();
+        expect(elements.pledgedAmtStatic).toHaveText("20");
         expect(elements.pledgedAmount).toHaveText('500');
         expect(elements.pledgeGoal).toHaveText('500');
         expect(elements.budget).toHaveText('180 €');
