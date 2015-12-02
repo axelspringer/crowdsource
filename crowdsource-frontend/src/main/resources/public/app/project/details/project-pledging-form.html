@@ -56,8 +56,16 @@
 
             <ul class="finance__ul">
                 <li class="finance__li-important form-controls-amount">
-                    <label form-group="amount">
-                        <input class="finance__input" type="number" name="amount" ng-model="pledgingForm.pledge.amount"
+                    <!-- Static pledge amount display -->
+                    <label ng-if="pledgingForm.getPledgableAmount() == 0" ng-disabled="true" class="finance__input" form-group="amount">
+                        <span class="pledged-amt-static">{{ pledgingForm.currentlyPledgedAmountByUser() }}</span>
+                        <span class="finance__subtitle" form-label-valid="amount">Dein Investment</span>
+                    </label>
+
+                    <!-- Modifiable pledge amount input -->
+                    <label ng-show="pledgingForm.getPledgableAmount() != 0" form-group="amount">
+                        <input class="finance__input" type="number" name="amount"
+                               ng-model="pledgingForm.pledge.amount"
                                ng-disabled="pledgingForm.getPledgableAmount() == 0"
                                required ng-max="pledgingForm.getPledgableAmount()" ng-pattern="/^[0-9]+$/">
 
