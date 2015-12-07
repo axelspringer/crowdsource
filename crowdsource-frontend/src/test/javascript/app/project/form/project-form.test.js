@@ -176,17 +176,6 @@ describe('project form', function () {
         expectValidationError('pledgeGoal', 'min');
     });
 
-    it('should cut off a trailing dot in pledge goal before sending it to the server', function () {
-        // this is some implicit logic of the input type="number" field and angular
-        // that the trailing dot is removed automatically. This test is here to make sure this functionality
-        // does not change unexpectedly
-
-        expectBackendCallAndRespond(200, {id: 'aabbcc'});
-
-        fillAndSubmitForm('Title', 'Short description', '12500.', 'Looong description');
-        $httpBackend.flush();
-    });
-
     it('should show a validation error if the description is changed to blank', function () {
         projectForm.description.getInputField().val('Loong description').trigger('input');
         projectForm.description.getInputField().val('').trigger('input');
