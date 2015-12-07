@@ -22,7 +22,7 @@ angular.module('crowdsource')
         };
 
         service.get = function (projectId) {
-            return projectResource.get({id: projectId});
+            return projectResource.get({id: projectId}).$promise;
         };
 
         service.pledge = function (projectId, pledge) {
