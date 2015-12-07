@@ -17,6 +17,12 @@ angular.module('crowdsource')
                 vm.initslider = false;
                 vm.amountInitialized = false;
 
+                $q.when(vm.project).then(function(project){
+                    // Resolve project when deferred by parent scope in order to refresh this form correctly
+                    vm.project = project;
+                    vm.project._recentChange = new Date().getTime();
+                });
+
                 $scope.$watch(function() {
                     return vm.project.pledgedAmountByRequestingUser + vm.project._recentChange;
                 }, function() {
@@ -193,7 +199,7 @@ angular.module('crowdsource')
                 function reloadUserAndProject() {
                     // parallel execution of backend calls
                     var promises = $q.all({
-                        project: Project.get(vm.project.id).$promise,
+                        project: Project.get(vm.project.id),
                         user: Authentication.reloadUser().$promise,
                         financingRound: FinancingRound.reloadCurrentRound()
                     });
@@ -204,6 +210,7 @@ angular.module('crowdsource')
                         vm.project._recentChange = new Date().getTime();
                         vm.amountInitialized = false;
                         vm.initAmount();
+
                         // the user and financing round are already copied over in their services
                     });
 

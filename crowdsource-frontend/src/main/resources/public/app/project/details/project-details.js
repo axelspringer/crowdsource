@@ -1,80 +1,90 @@
 angular.module('crowdsource')
+    .controller('ProjectDetailsController', function ($window, $routeParams, $location, $q, Project, FinancingRound, Authentication) {
 
-    .controller('ProjectDetailsController', function ($window, $routeParams, $location, Project, FinancingRound, Authentication) {
+    var vm = this;
 
-        var vm = this;
+    vm.auth = Authentication;
 
-        vm.auth = Authentication;
+    // set the project id beforehand to allow the project-comments directive
+    // to already load the comments for this project, else it must wait until
+    // the GET /project/:id response is finished
+    vm.project = {id : $routeParams.projectId };
 
-        vm.project = Project.get($routeParams.projectId);
+    activate();
 
-        // set the project id beforehand to allow the project-comments directive
-        // to already load the comments for this project, else it must wait until
-        // the GET /project/:id response is finished
-        vm.project.id = $routeParams.projectId;
-
-        vm.project.$promise.catch(function (response) {
-            if (response.status == 404) {
+    function activate () {
+        var deferred = $q.defer();
+        Project.get($routeParams.projectId).then(
+            function (res) {
+                vm.project = res;
+                deferred.resolve(res);
+        }, function (errorResp) {
+            if (errorResp.status == 404) {
                 $location.path('/error/notfound');
             }
-            else if (response.status == 403) {
+            else if (errorResp.status == 403) {
                 $location.path('/error/forbidden');
             }
             else {
                 $location.path('/error/unknown');
             }
         });
+        var res = deferred.promise;
+        res.id = $routeParams.projectId;
+        vm.project = res;
+        return res;
+    }
 
-        vm.publish = function () {
-            if (!$window.confirm('Willst Du das Projekt wirklich veröffentlichen?')) {
-                return;
-            }
+    vm.publish = function () {
+        if (!$window.confirm('Willst Du das Projekt wirklich veröffentlichen?')) {
+            return;
+        }
 
-            vm.publishing = true;
-            Project.publish(vm.project.id).$promise
-                .then(function (project) {
-                    vm.project = project;
-                })
-                .catch(function () {
-                    $location.path('/error/unknown');
-                }).finally(function () {
-                    vm.publishing = false;
-                });
-        };
+        vm.publishing = true;
+        Project.publish(vm.project.id).$promise
+            .then(function (project) {
+                vm.project = project;
+            })
+            .catch(function () {
+                $location.path('/error/unknown');
+            }).finally(function () {
+            vm.publishing = false;
+        });
+    };
 
-        vm.reject = function () {
-            if (!$window.confirm('Willst Du das Projekt wirklich ablehnen?')) {
-                return;
-            }
+    vm.reject = function () {
+        if (!$window.confirm('Willst Du das Projekt wirklich ablehnen?')) {
+            return;
+        }
 
-            vm.rejecting = true;
-            Project.reject(vm.project.id).$promise
-                .then(function (project) {
-                    vm.project = project;
-                })
-                .catch(function () {
-                    $location.path('/error/unknown');
-                }).finally(function () {
-                    vm.rejecting = false;
-                });
-        };
+        vm.rejecting = true;
+        Project.reject(vm.project.id).$promise
+            .then(function (project) {
+                vm.project = project;
+            })
+            .catch(function () {
+                $location.path('/error/unknown');
+            }).finally(function () {
+            vm.rejecting = false;
+        });
+    };
 
-        vm.defer = function () {
-            if (!$window.confirm('Willst Du das Projekt wirklich aus der nächsten Finanzierungsrunde ausschließen?')) {
-                return;
-            }
+    vm.defer = function () {
+        if (!$window.confirm('Willst Du das Projekt wirklich aus der nächsten Finanzierungsrunde ausschließen?')) {
+            return;
+        }
 
-            vm.deferring = true;
-            Project.defer(vm.project.id).$promise
-                .then(function (project) {
-                    vm.project = project;
-                })
-                .catch(function () {
-                    $location.path('/error/unknown');
-                }).finally(function () {
-                    vm.deferring = false;
-                });
-        };
+        vm.deferring = true;
+        Project.defer(vm.project.id).$promise
+            .then(function (project) {
+                vm.project = project;
+            })
+            .catch(function () {
+                $location.path('/error/unknown');
+            }).finally(function () {
+            vm.deferring = false;
+        });
+    };
 
         vm.goToEdit = function () {
             var path = '/project/' + vm.project.id + '/edit';
@@ -88,25 +98,25 @@ angular.module('crowdsource')
             return vm.project.status == 'PROPOSED' || vm.project.status == 'REJECTED' || vm.project.status =='DEFERRED';
         };
 
-        vm.isRejectable = function () {
-            if (!vm.project.$resolved) {
-                return false;
-            }
-            return vm.project.status == 'PROPOSED' || vm.project.status == 'PUBLISHED';
-        };
-
-        vm.isDeferrable = function() {
-            if (!vm.project.$resolved) {
-                return false;
-            }
-            return (vm.project.status == 'PROPOSED' || vm.project.status == 'PUBLISHED' )
-                && !FinancingRound.currentFinancingRound().active;
-        };
-
-        vm.toPledgingFormButtonDisabled = function (){
-            return vm.project.status == 'FULLY_PLEDGED' || vm.project.status == 'REJECTED'
-                    || vm.project.status == 'DEFERRED'|| vm.project.status == 'PROPOSED';
+    vm.isRejectable = function () {
+        if (!vm.project.$resolved) {
+            return false;
         }
+        return vm.project.status == 'PROPOSED' || vm.project.status == 'PUBLISHED';
+    };
+
+    vm.isDeferrable = function () {
+        if (!vm.project.$resolved) {
+            return false;
+        }
+        return (vm.project.status == 'PROPOSED' || vm.project.status == 'PUBLISHED' )
+            && !FinancingRound.currentFinancingRound().active;
+    };
+
+    vm.toPledgingFormButtonDisabled = function () {
+        return vm.project.status == 'FULLY_PLEDGED' || vm.project.status == 'REJECTED'
+            || vm.project.status == 'DEFERRED' || vm.project.status == 'PROPOSED';
+    };
 
         vm.editButtonVisibleForUser = function () {
             return vm.auth.currentUser.hasRole("ADMIN") || Project.isCreator(vm.project, vm.auth.currentUser);
