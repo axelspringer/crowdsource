@@ -1,11 +1,11 @@
 describe('project form', function () {
 
-    var $httpBackend, $location, projectForm;
+    var $httpBackend, $location, mockedRouteParams, $scope, projectForm, controller, view;
 
     beforeEach(function () {
         module('crowdsource');
         module('crowdsource.templates');
-        module(function(_$analyticsProvider_) {
+        module(function (_$analyticsProvider_) {
             _$analyticsProvider_.virtualPageviews(false);
             _$analyticsProvider_.firstPageview(false);
             _$analyticsProvider_.developerMode(true);
@@ -14,24 +14,28 @@ describe('project form', function () {
         localStorage.clear(); // reset
 
         inject(function ($compile, $rootScope, $templateCache, $controller, _$httpBackend_, _$location_, Project, RemoteFormValidation) {
-            var $scope = $rootScope.$new();
+            $scope = $rootScope.$new();
             $httpBackend = _$httpBackend_;
             $location = _$location_;
 
-            $controller('ProjectFormController as projectForm', {
+            mockedRouteParams = {};
+
+            controller = $controller('ProjectFormController as projectForm', {
                 $scope: $scope,
+                $routeParams: mockedRouteParams,
                 $location: _$location_,
                 Project: Project,
                 RemoteFormValidation: RemoteFormValidation
             });
 
             var template = $templateCache.get('app/project/form/project-form.html');
-            var view = $compile(template)($scope);
+            view = $compile(template)($scope);
 
             $scope.$digest();
             projectForm = new ProjectForm(view);
         });
     });
+
 
     function expectValidationError(inputName, violatedRule) {
         expect(projectForm[inputName].getLabelContainer()).toHaveClass('error');
@@ -57,13 +61,21 @@ describe('project form', function () {
 
     function expectBackendCallAndRespond(statusCode, responseBody) {
         $httpBackend.expectPOST('/project', {
-            "title": "Title",
-            "shortDescription": "Short description",
-            "pledgeGoal": 12500,
-            "description": "Looong description"
-        })
+                "title": "Title",
+                "shortDescription": "Short description",
+                "pledgeGoal": 12500,
+                "description": "Looong description"
+            })
             .respond(statusCode, responseBody);
     }
+
+    function reInitProjectForm(){
+        projectForm = new ProjectForm(view);
+    }
+
+    it('should show a specific headline when called in creation mode', function () {
+        expect(projectForm.headline.text()).toBe('Deine neue Projektidee');
+    });
 
     it('should show no validation errors when the form is untouched', function () {
         expect(projectForm.getGeneralErrorsContainer()).not.toExist();
@@ -181,6 +193,49 @@ describe('project form', function () {
         projectForm.description.getInputField().val('').trigger('input');
 
         expectValidationError('description', 'required');
+    });
+
+    it('should initialize form with existing project data when called in edit mode', function () {
+        // Given
+        var existingProject = {
+            "title": "Title 2 Edit",
+            "shortDescription": "Short description 2 Edit",
+            "pledgeGoal": 42000,
+            "description": "Looong description 2 Edit"
+        };
+        mockedRouteParams.projectId = 'pId';
+        $httpBackend.expectGET('/project/pId').respond(200, existingProject);
+
+        // When
+        controller.init(); // Re-Init to use mocked route params
+        $scope.$digest();
+        $httpBackend.flush();
+
+        // Then
+        expect(projectForm.title.getInputField().val()).toBe(existingProject.title);
+        expect(projectForm.shortDescription.getInputField().val()).toBe(existingProject.shortDescription);
+        expect(projectForm.pledgeGoal.getInputField().val()).toBe("" + existingProject.pledgeGoal);
+        expect(projectForm.description.getInputField().val()).toBe(existingProject.description);
+    });
+
+    it('should show a specific headline when called in edit mode', function () {
+        // Given
+        var existingProject = {
+            "title": "Title 2 Edit",
+            "shortDescription": "Short description 2 Edit",
+            "pledgeGoal": 42000,
+            "description": "Looong description 2 Edit"
+        };
+        mockedRouteParams.projectId = 'pId';
+        $httpBackend.expectGET('/project/pId').respond(200, existingProject);
+
+        // When
+        controller.init(); // Re-Init to use mocked route params
+        $scope.$digest();
+        $httpBackend.flush();
+        reInitProjectForm();
+
+        expect(projectForm.headline.text()).toBe('Projekt Editieren');
     });
 
 });

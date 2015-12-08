@@ -13,9 +13,13 @@ angular.module('crowdsource')
         };
 
         vm.init = function () {
-            if (vm.isEditMode()) {
-                vm.project = Project.get($routeParams.projectId);
-                vm.project.$promise.catch(function (response) {
+            if (!vm.isEditMode()) {
+                return;
+            }
+            vm.project = Project.get($routeParams.projectId).then(
+                function(project){
+                    vm.project = project;
+                }, function(response)  {
                     if (response.status == 404) {
                         $location.path('/error/notfound');
                     }
@@ -25,11 +29,11 @@ angular.module('crowdsource')
                     else {
                         $location.path('/error/unknown');
                     }
-                });
-            }
+                }
+            );
         };
 
-        vm.submitProjectIdea = function () {
+        vm.submitProject = function () {
             if (!vm.form.$valid) {
                 return;
             }
