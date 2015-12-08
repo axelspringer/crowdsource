@@ -23,6 +23,10 @@ angular.module('crowdsource')
                     vm.project._recentChange = new Date().getTime();
                 });
 
+                vm.financingRound = FinancingRound.reloadCurrentRound().then(function(financingRound){
+                    vm.financingRound = financingRound;
+                });
+
                 $scope.$watch(function() {
                     return vm.project.pledgedAmountByRequestingUser + vm.project._recentChange;
                 }, function() {
@@ -40,13 +44,11 @@ angular.module('crowdsource')
                     }
                 };
 
-                FinancingRound.reloadCurrentRound();
-
                 // to get the current user's budget
                 vm.user = Authentication.reloadUser();
 
                 vm.authorizedForPostRoundPledges = function () {
-                    var currentFinancingRound = FinancingRound.currentFinancingRound();
+                    var currentFinancingRound = vm.financingRound;
                     return currentFinancingRound.postRoundBudgetDistributable &&
                         vm.user.hasRole('ADMIN') &&
                         vm.project.status == 'PUBLISHED';
@@ -84,7 +86,7 @@ angular.module('crowdsource')
 
                 vm.getPledgableAmount = function () {
                     var remainingProjectGoal,
-                        financingRound = FinancingRound.currentFinancingRound();
+                        financingRound = vm.financingRound;
 
                     if (isLoading() || vm.project.status != 'PUBLISHED') {
                         return 0;
@@ -119,7 +121,7 @@ angular.module('crowdsource')
                 vm.getUserBudget = function () {
                     var budgetAvailableForUser;
                     if ( vm.authorizedForPostRoundPledges()){
-                        budgetAvailableForUser = FinancingRound.currentFinancingRound().postRoundBudgetRemaining;
+                        budgetAvailableForUser = vm.financingRound.postRoundBudgetRemaining;
                     }else {
                         budgetAvailableForUser = vm.user.budget;
                     }
@@ -173,7 +175,7 @@ angular.module('crowdsource')
                     if (vm.project.status != 'PUBLISHED') {
                         return {type: 'info', message: 'Eine Finanzierung ist erst möglich, wenn das Projekt von einem Administrator veröffentlicht wurde.'};
                     }
-                    if (!FinancingRound.currentFinancingRound().active && !vm.authorizedForPostRoundPledges()) {
+                    if (!vm.financingRound.active && !vm.authorizedForPostRoundPledges()) {
                         return {type: 'info', message: 'Momentan läuft keine Finanzierungsrunde. Bitte versuche es nochmal, wenn die Finanzierungsrunde gestartet worden ist.'};
                     }
                     if (vm.authorizedForPostRoundPledges()) {
@@ -193,7 +195,7 @@ angular.module('crowdsource')
                 };
 
                 function isLoading() {
-                    return !vm.project.$resolved || !vm.user.$resolved || !FinancingRound.current.$resolved;
+                    return !vm.project.$resolved || !vm.user.$resolved || !vm.financingRound.$resolved;
                 }
 
                 function reloadUserAndProject() {
@@ -210,8 +212,9 @@ angular.module('crowdsource')
                         vm.project._recentChange = new Date().getTime();
                         vm.amountInitialized = false;
                         vm.initAmount();
+                        vm.financingRound = angular.copy(resolvedPromises.financingRound, vm.financingRound);
 
-                        // the user and financing round are already copied over in their services
+                        // the user is already copied over in their services
                     });
 
                     return promises;

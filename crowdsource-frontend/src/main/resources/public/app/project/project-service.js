@@ -51,7 +51,7 @@ angular.module('crowdsource')
 
         service.isCreator = function (project, user) {
             return project.creator != undefined &&
-                project.creator.id === user.id;
+                project.creator.email === user.email;
         };
 
         return service;

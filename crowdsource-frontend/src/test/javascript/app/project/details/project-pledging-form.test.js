@@ -306,7 +306,7 @@ describe('project pledging form', function () {
             postRoundBudgetDistributable: true,
             postRoundBudget: 1000,
             postRoundBudgetRemaining: 800
-        }, FinancingRound.current);
+        }, FinancingRound.currentFinancingRound());
 
         $scope.$digest();
 

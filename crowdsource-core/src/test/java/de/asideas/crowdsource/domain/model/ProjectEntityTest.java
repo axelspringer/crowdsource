@@ -7,7 +7,6 @@ import de.asideas.crowdsource.domain.presentation.Pledge;
 import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.security.Roles;
-import org.hamcrest.CoreMatchers;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
@@ -709,6 +708,8 @@ public class ProjectEntityTest {
 
     @Test
     public void masterdataModificationAllowed_shouldReturnFalseHavingActiveFinancingRund() throws Exception {
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+        projectEntity.setStatus(ProjectStatus.PUBLISHED);
         assertThat(projectEntity.masterdataModificationAllowed(), is(false));
     }
 
@@ -717,6 +718,20 @@ public class ProjectEntityTest {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
         assertThat(projectEntity.masterdataModificationAllowed(), is(false));
+    }
+
+    @Test
+    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusProposed() throws Exception{
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        assertThat(projectEntity.masterdataModificationAllowed(), is(true));
+    }
+
+    @Test
+    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusDeferred() throws Exception{
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+        projectEntity.setStatus(ProjectStatus.DEFERRED);
+        assertThat(projectEntity.masterdataModificationAllowed(), is(true));
     }
 
     @Test

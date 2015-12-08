@@ -189,10 +189,10 @@ public class ProjectEntity {
     }
 
     public boolean modifyMasterdata(Project updatedProject, UserEntity requestingUser) {
-        if( !requestingUser.getRoles().contains(Roles.ROLE_ADMIN) && !requestingUser.equals(this.creator)){
+        if (!requestingUser.getRoles().contains(Roles.ROLE_ADMIN) && !requestingUser.equals(this.creator)) {
             throw new NotAuthorizedException("You are neither admin nor creator of that project");
         }
-        if(!masterdataModificationAllowed()){
+        if (!masterdataModificationAllowed()) {
             throw InvalidRequestException.masterdataChangeNotAllowed();
         }
         if (!masterdataChanged(updatedProject)) {
@@ -206,13 +206,18 @@ public class ProjectEntity {
     }
 
     boolean masterdataModificationAllowed() {
-        if(ProjectStatus.FULLY_PLEDGED == this.status){
-            return false;
+        switch (this.status) {
+            case FULLY_PLEDGED:
+                return false;
+            case PROPOSED:
+            case DEFERRED:
+                return true;
+            default: break;
         }
-        if(this.financingRound == null){
+        if (this.financingRound == null) {
             return true;
         }
-        if( this.financingRound.active() ) {
+        if (this.financingRound.active()) {
             return false;
         }
         return true;
