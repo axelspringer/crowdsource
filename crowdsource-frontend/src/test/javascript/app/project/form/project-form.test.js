@@ -59,14 +59,22 @@ describe('project form', function () {
         projectForm.getSubmitButton().click();
     }
 
-    function expectBackendCallAndRespond(statusCode, responseBody) {
-        $httpBackend.expectPOST('/project', {
-                "title": "Title",
-                "shortDescription": "Short description",
-                "pledgeGoal": 12500,
-                "description": "Looong description"
-            })
+    function expectPOSTCallAndRespond(statusCode, responseBody) {
+        $httpBackend.expectPOST('/project', postOrPutExpectation())
             .respond(statusCode, responseBody);
+    }
+    function expectPUTCallAndRespond(statusCode, responseBody) {
+        $httpBackend.expectPUT('/project', postOrPutExpectation())
+            .respond(statusCode, responseBody);
+    }
+
+    function postOrPutExpectation() {
+        return {
+            "title": "Title",
+            "shortDescription": "Short description",
+            "pledgeGoal": 12500,
+            "description": "Looong description"
+        };
     }
 
     function reInitProjectForm(){
@@ -100,8 +108,8 @@ describe('project form', function () {
         expectNoValidationError('description');
     });
 
-    it('should POST the data to the server and redirect to success page', function () {
-        expectBackendCallAndRespond(200, {id: 'aabbcc'});
+    it('should POST the data to the server and redirect to creation success page', function () {
+        expectPOSTCallAndRespond(200, {id: 'aabbcc'});
 
         fillAndSubmitForm('Title', 'Short description', '12500', 'Looong description');
         $httpBackend.flush();
@@ -110,7 +118,7 @@ describe('project form', function () {
     });
 
     it('should disable the submit button and change it\'s text while loading', function () {
-        expectBackendCallAndRespond(200, {id: 'aabbcc'});
+        expectPOSTCallAndRespond(200, {id: 'aabbcc'});
 
         expect(projectForm.getSubmitButton()).toHaveText('Absenden');
         expect(projectForm.getSubmitButton()).not.toBeDisabled();
@@ -130,7 +138,7 @@ describe('project form', function () {
     });
 
     it('should show an unknown error when the backend call results in 500', function () {
-        expectBackendCallAndRespond(500);
+        expectPOSTCallAndRespond(500);
         spyOn($location, 'path');
 
         fillAndSubmitForm('Title', 'Short description', '12500', 'Looong description');
@@ -207,7 +215,7 @@ describe('project form', function () {
         $httpBackend.expectGET('/project/pId').respond(200, existingProject);
 
         // When
-        controller.init(); // Re-Init to use mocked route params
+        controller.init(); // Re-Init to use mocked route params causing edit mode
         $scope.$digest();
         $httpBackend.flush();
 
@@ -216,6 +224,24 @@ describe('project form', function () {
         expect(projectForm.shortDescription.getInputField().val()).toBe(existingProject.shortDescription);
         expect(projectForm.pledgeGoal.getInputField().val()).toBe("" + existingProject.pledgeGoal);
         expect(projectForm.description.getInputField().val()).toBe(existingProject.description);
+    });
+
+    it('should PUT the data to the server and redirect to edit success page', function () {
+        //Given
+        mockedRouteParams.projectId = 'pId';
+        $httpBackend.expectGET('/project/pId').respond(200, {"title": "Title 2 Edit", "shortDescription": "Short description 2 Edit", "pledgeGoal": 42000, "description": "Looong description 2 Edit"} );
+
+        // When
+        controller.init(); // Re-Init to use mocked route params causing edit mode
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expectPUTCallAndRespond(200, {id: 'aabbcc'});
+        fillAndSubmitForm('Title', 'Short description', '12500', 'Looong description');
+        $httpBackend.flush();
+
+        // Then redirect directly to project
+        expect($location.path()).toBe('/project/aabbcc');
     });
 
     it('should show a specific headline when called in edit mode', function () {

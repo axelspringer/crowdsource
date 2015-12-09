@@ -3,7 +3,6 @@ package de.asideas.crowdsource.domain.presentation.user;
 import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.presentation.project.Project;
-import de.asideas.crowdsource.util.UserHelper;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -20,7 +19,7 @@ public class ProjectCreator {
 
     public ProjectCreator(UserEntity user) {
         this.id = user.getId();
-        this.name = UserHelper.determineNameFromEmail(user.getEmail());
+        this.name = user.fullNameFromEmail();
         this.email = user.getEmail();
     }
 

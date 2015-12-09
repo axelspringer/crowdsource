@@ -2,7 +2,7 @@ package de.asideas.crowdsource.domain.service.user;
 
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.util.UserHelper;
+import de.asideas.crowdsource.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +16,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@SuppressWarnings("Duplicates")
 @Service
 public class UserNotificationService {
 
@@ -25,12 +32,13 @@ public class UserNotificationService {
     public static final String ACTIVATION_LINK_PATTERN = "/signup/{emailAddress}/activation/{activationToken}";
     public static final String PASSWORD_RECOVERY_LINK_PATTERN = "/login/password-recovery/{emailAddress}/activation/{activationToken}";
 
-    public static final String ACTIVATION_SUBJECT = "Bitte vergib ein Passwort für Dein Konto auf der CrowdSource Platform";
-    public static final String NEW_PROJECT_SUBJECT = "Neues Projekt erstellt";
-    public static final String PASSWORD_FORGOTTEN_SUBJECT = "Bitte vergib ein Passwort für Dein Konto auf der CrowdSource Platform";
-    public static final String PROJECT_PUBLISHED_SUBJECT = "Freigabe Deines Projektes";
-    public static final String PROJECT_REJECTED_SUBJECT = "Freigabe Deines Projektes";
-    public static final String PROJECT_DEFERRED_SUBJECT = "Dein Projekt setzt in der nächsten Finanzierungsrunde aus.";
+    public static final String SUBJECT_ACTIVATION = "Bitte vergib ein Passwort für Dein Konto auf der CrowdSource Platform";
+    public static final String SUBJECT_PROJECT_CREATED = "Neues Projekt erstellt";
+    public static final String SUBJECT_PROJECT_MODIFIED = "Ein Projekt wurde editiert";
+    public static final String SUBJECT_PASSWORD_FORGOTTEN = "Bitte vergib ein Passwort für Dein Konto auf der CrowdSource Platform";
+    public static final String SUBJECT_PROJECT_PUBLISHED = "Freigabe Deines Projektes";
+    public static final String SUBJECT_PROJECT_REJECTED = "Freigabe Deines Projektes";
+    public static final String SUBJECT_PROJECT_DEFERRED = "Dein Projekt setzt in der nächsten Finanzierungsrunde aus.";
 
     private static final Logger LOG = LoggerFactory.getLogger(UserNotificationService.class);
 
@@ -56,6 +64,12 @@ public class UserNotificationService {
     private Expression projectDeferredEmailTemplate;
 
     @Autowired
+    private Expression projectModifiedEmailTemplate;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private JavaMailSender mailSender;
 
     @Autowired
@@ -68,10 +82,10 @@ public class UserNotificationService {
 
         StandardEvaluationContext context = new StandardEvaluationContext();
         context.setVariable("link", activationLink);
-        context.setVariable("userName", UserHelper.determineNameFromEmail(user.getEmail()));
+        context.setVariable("userName", user.fullNameFromEmail());
         final String mailContent = activationEmailTemplate.getValue(context, String.class);
 
-        sendMail(user.getEmail(), ACTIVATION_SUBJECT, mailContent);
+        sendMail(user.getEmail(), SUBJECT_ACTIVATION, mailContent);
     }
 
     public void sendPasswordRecoveryMail(UserEntity user) {
@@ -81,10 +95,10 @@ public class UserNotificationService {
 
         StandardEvaluationContext context = new StandardEvaluationContext();
         context.setVariable("link", passwordRecoveryLink);
-        context.setVariable("userName", UserHelper.determineNameFromEmail(user.getEmail()));
+        context.setVariable("userName", user.fullNameFromEmail());
         final String mailContent = passwordForgottenEmailTemplate.getValue(context, String.class);
 
-        sendMail(user.getEmail(), PASSWORD_FORGOTTEN_SUBJECT, mailContent);
+        sendMail(user.getEmail(), SUBJECT_PASSWORD_FORGOTTEN, mailContent);
     }
 
     public void notifyCreatorOnProjectStatusUpdate(ProjectEntity project) {
@@ -93,22 +107,22 @@ public class UserNotificationService {
         final String projectLink = getProjectLink(project.getId());
 
         context.setVariable("link", projectLink);
-        context.setVariable("userName", UserHelper.determineNameFromEmail(project.getCreator().getEmail()));
+        context.setVariable("userName", project.getCreator().fullNameFromEmail());
 
         switch (project.getStatus()) {
             case PUBLISHED:
                 final String publishMessage = projectPublishedEmailTemplate.getValue(context, String.class);
-                sendMail(project.getCreator().getEmail(), PROJECT_PUBLISHED_SUBJECT, publishMessage);
+                sendMail(project.getCreator().getEmail(), SUBJECT_PROJECT_PUBLISHED, publishMessage);
                 break;
 
             case REJECTED:
                 final String rejectedMessage = projectRejectedEmailTemplate.getValue(context, String.class);
-                sendMail(project.getCreator().getEmail(), PROJECT_REJECTED_SUBJECT, rejectedMessage);
+                sendMail(project.getCreator().getEmail(), SUBJECT_PROJECT_REJECTED, rejectedMessage);
                 break;
 
             case DEFERRED:
                 final String deferringMessage = projectDeferredEmailTemplate.getValue(context, String.class);
-                sendMail(project.getCreator().getEmail(), PROJECT_DEFERRED_SUBJECT, deferringMessage);
+                sendMail(project.getCreator().getEmail(), SUBJECT_PROJECT_DEFERRED, deferringMessage);
                 break;
 
             default:
@@ -119,9 +133,26 @@ public class UserNotificationService {
         }
     }
 
-    public void notifyUsersOnProjectModification(ProjectEntity projectEntity) {
-        //TODO Tom: Implement me!
-        throw new UnsupportedOperationException("Implement Me!");
+    public void notifyCreatorAndAdminOnProjectModification(ProjectEntity project, UserEntity modifier) {
+
+        final String projectLink = getProjectLink(project.getId());
+        final Set<UserEntity> users2Notify = new HashSet<>(userRepository.findAllAdminUsers());
+        users2Notify.add(modifier);
+        users2Notify.add(project.getCreator());
+
+        final List<SimpleMailMessage> mails = users2Notify.stream().map(recipient -> {
+
+            StandardEvaluationContext context = new StandardEvaluationContext();
+            context.setVariable("link", projectLink);
+            context.setVariable("recipientName", recipient.fullNameFromEmail());
+            context.setVariable("modifierName", modifier.fullNameFromEmail());
+
+            final String mailContent = projectModifiedEmailTemplate.getValue(context, String.class);
+
+            return newMailMessage(recipient.getEmail(), SUBJECT_PROJECT_MODIFIED, mailContent);
+        }).collect(Collectors.toList());
+
+        sendMails(mails);
     }
 
     public void notifyAdminOnProjectCreation(ProjectEntity project, String emailAddress) {
@@ -132,7 +163,7 @@ public class UserNotificationService {
         context.setVariable("link", projectLink);
 
         final String mailContent = newProjectEmailTemplate.getValue(context, String.class);
-        sendMail(emailAddress, NEW_PROJECT_SUBJECT, mailContent);
+        sendMail(emailAddress, SUBJECT_PROJECT_CREATED, mailContent);
     }
 
     private String getProjectLink(String projectId) {
@@ -153,12 +184,7 @@ public class UserNotificationService {
 
     private void sendMail(String email, String subject, String messageText) {
 
-        final SimpleMailMessage mailMessage = new SimpleMailMessage();
-        mailMessage.setTo(email);
-        mailMessage.setFrom(FROM_ADDRESS);
-        mailMessage.setSubject(subject);
-        mailMessage.setText(messageText);
-
+        final SimpleMailMessage mailMessage = newMailMessage(email, subject, messageText);
 
         taskExecutorSmtp.submit(() -> {
             try {
@@ -168,6 +194,28 @@ public class UserNotificationService {
                 LOG.error("Error on E-Mail Send. Message was: " + mailMessage, e);
             }
         });
+    }
+
+    private void sendMails(final Collection<SimpleMailMessage> messages) {
+        taskExecutorSmtp.submit(() -> {
+            for (SimpleMailMessage message : messages) {
+                try {
+                    LOG.info("Sending mail with subject: " + message.getSubject() );
+                    mailSender.send(message);
+                } catch (Exception e) {
+                    LOG.error("Error on E-Mail Send. Message was: " + message, e);
+                }
+            }
+        });
+    }
+
+    private SimpleMailMessage newMailMessage(String recipientEmail, String subject, String messageText) {
+        final SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(recipientEmail);
+        mailMessage.setFrom(FROM_ADDRESS);
+        mailMessage.setSubject(subject);
+        mailMessage.setText(messageText);
+        return mailMessage;
     }
 
 }

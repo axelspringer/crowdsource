@@ -27,6 +27,10 @@ module.exports = function (config) {
             'src/main/resources/public/app/**/*.js',
             'src/test/javascript/**/*.js',
 
+            // Selective test execution -> comment line above uncomment lines below
+            //'src/test/javascript/testsupport/**/*.js',
+            //'src/test/javascript/app/project/form/*.js',
+
             'src/main/resources/public/app/**/*.html'
         ],
 

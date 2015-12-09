@@ -176,6 +176,11 @@ public abstract class AbstractUserControllerTest {
         }
 
         @Bean
+        public Expression projectModifiedEmailTemplate() {
+            return mock(Expression.class);
+        }
+
+        @Bean
         public AsyncTaskExecutor taskExecutorSmtp() {
             return mock(AsyncTaskExecutor.class);
         }

@@ -1,7 +1,6 @@
 package de.asideas.crowdsource.domain.presentation.user;
 
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.util.UserHelper;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -20,7 +19,7 @@ public class User {
         this.email = userEntity.getEmail();
         this.budget = userEntity.getBudget();
         this.roles = userEntity.getRoles();
-        this.name = UserHelper.determineNameFromEmail(email);
+        this.name = userEntity.fullNameFromEmail();
     }
 
     public User() {

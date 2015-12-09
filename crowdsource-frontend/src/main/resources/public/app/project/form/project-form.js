@@ -49,7 +49,11 @@ angular.module('crowdsource')
             }
 
             projectRequest.then(function (savedProject) {
-                $location.path('/project/new/' + savedProject.id);
+                if(vm.isCreateMode()) {
+                    $location.path('/project/new/' + savedProject.id);
+                }else {
+                    $location.path('/project/' + savedProject.id);
+                }
             }).catch(function (response) {
                 RemoteFormValidation.applyServerErrorResponse(vm, vm.form, response);
             }).finally(function () {

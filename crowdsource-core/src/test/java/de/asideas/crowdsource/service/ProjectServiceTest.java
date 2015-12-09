@@ -34,7 +34,9 @@ import java.util.Collections;
 import java.util.UUID;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -71,6 +73,9 @@ public class ProjectServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private UserService userService;
+
+    @Mock
     private FinancingRoundRepository financingRoundRepository;
 
     @Mock
@@ -79,12 +84,13 @@ public class ProjectServiceTest {
     @Mock
     private ProjectService thisInstance;
 
+
     @Before
     public void init() {
         ReflectionTestUtils.setField(projectService, "thisInstance", thisInstance);
         reset(projectRepository, pledgeRepository, userRepository, financingRoundRepository, thisInstance);
         when(pledgeRepository.findByProjectAndFinancingRound(any(ProjectEntity.class), any(FinancingRoundEntity.class))).thenReturn(new ArrayList<>());
-        when(userRepository.findAll()).thenReturn(Arrays.asList(admin(ADMIN1_EMAIL), admin(ADMIN2_EMAIL), user(USER_EMAIL)));
+        when(userRepository.findAllAdminUsers()).thenReturn(Arrays.asList(admin(ADMIN1_EMAIL), admin(ADMIN2_EMAIL)));
         when(projectRepository.save(any(ProjectEntity.class))).thenAnswer(invocation -> invocation.getArguments()[0]);
     }
 
@@ -123,7 +129,6 @@ public class ProjectServiceTest {
 
         verify(userNotificationService).notifyAdminOnProjectCreation(any(ProjectEntity.class), eq(ADMIN1_EMAIL));
         verify(userNotificationService).notifyAdminOnProjectCreation(any(ProjectEntity.class), eq(ADMIN2_EMAIL));
-        verify(userNotificationService, never()).notifyAdminOnProjectCreation(any(ProjectEntity.class), eq(USER_EMAIL));
         verify(userNotificationService, times(2)).notifyAdminOnProjectCreation(any(ProjectEntity.class), anyString());
     }
 
@@ -414,7 +419,7 @@ public class ProjectServiceTest {
 
         ArgumentCaptor<ProjectEntity> captProject = ArgumentCaptor.forClass(ProjectEntity.class);
         verify(projectRepository).save(captProject.capture());
-        verify(userNotificationService).notifyUsersOnProjectModification(project);
+        verify(userNotificationService).notifyCreatorAndAdminOnProjectModification(project, user);
         assertThat(captProject.getValue().getDescription(), is(projectCmd.getDescription()));
         assertThat(captProject.getValue().getStatus(), not(equalTo(projectCmd.getStatus())));
     }
@@ -430,7 +435,7 @@ public class ProjectServiceTest {
         projectService.modifyProjectMasterdata(projectId, projectCmd, user);
 
         verify(projectRepository, never()).save(any(ProjectEntity.class));
-        verify(userNotificationService, never()).notifyUsersOnProjectModification(any(ProjectEntity.class));
+        verify(userNotificationService, never()).notifyCreatorAndAdminOnProjectModification(any(ProjectEntity.class), any(UserEntity.class));
     }
 
     @Test(expected = ResourceNotFoundException.class)
@@ -441,7 +446,7 @@ public class ProjectServiceTest {
         projectService.modifyProjectMasterdata(projectId, project(null, null, null, 17, null), user("blub") );
 
         verify(projectRepository, never()).save(any(ProjectEntity.class));
-        verify(userNotificationService, never()).notifyUsersOnProjectModification(any(ProjectEntity.class));
+        verify(userNotificationService, never()).notifyCreatorAndAdminOnProjectModification(any(ProjectEntity.class), any(UserEntity.class));
     }
 
     private void assertPledgeNotExecuted(RuntimeException actualEx, RuntimeException expEx, ProjectEntity project, UserEntity user, int userBudgetBeforePledge, ProjectStatus expStatus) {

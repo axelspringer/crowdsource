@@ -56,7 +56,7 @@ public class MailSteps {
 
         assertEquals(UserNotificationService.FROM_ADDRESS, receivedMessage.from);
         assertThat(receivedMessage.to, is(equalToIgnoringCase(userEmail + "@" + allowedEmailDomain)));
-        assertEquals(UserNotificationService.ACTIVATION_SUBJECT, receivedMessage.subject);
+        assertEquals(UserNotificationService.SUBJECT_ACTIVATION, receivedMessage.subject);
         assertThat(receivedMessage.message, containsString("Du hast Dich gerade auf der CrowdSource Platform angemeldet."));
         assertThat(receivedMessage.message, containsString("Um Deine Registrierung abzuschließen, öffne bitte diesen Link und setze Dein Passwort:"));
     }
@@ -73,7 +73,7 @@ public class MailSteps {
         final MailServerClient.Message receivedMessage = grabMessage();
         assertEquals(UserNotificationService.FROM_ADDRESS, receivedMessage.from);
         assertEquals(DEFAULT_USER_EMAIL, receivedMessage.to);
-        assertEquals(UserNotificationService.PASSWORD_FORGOTTEN_SUBJECT, receivedMessage.subject);
+        assertEquals(UserNotificationService.SUBJECT_PASSWORD_FORGOTTEN, receivedMessage.subject);
         assertThat(receivedMessage.message, containsString("Du hast soeben ein neues Passwort für Dein Konto bei der CrowdSource Plattform angefordert."));
         assertThat(receivedMessage.message, containsString("Bitte öffne diesen Link:"));
     }
@@ -98,7 +98,7 @@ public class MailSteps {
         final MailServerClient.Message receivedMessage = grabMessage();
         assertEquals(UserNotificationService.FROM_ADDRESS, receivedMessage.from);
         assertEquals(DEFAULT_ADMIN_EMAIL, receivedMessage.to);
-        assertEquals(UserNotificationService.NEW_PROJECT_SUBJECT, receivedMessage.subject);
+        assertEquals(UserNotificationService.SUBJECT_PROJECT_CREATED, receivedMessage.subject);
         assertThat(receivedMessage.message, containsString("es liegt ein neues Projekt zur Freigabe vor:"));
     }
 
@@ -127,7 +127,7 @@ public class MailSteps {
         final MailServerClient.Message receivedMessage = grabMessage();
         assertEquals(UserNotificationService.FROM_ADDRESS, receivedMessage.from);
         assertEquals(DEFAULT_USER_EMAIL, receivedMessage.to);
-        assertEquals(UserNotificationService.PROJECT_REJECTED_SUBJECT, receivedMessage.subject);
+        assertEquals(UserNotificationService.SUBJECT_PROJECT_REJECTED, receivedMessage.subject);
         assertThat(receivedMessage.message, containsString("Dein Projekt wurde leider abgelehnt."));
     }
 
@@ -137,7 +137,7 @@ public class MailSteps {
         final MailServerClient.Message receivedMessage = grabMessage();
         assertEquals(UserNotificationService.FROM_ADDRESS, receivedMessage.from);
         assertEquals(DEFAULT_USER_EMAIL, receivedMessage.to);
-        assertEquals(UserNotificationService.PROJECT_PUBLISHED_SUBJECT, receivedMessage.subject);
+        assertEquals(UserNotificationService.SUBJECT_PROJECT_PUBLISHED, receivedMessage.subject);
         assertThat(receivedMessage.message, containsString("Dein Projekt wurde erfolgreich freigegeben!"));
     }
 
@@ -147,7 +147,7 @@ public class MailSteps {
         final MailServerClient.Message receivedMessage = grabMessage();
         assertEquals(UserNotificationService.FROM_ADDRESS, receivedMessage.from);
         assertEquals(DEFAULT_USER_EMAIL, receivedMessage.to);
-        assertEquals(UserNotificationService.PROJECT_DEFERRED_SUBJECT, receivedMessage.subject);
+        assertEquals(UserNotificationService.SUBJECT_PROJECT_DEFERRED, receivedMessage.subject);
         assertThat(receivedMessage.message, containsString("Dein Projekt wurde leider zurückgestellt"));
     }
 

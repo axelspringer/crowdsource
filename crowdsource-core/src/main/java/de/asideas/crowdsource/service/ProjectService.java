@@ -93,7 +93,7 @@ public class ProjectService {
 
         if (projectEntity.modifyMasterdata(modifiedProject, requestingUser)) {
             projectEntity = projectRepository.save(projectEntity);
-            userNotificationService.notifyUsersOnProjectModification(projectEntity);
+            userNotificationService.notifyCreatorAndAdminOnProjectModification(projectEntity, requestingUser);
             LOG.debug("Project updated: {}", projectEntity);
         }
 
@@ -178,8 +178,7 @@ public class ProjectService {
     }
 
     private void notifyAdminsOnNewProject(final ProjectEntity projectEntity) {
-        userRepository.findAll().stream()
-                .filter(user -> user.getRoles().contains(Roles.ROLE_ADMIN))
+        userRepository.findAllAdminUsers().stream()
                 .map(UserEntity::getEmail)
                 .forEach(emailAddress -> userNotificationService.notifyAdminOnProjectCreation(projectEntity, emailAddress));
     }
