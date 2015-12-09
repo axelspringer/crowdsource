@@ -68,6 +68,5 @@ public class ProjectStatusWidget {
         RemoteWebDriver webDriver = webDriverProvider.provideDriver();
         wait.until(interpolationCompletedOfElementLocated(By.cssSelector(".project-status__backers")));
         PageFactory.initElements(webDriver, this);
-
     }
 }

@@ -1,5 +1,6 @@
 package de.asideas.crowdsource.testsupport.cucumber;
 
+import cucumber.api.PendingException;
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
@@ -34,6 +35,7 @@ import static org.junit.Assert.assertTrue;
 public class ProjectDetailSteps {
 
     public static final int PLEDGED_AMOUNT = 10;
+
     @Autowired
     private ProjectsPage projectsPage;
 
@@ -211,10 +213,6 @@ public class ProjectDetailSteps {
         assertThat(projectDetailPage.getProjectStatusWidget().getBackers(), is(expValue));
     }
 
-    public Project getCreatedProject() {
-        return createdProject;
-    }
-
     @And("^the \"([^\"]*)\"-button is not visible$")
     public void the_button_is_not_visible(String buttonName) throws Throwable {
         assertTrue(webDriver.findElements(By.className(buttonName + "-button")).size() == 0);
@@ -254,5 +252,9 @@ public class ProjectDetailSteps {
     @And("^the confirmation dialog is rejected")
     public void the_confirmation_dialog_is_rejected() throws Throwable {
         webDriver.switchTo().alert().dismiss();
+    }
+
+    public Project getCreatedProject() {
+        return createdProject;
     }
 }

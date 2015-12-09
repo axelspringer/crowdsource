@@ -11,6 +11,6 @@ public interface UserRepository extends MongoRepository<UserEntity, String> {
 
     UserEntity findByEmail(String email);
 
-    @Query("{roles: {$in: " + Roles.ROLE_ADMIN + "}}")
+    @Query("{roles: '" + Roles.ROLE_ADMIN + "'}")
     List<UserEntity> findAllAdminUsers();
 }

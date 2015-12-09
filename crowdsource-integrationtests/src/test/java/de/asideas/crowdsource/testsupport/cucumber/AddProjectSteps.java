@@ -6,7 +6,7 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import de.asideas.crowdsource.testsupport.pageobjects.NavigationBar;
 import de.asideas.crowdsource.testsupport.pageobjects.project.AddProjectConfirmationView;
-import de.asideas.crowdsource.testsupport.pageobjects.project.AddProjectForm;
+import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectAddAndModificationForm;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectDetailPage;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectStatusWidget;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectsPage;
@@ -35,7 +35,7 @@ public class AddProjectSteps {
     private NavigationBar navigationBar;
 
     @Autowired
-    private AddProjectForm addProjectForm;
+    private ProjectAddAndModificationForm addProjectForm;
 
     @Autowired
     private ProjectDetailPage projectDetailPage;
@@ -70,7 +70,7 @@ public class AddProjectSteps {
     @Then("^he is redirected to the project creation page$")
     public void he_is_redirected_to_the_project_creation_page() throws Throwable {
         PageFactory.initElements(webDriver, addProjectForm);
-        addProjectForm.waitForPageLoad();
+        addProjectForm.waitForPageLoadNewProject();
     }
 
     @When("^he submits the form with valid project data$")
