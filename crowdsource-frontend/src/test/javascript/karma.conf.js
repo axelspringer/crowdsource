@@ -13,16 +13,15 @@ module.exports = function (config) {
             'bower_components/angular-i18n/angular-locale_de.js',
             'bower_components/angular-mocks/angular-mocks.js',
             'bower_components/angular-ellipsis/src/angular-ellipsis.js',
+            'bower_components/angular-sanitize/angular-sanitize.min.js',
             'bower_components/ngScrollTo/ng-scrollto.js',
             'bower_components/moment/moment.js',
             'bower_components/moment-timezone/builds/moment-timezone-with-data.js',
             'bower_components/angulartics/src/angulartics.js',
             'bower_components/angulartics/src/angulartics-piwik.js',
-            'bower_components/showdown/compressed/Showdown.min.js',
-            'bower_components/showdown/compressed/extensions/github.min.js',
-            'bower_components/showdown/compressed/extensions/table.min.js',
-            'bower_components/showdown/compressed/extensions/twitter.min.js',
-            'bower_components/angular-markdown/angular.markdown.js',
+            'bower_components/showdown/dist/showdown.min.js',
+            'bower_components/ng-showdown/dist/ng-showdown.min.js',
+
 
             // actually, this file would have been picked up by the wildcard pattern app/**/*.js
             // but maybe in a wrong order. crowdsource.js defines the single crowdsource angular module and
@@ -34,7 +33,7 @@ module.exports = function (config) {
 
             // Selective test execution -> comment line above uncomment lines below
             //'src/test/javascript/testsupport/**/*.js',
-            //'src/test/javascript/app/project/form/*.js',
+            //'src/test/javascript/app/financing-rounds/*.js',
 
             'src/main/resources/public/app/**/*.html'
         ],

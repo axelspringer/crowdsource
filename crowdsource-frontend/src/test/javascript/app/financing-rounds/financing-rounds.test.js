@@ -79,12 +79,13 @@ describe('financing rounds', function () {
 
     it("should display two finished rounds", function () {
         var now = moment();
-        var startDate1 = now.subtract(10, 'days');
-        var endDate1 = startDate1.add(5, 'days');
-        var startDate2 = now.subtract(20, 'days');
-        var endDate2 = startDate2.add(10, 'days');
+        var startDate1 = now.clone().subtract(10, 'days');
+        var endDate1 = startDate1.clone().add(5, 'days');
+        var startDate2 = now.clone().subtract(20, 'days');
+        var endDate2 = startDate2.clone().add(5, 'days');
 
-        var row = '.row-1';
+        var row_0 = '.row-0';
+        var row_1 = '.row-1';
 
         prepareBackendGetFinancingRoundsMock([
             {"budget": "1111", "startDate": startDate1.toISOString(), "endDate": endDate1.toISOString(), "active": false},
@@ -93,19 +94,21 @@ describe('financing rounds', function () {
         $httpBackend.flush();
         $scope.$digest();
 
+        financingRounds = new FinancingRounds(view);
+
         expect(financingRounds.getTableRowCount()).toBe(2);
 
-        expect(financingRounds.getTableStartDate().text()).toBe(startDate1.format('DD.MM.YY HH:mm'));
-        expect(financingRounds.getTableEndDate().text()).toBe(endDate1.format('DD.MM.YY HH:mm'));
-        expect(financingRounds.getTableBudget().text()).toBe('1.111');
+        expect(financingRounds.getTableStartDate(row_0).text()).toBe(startDate1.format('DD.MM.YY HH:mm'));
+        expect(financingRounds.getTableEndDate(row_0).text()).toBe(endDate1.format('DD.MM.YY HH:mm'));
+        expect(financingRounds.getTableBudget(row_0).text()).toBe('1.111');
 
-        expect(financingRounds.getTableStartDate(row).text()).toBe(startDate2.format('DD.MM.YY HH:mm'));
-        expect(financingRounds.getTableEndDate(row)).toHaveText(endDate2.format('DD.MM.YY HH:mm'));
-        expect(financingRounds.getTableBudget(row)).toHaveText('2.222');
-        expect(financingRounds.getTablePostRoundBudget(row)).toHaveText('1.001');
+        expect(financingRounds.getTableStartDate(row_1).text()).toBe(startDate2.format('DD.MM.YY HH:mm'));
+        expect(financingRounds.getTableEndDate(row_1)).toHaveText(endDate2.format('DD.MM.YY HH:mm'));
+        expect(financingRounds.getTableBudget(row_1)).toHaveText('2.222');
+        expect(financingRounds.getTablePostRoundBudget(row_1)).toHaveText('1.001');
 
-        expect(financingRounds.getTableEndRoundButton()).not.toExist();
-        expect(financingRounds.getTableEndRoundButton(row)).not.toExist();
+        expect(financingRounds.getTableEndRoundButton(row_0)).not.toExist();
+        expect(financingRounds.getTableEndRoundButton(row_1)).not.toExist();
 
         expect(financingRounds.getStartRoundButton()).toExist();
         expect(financingRounds.getNotification()).not.toContainText('Es läuft bereits eine Finanzierungsrunde. Daher kann keine neue Runde gestartet werden.');
@@ -113,10 +116,10 @@ describe('financing rounds', function () {
 
     it("should display two rounds where one of them is active", function () {
         var now = moment();
-        var startDate1 = now.subtract(10, 'days');
-        var endDate1 = now.add(5, 'days');
-        var startDate2 = now.subtract(20, 'days');
-        var endDate2 = startDate2.add(10, 'days');
+        var startDate1 = now.clone().subtract(10, 'days');
+        var endDate1 = now.clone().add(5, 'days');
+        var startDate2 = now.clone().subtract(20, 'days');
+        var endDate2 = startDate2.clone().add(10, 'days');
 
         var row = '.row-1';
 

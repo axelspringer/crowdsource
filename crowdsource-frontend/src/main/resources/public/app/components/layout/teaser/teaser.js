@@ -94,12 +94,13 @@ angular.module('crowdsource')
             }
 
             var remainingTime = '';
-            if (diff.days() > 0) {
+            if (diff.asDays() > 0) {
                 var days = Math.floor(diff.asDays());
                 if (days > 6) {
                     return days + ' Tage';
+                }else if (days > 0){
+                    remainingTime += days + 'd ';
                 }
-                remainingTime += days + 'd ';
             }
             if (remainingTime || diff.hours() > 0) {
                 remainingTime += diff.hours() + 'h ';

@@ -5,7 +5,6 @@ describe('project form', function () {
     beforeEach(function () {
         module('crowdsource');
         module('crowdsource.templates');
-        module('angular-markdown');
         module(function (_$analyticsProvider_) {
             _$analyticsProvider_.virtualPageviews(false);
             _$analyticsProvider_.firstPageview(false);
