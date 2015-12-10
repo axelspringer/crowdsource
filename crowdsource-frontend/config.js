@@ -24,7 +24,11 @@ var config = {
             'bower_components/moment-timezone/builds/moment-timezone-with-data.min.js',
             'bower_components/bowser/bowser.min.js',
             'bower_components/angulartics/dist/angulartics.min.js',
-            'bower_components/angulartics/dist/angulartics-piwik.min.js'
+            'bower_components/angulartics/dist/angulartics-piwik.min.js',
+            'bower_components/showdown/compressed/Showdown.min.js',
+            'bower_components/showdown/compressed/extensions/github.min.js',
+            'bower_components/showdown/compressed/extensions/twitter.min.js',
+            'bower_components/showdown/compressed/extensions/table.min.js'
         ],
         unminified: [
             'bower_components/foundation/js/vendor/modernizr.js',
@@ -36,6 +40,7 @@ var config = {
             'bower_components/angular-i18n/angular-locale_de.js',
             'bower_components/ngScrollTo/ng-scrollto.js',
             'bower_components/foundation-datepicker/js/foundation-datepicker.js',
+            'bower_components/angular-markdown/angular.markdown.js'
         ]
     },
 

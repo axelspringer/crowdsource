@@ -18,6 +18,11 @@ module.exports = function (config) {
             'bower_components/moment-timezone/builds/moment-timezone-with-data.js',
             'bower_components/angulartics/src/angulartics.js',
             'bower_components/angulartics/src/angulartics-piwik.js',
+            'bower_components/showdown/compressed/Showdown.min.js',
+            'bower_components/showdown/compressed/extensions/github.min.js',
+            'bower_components/showdown/compressed/extensions/table.min.js',
+            'bower_components/showdown/compressed/extensions/twitter.min.js',
+            'bower_components/angular-markdown/angular.markdown.js',
 
             // actually, this file would have been picked up by the wildcard pattern app/**/*.js
             // but maybe in a wrong order. crowdsource.js defines the single crowdsource angular module and

@@ -1,8 +1,10 @@
 angular.module('crowdsource')
 
-    .controller('ProjectFormController', function ($location, $routeParams, Project, RemoteFormValidation) {
+    .controller('ProjectFormController', function ($location, $routeParams, $sce, Project, RemoteFormValidation) {
 
         var vm = this;
+        vm.md = {};
+        vm.md.description = "";
 
         vm.isEditMode = function () {
             return $routeParams.projectId !== undefined;
@@ -31,6 +33,18 @@ angular.module('crowdsource')
                     }
                 }
             );
+        };
+
+        vm.descriptionChanged = function(){
+            //var htmlSafeDescription = $sce.trustAsHtml(vm.project.description);
+            //console.log("Updated Descr: " + htmlSafeDescription);
+            //if(htmlSafeDescription != undefined){
+                //console.log("Length: " + htmlSafeDescription.length);
+            //}
+            //if(htmlSafeDescription != undefined && htmlSafeDescription.length > 2){
+            vm.md.description = vm.project.description;
+            console.log("ActuallySet MD");
+            //}
         };
 
         vm.submitProject = function () {

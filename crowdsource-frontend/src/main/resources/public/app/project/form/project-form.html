@@ -76,10 +76,13 @@
                 </span>
 
                 <textarea name="description" ng-model="projectForm.project.description"
+                          ng-change="projectForm.descriptionChanged()"
                           placeholder="Beschreibe Deine Idee ausführlich. Diese Information ist in der Detailansicht sichtbar (keine Zeichenbeschränkung, kein HTML)"
                           required reset-remote-validation></textarea>
             </label>
         </div>
+        <markdown extensions="github, twitter, table" ng-model="projectForm.md.description" allow-html="false" >
+        </markdown>
 
         <button type="submit" class="crwd-success radius shadow margin-top" ng-click="projectForm.submitProject()" ng-disabled="projectForm.loading"
                 analytics-on="click" analytics-category="Projects" analytics-event="ProjectIdeaSubmitted">

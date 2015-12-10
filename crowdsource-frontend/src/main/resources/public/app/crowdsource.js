@@ -20,7 +20,7 @@
     /**
      * global application configuration
      */
-    angular.module('crowdsource', ['ngRoute', 'ngResource', 'ngMessages', 'dibari.angular-ellipsis', 'ngScrollTo', 'angulartics', 'angulartics.piwik'])
+    angular.module('crowdsource', ['ngRoute', 'ngResource', 'ngMessages', 'dibari.angular-ellipsis', 'ngScrollTo', 'angulartics', 'angulartics.piwik', 'angular-markdown'])
         .config(function ($routeProvider, $locationProvider, $httpProvider, $analyticsProvider) {
             $routeProvider
                 .when('/projects', {
