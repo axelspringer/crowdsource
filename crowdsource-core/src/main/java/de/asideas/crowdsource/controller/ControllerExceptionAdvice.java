@@ -16,7 +16,6 @@ public class ControllerExceptionAdvice {
     @ExceptionHandler(InvalidRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleInvalidRequest(InvalidRequestException e) {
-
         return new ErrorResponse(e.getMessage());
     }
 

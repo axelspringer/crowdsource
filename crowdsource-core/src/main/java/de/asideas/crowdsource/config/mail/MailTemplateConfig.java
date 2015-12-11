@@ -50,6 +50,11 @@ public class MailTemplateConfig {
         return createExpressionFromFile("/email/project-deferred.template");
     }
 
+    @Bean
+    public Expression projectModifiedEmailTemplate() {
+        return createExpressionFromFile("/email/project-modified.template");
+    }
+
     private Expression createExpressionFromFile(final String templatePath) {
         try {
             final InputStream resourceAsStream = getInputStreamForTemplateOrDefaultTemplate(templatePath);

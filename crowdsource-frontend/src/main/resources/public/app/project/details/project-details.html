@@ -30,19 +30,29 @@
                     </ul>
                 </div>
 
-
-
                 <div class="pm-l-cell--2nd project-details--{{projectDetails.project.status.toLowerCase()}}">
-                    <button class="pm-btn-simple  to-pledging-form-button"
-                            scroll-to="project-pledging-form"
-                            ng-disabled="projectDetails.toPledgingFormButtonDisabled()"
-                            analytics-on="click" analytics-category="Projects" analytics-event="GoToFinancing">
-                        <span ng-if="projectDetails.project.status == 'FULLY_PLEDGED'">Zu 100% finanziert!</span>
-                        <span ng-if="projectDetails.project.status == 'DEFERRED'">Zurückgestellt</span>
-                        <span ng-if="projectDetails.project.status == 'REJECTED'">Abgelehnt</span>
-                        <span ng-if="projectDetails.project.status == 'PROPOSED'">Vorgeschlagen</span>
-                        <span ng-if="projectDetails.project.status == 'PUBLISHED'">Zur Finanzierung</span>
-                    </button>
+                    <!-- To-Pleddging-Form and Status Button-->
+                    <div>
+                        <button class="pm-btn-simple  to-pledging-form-button"
+                                scroll-to="project-pledging-form"
+                                ng-disabled="projectDetails.toPledgingFormButtonDisabled()"
+                                analytics-on="click" analytics-category="Projects" analytics-event="GoToFinancing">
+                            <span ng-if="projectDetails.project.status == 'FULLY_PLEDGED'">Zu 100% finanziert!</span>
+                            <span ng-if="projectDetails.project.status == 'DEFERRED'">Zurückgestellt</span>
+                            <span ng-if="projectDetails.project.status == 'REJECTED'">Abgelehnt</span>
+                            <span ng-if="projectDetails.project.status == 'PROPOSED'">Vorgeschlagen</span>
+                            <span ng-if="projectDetails.project.status == 'PUBLISHED'">Zur Finanzierung</span>
+                        </button>
+                    </div>
+
+                    <!-- EDIT Button-->
+                    <div ng-if="projectDetails.editButtonVisibleForUser()">
+                        <button class="pm-btn-simple--success to-edit-form-button"
+                                ng-click="projectDetails.goToEdit()"
+                                ng-disabled="!projectDetails.editButtonEnabled()">
+                            <span>Editieren</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -1,10 +1,39 @@
 angular.module('crowdsource')
 
-    .controller('ProjectFormController', function ($location, Project, RemoteFormValidation) {
+    .controller('ProjectFormController', function ($location, $routeParams, Project, RemoteFormValidation) {
 
         var vm = this;
 
-        vm.submitProjectIdea = function () {
+        vm.isEditMode = function () {
+            return $routeParams.projectId !== undefined;
+        };
+
+        vm.isCreateMode = function () {
+            return !vm.isEditMode();
+        };
+
+        vm.init = function () {
+            if (!vm.isEditMode()) {
+                return;
+            }
+            vm.project = Project.get($routeParams.projectId).then(
+                function(project){
+                    vm.project = project;
+                }, function(response)  {
+                    if (response.status == 404) {
+                        $location.path('/error/notfound');
+                    }
+                    else if (response.status == 403) {
+                        $location.path('/error/forbidden');
+                    }
+                    else {
+                        $location.path('/error/unknown');
+                    }
+                }
+            );
+        };
+
+        vm.submitProject = function () {
             if (!vm.form.$valid) {
                 return;
             }
@@ -12,16 +41,24 @@ angular.module('crowdsource')
             RemoteFormValidation.clearRemoteErrors(vm);
             vm.loading = true;
 
-            Project.add(vm.project)
-                .then(function (savedProject) {
+            var projectRequest;
+            if (vm.isCreateMode()) {
+                projectRequest = Project.add(vm.project);
+            } else {
+                projectRequest = Project.edit(vm.project);
+            }
+
+            projectRequest.then(function (savedProject) {
+                if(vm.isCreateMode()) {
                     $location.path('/project/new/' + savedProject.id);
-                })
-                .catch(function (response) {
-                    RemoteFormValidation.applyServerErrorResponse(vm, vm.form, response);
-                })
-                .finally(function () {
-                    vm.loading = false;
-                });
+                }else {
+                    $location.path('/project/' + savedProject.id);
+                }
+            }).catch(function (response) {
+                RemoteFormValidation.applyServerErrorResponse(vm, vm.form, response);
+            }).finally(function () {
+                vm.loading = false;
+            });
         };
 
     });

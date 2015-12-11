@@ -55,13 +55,7 @@ public class ProjectService {
     }
 
     public Project getProject(String projectId, UserEntity requestingUser) {
-
-        ProjectEntity projectEntity = projectRepository.findOne(projectId);
-        if (projectEntity == null) {
-            throw new ResourceNotFoundException();
-        }
-
-        return project(projectEntity, requestingUser);
+        return project(loadProjectEntity(projectId), requestingUser);
     }
 
     public List<Project> getProjects(UserEntity requestingUser) {
@@ -84,15 +78,23 @@ public class ProjectService {
     }
 
     public Project modifyProjectStatus(String projectId, ProjectStatus newStatusToApply, UserEntity requestingUser) {
-        ProjectEntity projectEntity = projectRepository.findOne(projectId);
-
-        if (projectEntity == null) {
-            throw new ResourceNotFoundException();
-        }
+        ProjectEntity projectEntity = loadProjectEntity(projectId);
 
         if (projectEntity.modifyStatus(newStatusToApply)) {
             projectEntity = projectRepository.save(projectEntity);
-            userNotificationService.notifyCreatorOnProjectUpdate(projectEntity);
+            userNotificationService.notifyCreatorOnProjectStatusUpdate(projectEntity);
+        }
+
+        return project(projectEntity, requestingUser);
+    }
+
+    public Project modifyProjectMasterdata(String projectId, Project modifiedProject, UserEntity requestingUser) {
+        ProjectEntity projectEntity = loadProjectEntity(projectId);
+
+        if (projectEntity.modifyMasterdata(modifiedProject, requestingUser)) {
+            projectEntity = projectRepository.save(projectEntity);
+            userNotificationService.notifyCreatorAndAdminOnProjectModification(projectEntity, requestingUser);
+            LOG.debug("Project updated: {}", projectEntity);
         }
 
         return project(projectEntity, requestingUser);
@@ -100,11 +102,7 @@ public class ProjectService {
 
     public void pledge(String projectId, UserEntity userEntity, Pledge pledge) {
 
-        ProjectEntity projectEntity = projectRepository.findOne(projectId);
-
-        if (projectEntity == null) {
-            throw new ResourceNotFoundException();
-        }
+        ProjectEntity projectEntity = loadProjectEntity(projectId);
 
         FinancingRoundEntity financingRound = financingRoundService.mostRecentRoundEntity();
         if (financingRound != null &&
@@ -162,6 +160,14 @@ public class ProjectService {
         LOG.debug("Project pledged using post round budget: {}", pledgeResult);
     }
 
+    private ProjectEntity loadProjectEntity(String projectId) {
+        ProjectEntity projectEntity = projectRepository.findOne(projectId);
+        if (projectEntity == null) {
+            throw new ResourceNotFoundException();
+        }
+        return projectEntity;
+    }
+
     private Project project(ProjectEntity projectEntity, UserEntity requestingUser) {
         List<PledgeEntity> pledges = pledgeRepository.findByProjectAndFinancingRound(projectEntity, projectEntity.getFinancingRound());
         return new Project(projectEntity, pledges, requestingUser);
@@ -172,8 +178,7 @@ public class ProjectService {
     }
 
     private void notifyAdminsOnNewProject(final ProjectEntity projectEntity) {
-        userRepository.findAll().stream()
-                .filter(user -> user.getRoles().contains(Roles.ROLE_ADMIN))
+        userRepository.findAllAdminUsers().stream()
                 .map(UserEntity::getEmail)
                 .forEach(emailAddress -> userNotificationService.notifyAdminOnProjectCreation(projectEntity, emailAddress));
     }

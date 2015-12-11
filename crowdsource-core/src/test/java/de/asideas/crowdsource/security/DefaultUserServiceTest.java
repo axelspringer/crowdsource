@@ -7,6 +7,7 @@ import de.asideas.crowdsource.repository.UserRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
@@ -21,10 +22,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,6 +52,7 @@ public class DefaultUserServiceTest {
 
     @Before
     public void init() {
+        reset(userRepository, passwordEncoder, mockedInputSource);
         ReflectionTestUtils.setField(defaultUserService, "objectMapper", objectMapper);
     }
 
@@ -92,12 +97,16 @@ public class DefaultUserServiceTest {
     @Test
     public void shouldCreateUsersIfNotExists() throws IOException {
         prepareResourceMock("[{\"email\": \"foo@bar.de\", \"password\":\"aPw\", \"activated\":\"true\",\"roles\": [\"ROLE_FOO\"]}]");
+        final UserEntity expUser = createUserEntity("foo@bar.de", "anEncryptedPw", true, Collections.singletonList("ROLE_FOO"));
 
         when(passwordEncoder.encode(eq("aPw"))).thenReturn("anEncryptedPw");
 
         defaultUserService.loadDefaultUsers();
 
-        verify(userRepository, times(1)).save(eq(createUserEntity("foo@bar.de", "anEncryptedPw", true, Collections.singletonList("ROLE_FOO"))));
+        final ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
+
+        verify(userRepository, times(1)).save(userCaptor.capture());
+        assertSameContent(userCaptor.getValue(), expUser);
     }
 
     @Test
@@ -105,13 +114,17 @@ public class DefaultUserServiceTest {
         prepareResourceMock("[{\"email\": \"foo@bar.de\", \"password\":\"aPw\", \"activated\":\"true\",\"roles\": [\"ROLE_FOO\"]}, " +
                 "{\"email\": \"foo2@bar.de\", \"password\":\"aPw\", \"activated\":\"false\",\"roles\": [\"ROLE_FOO_2\"]}]");
 
-
         when(passwordEncoder.encode(eq("aPw"))).thenReturn("anEncryptedPw").thenReturn("anEncryptedPw2");
 
         defaultUserService.loadDefaultUsers();
 
-        verify(userRepository, times(1)).save(eq(createUserEntity("foo@bar.de", "anEncryptedPw", true, Collections.singletonList("ROLE_FOO"))));
-        verify(userRepository, times(1)).save(eq(createUserEntity("foo2@bar.de", "anEncryptedPw2", false, Collections.singletonList("ROLE_FOO_2"))));
+        final UserEntity user1 = createUserEntity("foo@bar.de", "anEncryptedPw", true, Collections.singletonList("ROLE_FOO"));
+        final UserEntity user2 = createUserEntity("foo2@bar.de", "anEncryptedPw2", false, Collections.singletonList("ROLE_FOO_2"));
+        ArgumentCaptor<UserEntity> captorUser = ArgumentCaptor.forClass(UserEntity.class);
+
+        verify(userRepository, times(2)).save(captorUser.capture());
+        assertSameContent(captorUser.getAllValues().get(0), user1 );
+        assertSameContent(captorUser.getAllValues().get(1), user2 );
     }
 
     @Test
@@ -123,7 +136,11 @@ public class DefaultUserServiceTest {
 
         defaultUserService.loadDefaultUsers();
 
-        verify(userRepository, times(1)).save(eq(createUserEntity("foo@bar.de", "anEncryptedPw", true, Arrays.asList("ROLE_FOO", "ROLE_FOO_2"))));
+        final UserEntity expUser = createUserEntity("foo@bar.de", "anEncryptedPw", true, Arrays.asList("ROLE_FOO", "ROLE_FOO_2"));
+        final ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
+
+        verify(userRepository, times(1)).save(userCaptor.capture());
+        assertSameContent(userCaptor.getValue(), expUser);
     }
 
     private UserEntity createUserEntity(String email, String password, boolean active, List<String> roles) {
@@ -144,5 +161,12 @@ public class DefaultUserServiceTest {
     private void prepareResourceMock(String fileContent) throws IOException {
         prepareResourceMock(true, true);
         when(mockedInputSource.getInputStream()).thenReturn(new ByteArrayInputStream(fileContent.getBytes("UTF-8")));
+    }
+
+    private void assertSameContent(UserEntity user1, UserEntity user2){
+        assertThat(user1.getRoles(), is(user2.getRoles()));
+        assertThat(user1.getEmail(), is(user2.getEmail()));
+        assertThat(user1.getPassword(), is(user2.getPassword()));
+        assertThat(user1.isActivated(), is(user2.isActivated()));
     }
 }

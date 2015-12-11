@@ -88,7 +88,7 @@ public class ActivationSteps {
         assertThat(message.from, is(UserNotificationService.FROM_ADDRESS));
         assertThat(message.to, is(equalToIgnoringCase(getGeneratedEmail())));
 
-        String expectedSubject = isRegistrationFlow ? UserNotificationService.ACTIVATION_SUBJECT : UserNotificationService.PASSWORD_FORGOTTEN_SUBJECT;
+        String expectedSubject = isRegistrationFlow ? UserNotificationService.SUBJECT_ACTIVATION : UserNotificationService.SUBJECT_PASSWORD_FORGOTTEN;
         assertThat(message.subject, is(expectedSubject));
 
         String expectedContent = isRegistrationFlow ? "Du hast Dich gerade auf der CrowdSource Platform angemeldet" : "Du hast soeben ein neues Passwort";

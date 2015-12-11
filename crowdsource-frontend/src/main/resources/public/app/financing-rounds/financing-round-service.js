@@ -3,6 +3,8 @@ angular.module('crowdsource')
     .factory('FinancingRound', function ($resource, $q) {
 
         var service = {};
+        var currentFinancingRound = {$resolved: false};
+        var currentRoundInitialized = false;
 
         var financingRoundResource = $resource('/financingrounds/:id');
 
@@ -40,44 +42,44 @@ angular.module('crowdsource')
             return financingRoundsResource.query();
         };
 
-        service.reloadCurrentRound = function () {
-            var promise = getCurrent();
-            service.current.$promise = promise;
-
-            promise.then(function (currentRound) {
-                service.current = currentRound;
-            });
-            return promise;
-        };
-
-        function getCurrent() {
-            var deferred = $q.defer();
-
-            var currentRound = financingRoundResource.get({id: 'mostRecent'});
-            currentRound.$promise
-                .then(function () {
-                    deferred.resolve(currentRound);
-                })
-                .catch(function (response) {
-                    // also resolve the deferred when a 404 is returned
+        service.loadMostRecentRound = function (forceUpdate) {
+            forceUpdate = forceUpdate != undefined ? forceUpdate : false;
+            var deferredRes = $q.defer();
+            if (currentRoundInitialized && !forceUpdate) {
+                deferredRes.resolve(currentFinancingRound);
+                return deferredRes.promise;
+            }
+            currentRoundInitialized = true;
+            currentFinancingRound = financingRoundResource.get(
+                {id: 'mostRecent'},
+                {},
+                function (resp) {
+                    currentFinancingRound = resp;
+                    deferredRes.resolve(currentFinancingRound);
+                },
+                function (response) {
+                    //also resolve the deferred when a 404 is returned
                     // (this means that there is no active financing round atm)
                     if (response.status == 404) {
-                        currentRound.active = false;
-                        deferred.resolve(currentRound);
+                        currentFinancingRound.active = false;
+                        deferredRes.resolve(currentFinancingRound);
                     }
                     else {
-                        deferred.reject(response);
+                        deferredRes.reject(response);
                     }
-                });
+                }
+            );
+            return deferredRes.promise;
+        };
 
-            currentRound.$promise = deferred.promise;
-            return deferred.promise;
-        }
+        service.currentFinancingRound = function () {
+            service.loadMostRecentRound(false);
+            return currentFinancingRound;
+        };
 
-        service.current = {$resolved: false};
-
-        service.currentFinancingRound = function(){
-            return service.current;
+        service.reloadCurrentRound = function () {
+            var promise = service.loadMostRecentRound(true);
+            return promise;
         };
 
         return service;

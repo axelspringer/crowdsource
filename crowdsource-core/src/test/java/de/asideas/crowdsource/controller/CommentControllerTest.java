@@ -244,6 +244,11 @@ public class CommentControllerTest {
         }
 
         @Bean
+        public Expression projectModifiedEmailTemplate() {
+            return mock(Expression.class);
+        }
+
+        @Bean
         public AsyncTaskExecutor taskExecutorSmtp() {
             return mock(AsyncTaskExecutor.class);
         }

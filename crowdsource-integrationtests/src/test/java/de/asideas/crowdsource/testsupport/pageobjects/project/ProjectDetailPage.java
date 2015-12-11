@@ -49,6 +49,9 @@ public class ProjectDetailPage {
     @FindBy(className = "newcomment-submit")
     private WebElement newCommentSubmitButton;
 
+    @FindBy(className = "to-edit-form-button")
+    private WebElement editProjectButton;
+
     @Autowired
     private ProjectStatusWidget projectStatusWidget;
 
@@ -108,5 +111,13 @@ public class ProjectDetailPage {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void clickEditButton(){
+        editProjectButton.click();
+    }
+
+    public WebElement getEditProjectButton(){
+        return editProjectButton;
     }
 }

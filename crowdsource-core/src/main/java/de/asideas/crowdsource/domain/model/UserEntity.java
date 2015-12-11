@@ -2,8 +2,7 @@ package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.presentation.Pledge;
 import de.asideas.crowdsource.security.Roles;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
@@ -14,6 +13,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+
+import static java.util.stream.Collectors.joining;
 
 // needed for serialization
 @Document(collection = "users")
@@ -60,6 +62,26 @@ public class UserEntity {
 
         budget -= pledge.getAmount();
     }
+
+    public String fullNameFromEmail() {
+        if (email == null) {
+            return null;
+        }
+
+        int atPos = email.indexOf('@');
+        if (atPos < 1) {
+            return null;
+        }
+
+        String localPart = email.substring(0, atPos);
+        List<String> localParts = Arrays.asList(localPart.split("\\."));
+
+        return localParts.stream()
+                .map(s -> s.replaceAll("\\d+", ""))
+                .map(StringUtils::capitalize)
+                .collect(joining(" "));
+    }
+
 
     public String getId() {
         return this.id;
@@ -135,12 +157,24 @@ public class UserEntity {
 
     @Override
     public boolean equals(Object o) {
-        return EqualsBuilder.reflectionEquals(this, o);
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        UserEntity that = (UserEntity) o;
+
+        if(this.id == null && that.id == null){
+            return this == that;
+        }
+
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
+        return Objects.hash(id);
     }
 
     @Override

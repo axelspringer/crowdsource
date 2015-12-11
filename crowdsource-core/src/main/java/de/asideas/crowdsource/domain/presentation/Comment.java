@@ -1,7 +1,6 @@
 package de.asideas.crowdsource.domain.presentation;
 
 import de.asideas.crowdsource.domain.model.CommentEntity;
-import de.asideas.crowdsource.util.UserHelper;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -19,7 +18,7 @@ public class Comment {
 
     public Comment(CommentEntity commentEntity) {
         this.created = commentEntity.getCreatedDate();
-        this.userName = UserHelper.determineNameFromEmail(commentEntity.getUser().getEmail());
+        this.userName = commentEntity.getUser().fullNameFromEmail();
         this.comment = commentEntity.getComment();
     }
 

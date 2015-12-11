@@ -1,7 +1,8 @@
-<content-row class="project-form">
+<content-row class="project-form" ng-init="projectForm.init()">
     <form name="projectForm.form" novalidate foundation-reflow="tooltip">
 
-        <h2 class="plist__heading push-dble--bottom">Deine neue Projektidee</h2>
+        <h2 ng-if="projectForm.isCreateMode()" class="plist__heading push-dble--bottom">Deine neue Projektidee</h2>
+        <h2 ng-if="projectForm.isEditMode()" class="plist__heading push-dble--bottom">Projekt Editieren</h2>
 
 
         <div class="general-error alert-box alert" ng-messages="projectForm.generalErrors" ng-if="projectForm.generalErrors">
@@ -80,7 +81,7 @@
             </label>
         </div>
 
-        <button type="submit" class="crwd-success radius shadow margin-top" ng-click="projectForm.submitProjectIdea()" ng-disabled="projectForm.loading"
+        <button type="submit" class="crwd-success radius shadow margin-top" ng-click="projectForm.submitProject()" ng-disabled="projectForm.loading"
                 analytics-on="click" analytics-category="Projects" analytics-event="ProjectIdeaSubmitted">
             {{ projectForm.loading ? 'Absenden...' : 'Absenden' }}
         </button>

@@ -271,6 +271,25 @@ $pd-icon-dimension: 24px;
 }
 
 /*button*/
+.pm-btn-simple--success {
+    // @media smartphone
+    @extend %crwd-btn-simple;
+    width: 100%;
+    margin: 0.25rem 0;
+    background-color: rgba($clr-green-shade-2, 0.65);
+
+    &:hover {
+        background-color: rgba($clr-green-shade-2, 1);
+    }
+
+    // @media > smartphone
+    @media #{$medium-up} {
+        width: auto;
+    }
+}
+
+
+/*button*/
 .pm-btn--success {
 
     @extend %crwd-btn-simple-shadow;

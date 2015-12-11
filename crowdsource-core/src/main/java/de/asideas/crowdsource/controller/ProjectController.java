@@ -87,6 +87,13 @@ public class ProjectController {
         return projectService.modifyProjectStatus(projectId, newStatus.status, userByPrincipal(principal));
     }
 
+    @Secured(Roles.ROLE_USER)
+    @ResponseStatus(HttpStatus.OK)
+    @RequestMapping(value = "/project/{projectId}", method = RequestMethod.PUT)
+    public Project modifyProjectMasterdata(@PathVariable("projectId") String projectId, @RequestBody @Valid @NotNull Project modifiedProject, Principal principal) {
+        return projectService.modifyProjectMasterdata(projectId, modifiedProject, userByPrincipal(principal));
+    }
+
     private boolean mayViewProjectFilter(Project project, Authentication auth) {
         // fully pledged and published are always visible
         final ProjectStatus status = project.getStatus();

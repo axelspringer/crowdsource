@@ -53,19 +53,19 @@ angular.module('crowdsource')
             }
 
             function applyRemainingTime() {
-                if (!FinancingRound.current.$resolved || !serverTime.$resolved) {
+                if (!FinancingRound.currentFinancingRound().$resolved || !serverTime.$resolved) {
                     return;
                 }
 
-                if (FinancingRound.current.active) {
-                    vm.remainingTime = TeaserMetrics.formatRemainingTime(ServerTime.getInterpolatedTimeOfServer(), FinancingRound.current.endDate);
+                if (FinancingRound.currentFinancingRound().active) {
+                    vm.remainingTime = TeaserMetrics.formatRemainingTime(ServerTime.getInterpolatedTimeOfServer(), FinancingRound.currentFinancingRound().endDate);
                 }
                 else {
                     vm.remainingTime = null;
                 }
 
                 // financing round time is now over
-                if (FinancingRound.current.active && !vm.remainingTime) {
+                if (FinancingRound.currentFinancingRound().active && !vm.remainingTime) {
                     // reload the data 500ms later (because the time of the browser could be out of sync with the server time)
                     $timeout(function () {
                         // reload the metrics to see if the financing round is really over

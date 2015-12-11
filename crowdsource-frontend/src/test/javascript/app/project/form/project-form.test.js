@@ -1,11 +1,11 @@
 describe('project form', function () {
 
-    var $httpBackend, $location, projectForm;
+    var $httpBackend, $location, mockedRouteParams, $scope, projectForm, controller, view;
 
     beforeEach(function () {
         module('crowdsource');
         module('crowdsource.templates');
-        module(function(_$analyticsProvider_) {
+        module(function (_$analyticsProvider_) {
             _$analyticsProvider_.virtualPageviews(false);
             _$analyticsProvider_.firstPageview(false);
             _$analyticsProvider_.developerMode(true);
@@ -14,24 +14,28 @@ describe('project form', function () {
         localStorage.clear(); // reset
 
         inject(function ($compile, $rootScope, $templateCache, $controller, _$httpBackend_, _$location_, Project, RemoteFormValidation) {
-            var $scope = $rootScope.$new();
+            $scope = $rootScope.$new();
             $httpBackend = _$httpBackend_;
             $location = _$location_;
 
-            $controller('ProjectFormController as projectForm', {
+            mockedRouteParams = {};
+
+            controller = $controller('ProjectFormController as projectForm', {
                 $scope: $scope,
+                $routeParams: mockedRouteParams,
                 $location: _$location_,
                 Project: Project,
                 RemoteFormValidation: RemoteFormValidation
             });
 
             var template = $templateCache.get('app/project/form/project-form.html');
-            var view = $compile(template)($scope);
+            view = $compile(template)($scope);
 
             $scope.$digest();
             projectForm = new ProjectForm(view);
         });
     });
+
 
     function expectValidationError(inputName, violatedRule) {
         expect(projectForm[inputName].getLabelContainer()).toHaveClass('error');
@@ -55,15 +59,31 @@ describe('project form', function () {
         projectForm.getSubmitButton().click();
     }
 
-    function expectBackendCallAndRespond(statusCode, responseBody) {
-        $httpBackend.expectPOST('/project', {
+    function expectPOSTCallAndRespond(statusCode, responseBody) {
+        $httpBackend.expectPOST('/project', postOrPutExpectation())
+            .respond(statusCode, responseBody);
+    }
+    function expectPUTCallAndRespond(statusCode, responseBody) {
+        $httpBackend.expectPUT('/project', postOrPutExpectation())
+            .respond(statusCode, responseBody);
+    }
+
+    function postOrPutExpectation() {
+        return {
             "title": "Title",
             "shortDescription": "Short description",
             "pledgeGoal": 12500,
             "description": "Looong description"
-        })
-            .respond(statusCode, responseBody);
+        };
     }
+
+    function reInitProjectForm(){
+        projectForm = new ProjectForm(view);
+    }
+
+    it('should show a specific headline when called in creation mode', function () {
+        expect(projectForm.headline.text()).toBe('Deine neue Projektidee');
+    });
 
     it('should show no validation errors when the form is untouched', function () {
         expect(projectForm.getGeneralErrorsContainer()).not.toExist();
@@ -88,8 +108,8 @@ describe('project form', function () {
         expectNoValidationError('description');
     });
 
-    it('should POST the data to the server and redirect to success page', function () {
-        expectBackendCallAndRespond(200, {id: 'aabbcc'});
+    it('should POST the data to the server and redirect to creation success page', function () {
+        expectPOSTCallAndRespond(200, {id: 'aabbcc'});
 
         fillAndSubmitForm('Title', 'Short description', '12500', 'Looong description');
         $httpBackend.flush();
@@ -98,7 +118,7 @@ describe('project form', function () {
     });
 
     it('should disable the submit button and change it\'s text while loading', function () {
-        expectBackendCallAndRespond(200, {id: 'aabbcc'});
+        expectPOSTCallAndRespond(200, {id: 'aabbcc'});
 
         expect(projectForm.getSubmitButton()).toHaveText('Absenden');
         expect(projectForm.getSubmitButton()).not.toBeDisabled();
@@ -118,7 +138,7 @@ describe('project form', function () {
     });
 
     it('should show an unknown error when the backend call results in 500', function () {
-        expectBackendCallAndRespond(500);
+        expectPOSTCallAndRespond(500);
         spyOn($location, 'path');
 
         fillAndSubmitForm('Title', 'Short description', '12500', 'Looong description');
@@ -181,6 +201,67 @@ describe('project form', function () {
         projectForm.description.getInputField().val('').trigger('input');
 
         expectValidationError('description', 'required');
+    });
+
+    it('should initialize form with existing project data when called in edit mode', function () {
+        // Given
+        var existingProject = {
+            "title": "Title 2 Edit",
+            "shortDescription": "Short description 2 Edit",
+            "pledgeGoal": 42000,
+            "description": "Looong description 2 Edit"
+        };
+        mockedRouteParams.projectId = 'pId';
+        $httpBackend.expectGET('/project/pId').respond(200, existingProject);
+
+        // When
+        controller.init(); // Re-Init to use mocked route params causing edit mode
+        $scope.$digest();
+        $httpBackend.flush();
+
+        // Then
+        expect(projectForm.title.getInputField().val()).toBe(existingProject.title);
+        expect(projectForm.shortDescription.getInputField().val()).toBe(existingProject.shortDescription);
+        expect(projectForm.pledgeGoal.getInputField().val()).toBe("" + existingProject.pledgeGoal);
+        expect(projectForm.description.getInputField().val()).toBe(existingProject.description);
+    });
+
+    it('should PUT the data to the server and redirect to edit success page', function () {
+        //Given
+        mockedRouteParams.projectId = 'pId';
+        $httpBackend.expectGET('/project/pId').respond(200, {"title": "Title 2 Edit", "shortDescription": "Short description 2 Edit", "pledgeGoal": 42000, "description": "Looong description 2 Edit"} );
+
+        // When
+        controller.init(); // Re-Init to use mocked route params causing edit mode
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expectPUTCallAndRespond(200, {id: 'aabbcc'});
+        fillAndSubmitForm('Title', 'Short description', '12500', 'Looong description');
+        $httpBackend.flush();
+
+        // Then redirect directly to project
+        expect($location.path()).toBe('/project/aabbcc');
+    });
+
+    it('should show a specific headline when called in edit mode', function () {
+        // Given
+        var existingProject = {
+            "title": "Title 2 Edit",
+            "shortDescription": "Short description 2 Edit",
+            "pledgeGoal": 42000,
+            "description": "Looong description 2 Edit"
+        };
+        mockedRouteParams.projectId = 'pId';
+        $httpBackend.expectGET('/project/pId').respond(200, existingProject);
+
+        // When
+        controller.init(); // Re-Init to use mocked route params
+        $scope.$digest();
+        $httpBackend.flush();
+        reInitProjectForm();
+
+        expect(projectForm.headline.text()).toBe('Projekt Editieren');
     });
 
 });

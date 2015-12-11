@@ -46,6 +46,12 @@
                     controller: 'ProjectDetailsController as projectDetails',
                     title: 'Projektdetails'
                 })
+                .when('/project/:projectId/edit', {
+                    templateUrl: 'app/project/form/project-form.html',
+                    controller: 'ProjectFormController as projectForm',
+                    requireLogin: true,
+                    title: 'Projekt bearbeiten'
+                })
                 .when('/login', {
                     templateUrl: 'app/user/login/user-login.html',
                     controller: 'UserLoginController as login',

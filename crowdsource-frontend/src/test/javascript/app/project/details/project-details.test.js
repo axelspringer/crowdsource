@@ -1,6 +1,8 @@
 describe('project details', function () {
 
     var $scope, $httpBackend, $window, $location, AuthenticationToken, FinancingRound, projectDetails;
+    var financingRoundMock;
+    var PROJECT_CREATOR_MAIL = 'foo.bar@axel.de';
 
     beforeEach(function () {
         module('crowdsource');
@@ -30,21 +32,23 @@ describe('project details', function () {
                 Project: Project
             });
 
-            $httpBackend.whenGET('/financingrounds/mostRecent').respond(200, {active: true});
+            financingRoundMock = {active: true};
+            $httpBackend.whenGET('/financingrounds/mostRecent').respond(200, financingRoundMock);
 
             var template = $templateCache.get('app/project/details/project-details.html');
             projectDetails = $compile(template)($scope);
         });
     });
 
-    function prepareBackendMock(projectStatus) {
+    function prepareProjectMock(projectStatus) {
+
         $httpBackend.expectGET('/project/xyz').respond(200, {
             id: 'xyz',
             status: projectStatus,
             title: 'Title',
             shortDescription: 'Short description',
             description: 'Looong description',
-            creator: {name: 'Foo Bar', email: 'foo.bar@axel.de'},
+            creator: {name: 'Foo Bar', email: PROJECT_CREATOR_MAIL},
             pledgedAmount: 13853,
             pledgeGoal: 20000,
             backers: 7
@@ -53,7 +57,7 @@ describe('project details', function () {
 
     it("should display the project's details that were retrieved from backend", function () {
 
-        prepareBackendMock('PUBLISHED');
+        prepareProjectMock('PUBLISHED');
 
         $scope.$digest();
         $httpBackend.flush();
@@ -80,7 +84,7 @@ describe('project details', function () {
 
         spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
 
-        prepareBackendMock('PUBLISHED');
+        prepareProjectMock('PUBLISHED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -128,7 +132,7 @@ describe('project details', function () {
     });
 
     it("should show text 'Vorgeschlagen' on the to-pledging-form-button when the project is in status 'PROPOSED'", function () {
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
 
         $scope.$digest();
         $httpBackend.flush();
@@ -138,7 +142,7 @@ describe('project details', function () {
     });
 
     it("should show text 'Zur Finanzierung' on the to-pledging-form-button when the project is in status 'PUBLISHED'", function () {
-        prepareBackendMock('PUBLISHED');
+        prepareProjectMock('PUBLISHED');
 
         $scope.$digest();
         $httpBackend.flush();
@@ -148,7 +152,7 @@ describe('project details', function () {
     });
 
     it("should show text 'Abgelehnt' on the to-pledging-form-button when the project is in status 'REJECTED'", function () {
-        prepareBackendMock('REJECTED');
+        prepareProjectMock('REJECTED');
 
         $scope.$digest();
         $httpBackend.flush();
@@ -158,7 +162,7 @@ describe('project details', function () {
     });
 
     it("should show text 'Zurückgestellt' on the to-pledging-form-button when the project is in status 'DEFERRED'", function () {
-        prepareBackendMock('DEFERRED');
+        prepareProjectMock('DEFERRED');
 
         $scope.$digest();
         $httpBackend.flush();
@@ -168,7 +172,7 @@ describe('project details', function () {
     });
 
     it("should show text 'Zu 100% finanziert' on the to-pledging-form-button when the project is in status 'FULLY_PLEDGED'", function () {
-        prepareBackendMock('FULLY_PLEDGED');
+        prepareProjectMock('FULLY_PLEDGED');
 
         $scope.$digest();
         $httpBackend.flush();
@@ -178,7 +182,7 @@ describe('project details', function () {
     });
 
     it("should show the comments directive if the user is logged in", function () {
-        prepareBackendMock('PUBLISHED');
+        prepareProjectMock('PUBLISHED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -192,7 +196,7 @@ describe('project details', function () {
 
     it("should display the publish-button when a project is not published and the user is admin", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -209,7 +213,7 @@ describe('project details', function () {
 
     it("should display the publish-button when a project is deferred and the user is admin", function () {
 
-        prepareBackendMock('DEFERRED');
+        prepareProjectMock('DEFERRED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -226,7 +230,7 @@ describe('project details', function () {
 
     it("should not display the publish-button when a project is not published and the user is not admin", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -240,7 +244,7 @@ describe('project details', function () {
 
     it("should not display the publish-button when a project is published", function () {
 
-        prepareBackendMock('PUBLISHED');
+        prepareProjectMock('PUBLISHED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -254,7 +258,7 @@ describe('project details', function () {
 
     it("should not display the publish-button when a project is fully pledged", function () {
 
-        prepareBackendMock('FULLY_PLEDGED');
+        prepareProjectMock('FULLY_PLEDGED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -269,7 +273,7 @@ describe('project details', function () {
 
     it("should display the reject-button when a project is not reject and the user is admin", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -286,7 +290,7 @@ describe('project details', function () {
 
     it("should not display the reject-button when a project is not published and the user is not admin", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -300,7 +304,7 @@ describe('project details', function () {
 
     it("should not display the reject-button when a project is rejected", function () {
 
-        prepareBackendMock('REJECTED');
+        prepareProjectMock('REJECTED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -314,7 +318,7 @@ describe('project details', function () {
 
     it("should not display the reject-button when a project is fully pledged", function () {
 
-        prepareBackendMock('FULLY_PLEDGED');
+        prepareProjectMock('FULLY_PLEDGED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -328,7 +332,7 @@ describe('project details', function () {
 
     it("should display the defer-button when a project is not rejected and the user is admin and no financing round is active", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -346,7 +350,7 @@ describe('project details', function () {
 
     it("should not display the defer-button when there is an active financing round and the user is admin", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -361,7 +365,7 @@ describe('project details', function () {
 
     it("should not display the defer-button when a project is deferred", function () {
 
-        prepareBackendMock('DEFERRED');
+        prepareProjectMock('DEFERRED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -376,7 +380,7 @@ describe('project details', function () {
 
     it("should not display the defer-button when a project is fully pledged", function () {
 
-        prepareBackendMock('FULLY_PLEDGED');
+        prepareProjectMock('FULLY_PLEDGED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -389,9 +393,150 @@ describe('project details', function () {
         expect(projectDetails.find('.defer-button')).not.toExist();
     });
 
+    it("should display disabled project edit-button when a project is FULLY_PLEDGED and the user is admin", function () {
+
+        prepareProjectMock('FULLY_PLEDGED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).toBeDisabled();
+    });
+
+    it("should display enabled project edit-button when a project is not FULLY_PLEDGED and the user is admin", function () {
+
+        prepareProjectMock('PUBLISHED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+        financingRoundMock.active = false;
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).toExist();
+        expect(projectDetails.find('.to-edit-form-button')).not.toBeDisabled();
+    });
+
+    it("should display enabled project edit-button when a project is not FULLY_PLEDGED and the user is creator", function () {
+
+        prepareProjectMock('PUBLISHED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER'], email: PROJECT_CREATOR_MAIL });
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+        financingRoundMock.active = false;
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).toExist();
+        expect(projectDetails.find('.to-edit-form-button')).not.toBeDisabled();
+    });
+
+    it("should display disabled project edit-button when a project is not FULLY_PLEDGED and within financing round and the user is creator", function () {
+
+        prepareProjectMock('PUBLISHED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER'], email: PROJECT_CREATOR_MAIL });
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+        financingRoundMock.active = true;
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).toExist();
+        expect(projectDetails.find('.to-edit-form-button')).toBeDisabled();
+    });
+
+    it("should display disabled project edit-button when a project is not FULLY_PLEDGED and within financing round and the user is admin", function () {
+
+        prepareProjectMock('PUBLISHED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+        financingRoundMock.active = true;
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).toExist();
+        expect(projectDetails.find('.to-edit-form-button')).toBeDisabled();
+    });
+
+    it("should display disabled project edit-button when a project is FULLY_PLEDGED", function () {
+
+        prepareProjectMock('FULLY_PLEDGED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+        financingRoundMock.active = false;
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).toExist();
+        expect(projectDetails.find('.to-edit-form-button')).toBeDisabled();
+    });
+
+    it("should display enabled project edit-button when a project is PROPOSED even if financing round is active", function () {
+
+        prepareProjectMock('PROPOSED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+        financingRoundMock.active = true;
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).toExist();
+        expect(projectDetails.find('.to-edit-form-button')).not.toBeDisabled();
+    });
+
+    it("should display enabled project edit-button when a project is DEFERRED even if financing round is active", function () {
+
+        prepareProjectMock('DEFERRED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER'], email: PROJECT_CREATOR_MAIL});
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+        financingRoundMock.active = true;
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).toExist();
+        expect(projectDetails.find('.to-edit-form-button')).not.toBeDisabled();
+    });
+
+    it("should not display project edit-button when a project is PUBLISHED and no financing round is active and the user is not creator and not admin", function () {
+
+        prepareProjectMock('PUBLISHED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER'], email: 'aNob@dy.usr'});
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+        financingRoundMock.active = false;
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        expect(projectDetails.find('.to-edit-form-button')).not.toExist();
+    });
+
     it("should send the patch-request to the backend when the publish-button is clicked and confirmed", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -411,7 +556,7 @@ describe('project details', function () {
 
     it("should not send the patch-request to the backend when the publish confirmation is canceled", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -428,7 +573,7 @@ describe('project details', function () {
 
     it("should send the patch-request to the backend when the reject-button is clicked and confirmed", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -447,7 +592,7 @@ describe('project details', function () {
 
     it("should not send the patch-request to the backend when the reject confirmation is canceled", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -462,7 +607,7 @@ describe('project details', function () {
 
     it("should send the patch-request to the backend when the defer-button is clicked and confirmed", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -483,7 +628,7 @@ describe('project details', function () {
 
     it("should not send the patch-request to the backend when the defer confirmation is canceled", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -497,10 +642,9 @@ describe('project details', function () {
         projectDetails.find('.defer-button').click();
     });
 
-
     it("should redirect to unknown-error page when the reject-request fails", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -519,7 +663,7 @@ describe('project details', function () {
 
     it("should redirect to unknown-error page when the publish-request fails", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
@@ -538,7 +682,7 @@ describe('project details', function () {
 
     it("should redirect to unknown-error page when the defer-request fails", function () {
 
-        prepareBackendMock('PROPOSED');
+        prepareProjectMock('PROPOSED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 

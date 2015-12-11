@@ -1,4 +1,5 @@
 angular.module('crowdsource')
+
     .controller('ProjectDetailsController', function ($window, $routeParams, $location, $q, Project, FinancingRound, Authentication) {
 
     var vm = this;
@@ -86,12 +87,17 @@ angular.module('crowdsource')
         });
     };
 
-    vm.isPublishable = function () {
-        if (!vm.project.$resolved) {
-            return false;
-        }
-        return vm.project.status == 'PROPOSED' || vm.project.status == 'REJECTED' || vm.project.status == 'DEFERRED';
+    vm.goToEdit = function () {
+        var path = '/project/' + vm.project.id + '/edit';
+        $location.path(path);
     };
+
+    vm.isPublishable = function () {
+            if (!vm.project.$resolved) {
+                return false;
+            }
+            return vm.project.status == 'PROPOSED' || vm.project.status == 'REJECTED' || vm.project.status =='DEFERRED';
+        };
 
     vm.isRejectable = function () {
         if (!vm.project.$resolved) {
@@ -113,5 +119,23 @@ angular.module('crowdsource')
             || vm.project.status == 'DEFERRED' || vm.project.status == 'PROPOSED';
     };
 
-});
+    vm.editButtonVisibleForUser = function () {
+        return vm.auth.currentUser.hasRole("ADMIN") || Project.isCreator(vm.project, vm.auth.currentUser);
+    };
 
+    vm.editButtonEnabled = function () {
+        var financingRoundActive = (FinancingRound.currentFinancingRound() == undefined || FinancingRound.currentFinancingRound().active);
+        switch (vm.project.status) {
+            case 'FULLY_PLEDGED':
+                return false;
+            case 'PROPOSED':
+            case 'DEFERRED':
+                return true;
+            case 'PUBLISHED':
+                return !financingRoundActive;
+            default:
+                return false;
+        }
+    };
+
+});
