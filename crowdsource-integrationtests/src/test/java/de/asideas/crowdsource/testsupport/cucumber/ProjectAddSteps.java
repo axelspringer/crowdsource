@@ -26,7 +26,10 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class AddProjectSteps {
+public class ProjectAddSteps {
+
+    public static final String PROJECT_DESCRIPTION_MARKDOWN = "# This is the project description text.\n\n Due to it is rendered using markdown we can emphasize `code like that`!";
+    public static final String PROJECT_DESCRIPTION_RENDERED = "<h3>This is the project description text.</h3><p>Due to it is rendered using markdown we can emphasize <code>code like that</code>!</p>";
 
     @Autowired
     private WebDriverProvider webDriverProvider;
@@ -88,7 +91,7 @@ public class AddProjectSteps {
                 " Mmmmm mmmmm mmmmm mmm mmmm, mmmmmmmmmm mmmmmmmmmm mmmmm, mmm mmmm mmmmmm mmmmmm mmmmmm mmmmmmmm mm mmmmmm");
 
         addProjectForm.setPledgeGoal("25000");
-        addProjectForm.setDescription("Loooong description\nwith newlines");
+        addProjectForm.setDescription(PROJECT_DESCRIPTION_MARKDOWN);
         addProjectForm.submit();
     }
 
@@ -119,7 +122,7 @@ public class AddProjectSteps {
 
         assertThat(projectDetailPage.getTitle(), startsWith(randomProjectTitlePrefix));
         assertThat(projectDetailPage.getShortDescription(), startsWith(randomProjectShortDescriptionPrefix));
-        assertThat(projectDetailPage.getDescription(), is("Loooong description\nwith newlines"));
+        assertThat(projectDetailPage.getDescriptionAsHtml(), is(PROJECT_DESCRIPTION_RENDERED));
 
         ProjectStatusWidget projectStatusWidget = projectDetailPage.getProjectStatusWidget();
         assertThat(projectStatusWidget.getProgressBarValue(), is("0px"));
