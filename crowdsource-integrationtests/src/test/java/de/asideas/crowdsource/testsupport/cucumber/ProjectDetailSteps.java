@@ -1,6 +1,5 @@
 package de.asideas.crowdsource.testsupport.cucumber;
 
-import cucumber.api.PendingException;
 import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
@@ -35,6 +34,8 @@ import static org.junit.Assert.assertTrue;
 public class ProjectDetailSteps {
 
     public static final int PLEDGED_AMOUNT = 10;
+    public static final String PROJECT_DESCRIPTION_MARKDOWN = "# This is the project description text.\n\n Due to it is rendered using markdown we can emphasize `code like that`!";
+    public static final String PROJECT_DESCRIPTION_RENDERED = "<h3>This is the project description text.</h3><p>Due to it is rendered using markdown we can emphasize <code>code like that</code>!</p>";
 
     @Autowired
     private ProjectsPage projectsPage;
@@ -85,7 +86,7 @@ public class ProjectDetailSteps {
         createdProject.setTitle("T" + RandomStringUtils.randomAlphanumeric(6));
         createdProject.setShortDescription("Short description " + RandomStringUtils.randomAlphanumeric(16));
         createdProject.setPledgeGoal(pledgeGoal);
-        createdProject.setDescription("This is the project description text." + RandomStringUtils.random(1000, "\nabc").trim());
+        createdProject.setDescription(PROJECT_DESCRIPTION_MARKDOWN);
 
         CrowdSourceClient.AuthToken authToken = crowdSourceClient.authorizeWithDefaultUser();
         createdProject = crowdSourceClient.createProject(createdProject, authToken).getBody();
@@ -132,7 +133,7 @@ public class ProjectDetailSteps {
 
         assertThat(projectDetailPage.getTitle(), is(createdProject.getTitle()));
         assertThat(projectDetailPage.getShortDescription(), is(createdProject.getShortDescription()));
-        assertThat(projectDetailPage.getDescription(), is(createdProject.getDescription()));
+        assertThat(projectDetailPage.getDescriptionAsHtml(), is(PROJECT_DESCRIPTION_RENDERED));
 
         ProjectStatusWidget projectStatusWidget = projectDetailPage.getProjectStatusWidget();
         assertThat(projectStatusWidget.getProgressBarValue(), is("0px"));

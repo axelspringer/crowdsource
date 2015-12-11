@@ -1,7 +1,7 @@
 describe('project details', function () {
 
     var $scope, $httpBackend, $window, $location, AuthenticationToken, FinancingRound, projectDetails;
-    var financingRoundMock;
+    var financingRoundMock, projectMock;
     var PROJECT_CREATOR_MAIL = 'foo.bar@axel.de';
 
     beforeEach(function () {
@@ -35,29 +35,32 @@ describe('project details', function () {
             financingRoundMock = {active: true};
             $httpBackend.whenGET('/financingrounds/mostRecent').respond(200, financingRoundMock);
 
+            projectMock = {
+                id: 'xyz',
+                status: 'PROPOSED',
+                title: 'Title',
+                shortDescription: 'Short description',
+                description: 'Looong description',
+                creator: {name: 'Foo Bar', email: PROJECT_CREATOR_MAIL},
+                pledgedAmount: 13853,
+                pledgeGoal: 20000,
+                backers: 7
+            };
+
             var template = $templateCache.get('app/project/details/project-details.html');
             projectDetails = $compile(template)($scope);
         });
     });
 
     function prepareProjectMock(projectStatus) {
-
-        $httpBackend.expectGET('/project/xyz').respond(200, {
-            id: 'xyz',
-            status: projectStatus,
-            title: 'Title',
-            shortDescription: 'Short description',
-            description: 'Looong description',
-            creator: {name: 'Foo Bar', email: PROJECT_CREATOR_MAIL},
-            pledgedAmount: 13853,
-            pledgeGoal: 20000,
-            backers: 7
-        });
+        projectMock.status = projectStatus;
+        $httpBackend.expectGET('/project/xyz').respond(200, projectMock);
+        return projectMock;
     }
 
     it("should display the project's details that were retrieved from backend", function () {
 
-        prepareProjectMock('PUBLISHED');
+        var expProject = prepareProjectMock('PUBLISHED');
 
         $scope.$digest();
         $httpBackend.flush();
@@ -78,6 +81,23 @@ describe('project details', function () {
         expect(projectDetails.find('.to-pledging-form-button')).toHaveAttr('analytics-event', 'GoToFinancing');
 
         expect(projectDetails.find('project-comments')).not.toExist();
+    });
+
+    it("should display rendered markdown for project description", function () {
+        projectMock.description = "# First Heading in Markdown is configured to be 3\n\n " +
+            "| Tables        | are           |\n" +
+            "| ------------- | ------------- |\n" +
+            "| supported     | as well       |\n";
+
+        prepareProjectMock('PUBLISHED');
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        var actualDescriptionHtml = projectDetails.find('.project-description .ng-binding')
+                .html().replace(/(\r\n|\n|\r)/gm,"");
+        expect(actualDescriptionHtml).toBe("<h3>First Heading in Markdown is configured to be 3</h3>" +
+            "<table><thead><tr><th>Tables</th><th>are</th></tr></thead><tbody><tr><td>supported</td><td>as well</td></tr></tbody></table>");
     });
 
     it("should display the project creator's email if an admin views the details", function () {

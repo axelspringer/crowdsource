@@ -82,7 +82,7 @@
                           required reset-remote-validation></textarea>
             </label>
 
-            <div ng-show="projectForm.md.preview" markdown-to-html="projectForm.project.description"></div>
+            <div class="project-description-preview" ng-show="projectForm.md.preview" markdown-to-html="projectForm.project.description"></div>
 
             <button class="description-preview button tiny secondary round"
                     ng-class="{success: projectForm.md.preview}"
