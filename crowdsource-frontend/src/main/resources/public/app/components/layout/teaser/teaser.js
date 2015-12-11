@@ -98,7 +98,7 @@ angular.module('crowdsource')
                 var days = Math.floor(diff.asDays());
                 if (days > 6) {
                     return days + ' Tage';
-                }else if (days > 0){
+                } else if (days > 0) {
                     remainingTime += days + 'd ';
                 }
             }

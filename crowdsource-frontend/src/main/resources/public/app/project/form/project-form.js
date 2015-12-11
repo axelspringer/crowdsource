@@ -1,6 +1,6 @@
 angular.module('crowdsource')
 
-    .controller('ProjectFormController', function ($location, $routeParams, $sce, Project, RemoteFormValidation) {
+    .controller('ProjectFormController', function ($location, $routeParams, Project, RemoteFormValidation) {
 
         var vm = this;
         vm.md = {
