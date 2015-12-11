@@ -73,8 +73,8 @@ public class AddProjectSteps {
         addProjectForm.waitForPageLoadNewProject();
     }
 
-    @When("^he submits the form with valid project data$")
-    public void he_submits_the_form_with_valid_project_data() throws Throwable {
+    @When("^he submits the project form with valid project data$")
+    public void he_submits_the_project_form_with_valid_project_data() throws Throwable {
         PageFactory.initElements(webDriver, addProjectForm);
 
         randomProjectTitlePrefix = "Title" + RandomStringUtils.randomAlphanumeric(4);

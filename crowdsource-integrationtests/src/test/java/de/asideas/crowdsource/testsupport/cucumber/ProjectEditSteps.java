@@ -9,8 +9,6 @@ import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectAddAndModificationForm;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectDetailPage;
-import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectsPage;
-import de.asideas.crowdsource.testsupport.selenium.SeleniumWait;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverProvider;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
@@ -28,9 +26,6 @@ public class ProjectEditSteps {
     public static final String PROJECT_DESCRIPTION_EDITED_RENDERED = "<h3>This is the project description text.</h3><p>.. that was edited recently.</p>";
 
     @Autowired
-    private ProjectsPage projectsPage;
-
-    @Autowired
     private WebDriverProvider webDriverProvider;
 
     @Autowired
@@ -39,8 +34,6 @@ public class ProjectEditSteps {
     @Autowired
     private ProjectDetailSteps projectDetailSteps;
 
-    @Autowired
-    private SeleniumWait seleniumWait;
 
     @Autowired
     private ProjectAddAndModificationForm projectAddAndModificationForm;
@@ -75,6 +68,7 @@ public class ProjectEditSteps {
             }
         }
     }
+
     @When("^the user clicks the edit button$")
     public void the_user_clicks_the_edit_button(){
         projectDetailPage.clickEditButton();
@@ -86,7 +80,6 @@ public class ProjectEditSteps {
         projectAddAndModificationForm.waitForPageLoadEditProject();
         assertThat(webDriver.getCurrentUrl(), is(projectAddAndModificationForm.editUrl(projectDetailSteps.getCreatedProject().getId())));
     }
-
 
     @And("^the form input fields are initialized with the project's data.*$")
     public void the_Form_Input_Fields_Are_Initialized_With_The_Project_SData() throws Throwable {
@@ -125,8 +118,8 @@ public class ProjectEditSteps {
         projectAddAndModificationForm.clickPreviewButton();
     }
 
-    @And("^he submits the form.*$")
-    public void he_submits_the_form(){
+    @And("^he submits the edit project form.*$")
+    public void he_submits_the_edit_project_form(){
         projectAddAndModificationForm.submit();
     }
 

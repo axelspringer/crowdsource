@@ -19,7 +19,7 @@ Scenario: A user modifies a project
   And a user is logged in
   And he directly opens the project edit view
   When he adapts the project details
-  And he submits the form
+  And he submits the edit project form
   Then he is redirected to the project detail page containing updated project data
 
 Scenario: While modifying a project a user displays the rendered markdown description preview

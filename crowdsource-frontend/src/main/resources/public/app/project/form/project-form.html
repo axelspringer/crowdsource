@@ -69,10 +69,10 @@
         <div class="form-controls-description">
             <label form-group="description">
 
-                <span form-label-valid="description">Beschreibung</span>
+                <span form-label-valid="description">Beschreibung (Du kannst <a onclick="window.open('https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet', 'newwindow', 'width=800, height=600');"><strong>Markdown (?)</strong></a> verweenden.)</span>
 
                 <span form-label-invalid="description" ng-messages="projectForm.form.description.$error">
-                    <span ng-message="required">Bitte gib eine ausführliche Beschreibung an. Du kannst <strong>Markdown</strong> verweenden.</span>
+                    <span ng-message="required">Bitte gib eine ausführliche Beschreibung an.</span>
                 </span>
 
                 <textarea name="description" ng-model="projectForm.project.description"
@@ -82,13 +82,15 @@
                           required reset-remote-validation></textarea>
             </label>
 
-            <div class="project-description-preview" ng-show="projectForm.md.preview" markdown-to-html="projectForm.project.description"></div>
+            <div class="project-description-preview" ng-show="projectForm.md.preview" markdown-to-html="projectForm.project.description != undefined ? projectForm.project.description : ''"></div>
 
-            <button class="description-preview button tiny secondary round"
+            <button class="description-preview button tiny ultra-tiny secondary round"
                     ng-class="{success: projectForm.md.preview}"
-                    ng-click="projectForm.switchPreview()" >
+                    ng-click="projectForm.switchPreview()"
+                    title="Vorschau">
                 <span class="project-form__icon--preview ng-binding"></span>
             </button>
+            <!--class="project-form__icon&#45;&#45;preview ng-binding"-->
         </div>
 
         <button type="submit" class="crwd-success radius shadow margin-top" ng-click="projectForm.submitProject()" ng-disabled="projectForm.loading"
