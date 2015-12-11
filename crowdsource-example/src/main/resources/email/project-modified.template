@@ -1,6 +1,6 @@
 Hallo #{#recipientName},
 
-Das folgende Projekt wurde von #{#modifierName} editiert.
+das folgende Projekt wurde von #{#modifierName} editiert.
 Weitere Informationen hinsichtlich des Prozesses kannst Du der FAQ entnehmen.
 
 Zum Projekt:
