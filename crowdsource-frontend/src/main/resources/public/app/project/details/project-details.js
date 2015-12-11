@@ -120,9 +120,7 @@ angular.module('crowdsource')
     };
 
     vm.editButtonVisibleForUser = function () {
-        var res = vm.auth.currentUser.hasRole("ADMIN") || Project.isCreator(vm.project, vm.auth.currentUser);
-        //console.log("EditBtn Visible: " + res);
-        return res;
+        return vm.auth.currentUser.hasRole("ADMIN") || Project.isCreator(vm.project, vm.auth.currentUser);
     };
 
     vm.editButtonEnabled = function () {

@@ -243,7 +243,7 @@ public class UserNotificationServiceTest {
     private void assertCreatorModifierAndAdminNotifiedOfProjectEdit(UserEntity creator, UserEntity modifier, UserEntity admin, List<SimpleMailMessage> capturedMessages) {
         final String projectLink = "https://crowd.asideas.de#/project/proj3ctId";
         final String expMessage = "Hallo %s,\n\n" +
-                "Das folgende Projekt wurde von %s editiert.\n" +
+                "das folgende Projekt wurde von %s editiert.\n" +
                 "Weitere Informationen hinsichtlich des Prozesses kannst Du der FAQ entnehmen.\n\n" +
                 "Zum Projekt:\n\n%s\n\n" +
                 "Mit freundlichen Grüßen\nDein CrowdSource Team";
