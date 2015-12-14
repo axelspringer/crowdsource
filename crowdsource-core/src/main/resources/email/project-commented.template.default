@@ -1,6 +1,6 @@
 Hallo #{#recipientName},
 
-zu Deinem Projekt "#{#projectName}" wurde ein Kommentar hinzugefügt:
+zu Deinem Projekt "#{#projectName}" wurde ein Kommentar von #{#commentingUser} hinzugefügt:
 
 "#{#commentExcerpt}"
 

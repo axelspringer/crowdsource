@@ -31,10 +31,9 @@ public class CommentEntity {
     @LastModifiedDate
     private DateTime lastModifiedDate;
 
-    public CommentEntity(ProjectEntity projectEntity, UserEntity userEntity, String comment) {
-
+    public CommentEntity(ProjectEntity projectEntity, UserEntity commentingUser, String comment) {
         this.project = projectEntity;
-        this.user = userEntity;
+        this.user = commentingUser;
         this.comment = comment;
     }
 

@@ -55,6 +55,15 @@ public class MailTemplateConfig {
         return createExpressionFromFile("/email/project-modified.template");
     }
 
+    @Bean
+    public Expression projectCommentedEmailTemplate() {
+        return createExpressionFromFile("/email/project-commented.template");
+    }
+
+    public String toDefaultTemplatePath(String templatePath) {
+        return templatePath + ".default";
+    }
+
     private Expression createExpressionFromFile(final String templatePath) {
         try {
             final InputStream resourceAsStream = getInputStreamForTemplateOrDefaultTemplate(templatePath);
@@ -74,9 +83,5 @@ public class MailTemplateConfig {
             resourceAsStream = getClass().getResourceAsStream(toDefaultTemplatePath(templatePath));
         }
         return resourceAsStream;
-    }
-
-    public String toDefaultTemplatePath(String templatePath) {
-        return templatePath + ".default";
     }
 }
