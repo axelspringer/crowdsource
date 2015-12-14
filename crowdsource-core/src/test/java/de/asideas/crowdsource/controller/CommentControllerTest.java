@@ -1,27 +1,19 @@
 package de.asideas.crowdsource.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.asideas.crowdsource.domain.model.CommentEntity;
-import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
+import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.presentation.Comment;
-import de.asideas.crowdsource.domain.presentation.project.Project;
-import de.asideas.crowdsource.domain.service.user.UserNotificationService;
-import de.asideas.crowdsource.repository.CommentRepository;
-import de.asideas.crowdsource.repository.ProjectRepository;
-import de.asideas.crowdsource.repository.UserRepository;
-import de.asideas.crowdsource.service.UserService;
+import de.asideas.crowdsource.service.CommentService;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.expression.Expression;
 import org.springframework.http.MediaType;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -38,6 +30,7 @@ import java.util.Collections;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
@@ -58,14 +51,10 @@ public class CommentControllerTest {
     private final static String NON_EXISTING_PROJECT_ID = "I_DONT_EXIST";
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Autowired
-    private CommentRepository commentRepository;
+    private Comment aComment;
 
     @Autowired
-    private ProjectRepository projectRepository;
-
-    @Autowired
-    private UserRepository userRepository;
+    private CommentService commentService;
 
     @Resource
     private WebApplicationContext webApplicationContext;
@@ -77,32 +66,29 @@ public class CommentControllerTest {
 
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
 
-        reset(projectRepository);
-        reset(commentRepository);
-        reset(userRepository);
+        reset(commentService);
 
         final UserEntity userEntity = new UserEntity("test.name@test.de", "password");
-        final ProjectEntity projectEntity = new ProjectEntity(userEntity, new Project(), new FinancingRoundEntity());
-        when(userRepository.findByEmail(EXISTING_USER_MAIL)).thenReturn(userEntity);
-        when(projectRepository.findOne(EXISTING_PROJECT_ID)).thenReturn(projectEntity);
-        when(commentRepository.findByProject(projectEntity)).thenReturn(Collections.singletonList(new CommentEntity(projectEntity, userEntity, "some comment")));
+
+        aComment = new Comment(new DateTime(), userEntity.fullNameFromEmail(), "some comment");
+        when(commentService.loadCommentsByProject(EXISTING_PROJECT_ID)).thenReturn(Collections.singletonList(aComment));
     }
 
     @Test
-    public void testComments() throws Exception {
+    public void comments() throws Exception {
 
         final MvcResult mvcResult = mockMvc.perform(get("/project/" + EXISTING_PROJECT_ID + "/comments"))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        assertThat(mvcResult.getResponse().getContentAsString(), is("[{\"created\":null,\"userName\":\"Test Name\",\"comment\":\"some comment\"}]"));
+        assertThat(
+                mvcResult.getResponse().getContentAsString(),
+                is("[{\"created\":" + aComment.getCreated().getMillis()+ ",\"userName\":\"Test Name\",\"comment\":\"some comment\"}]"));
 
-        verify(projectRepository).findOne(EXISTING_PROJECT_ID);
-        verify(commentRepository).findByProject(any(ProjectEntity.class));
     }
 
     @Test
-    public void testStoreCommentValidComment() throws Exception {
+    public void storeComment_validComment() throws Exception {
 
         Comment comment = new Comment();
         comment.setComment("message");
@@ -112,16 +98,13 @@ public class CommentControllerTest {
                 .content(mapper.writeValueAsString(comment)))
                 .andExpect(status().isCreated());
 
-        verify(projectRepository).findOne(EXISTING_PROJECT_ID);
-        verify(userRepository).findByEmail(EXISTING_USER_MAIL);
-        verify(commentRepository).save(any(CommentEntity.class));
+        verify(commentService).addComment(comment, EXISTING_PROJECT_ID, EXISTING_USER_MAIL);
     }
 
     @Test
-    public void testStoreInvalidComment() throws Exception {
+    public void storeComment_returnsBadRequestOnEmptyCommentMessage() throws Exception {
 
-        Comment comment = new Comment();
-        comment.setComment("");
+        Comment comment = new Comment(null, null, "");
 
         final MvcResult mvcResult = mockMvc.perform(post("/project/" + EXISTING_PROJECT_ID + "/comment")
                 .principal(new UsernamePasswordAuthenticationToken(EXISTING_USER_MAIL, "password"))
@@ -131,43 +114,39 @@ public class CommentControllerTest {
 
         assertThat(mvcResult.getResponse().getContentAsString(), is("{\"errorCode\":\"field_errors\",\"fieldViolations\":{\"comment\":\"may not be empty\"}}"));
 
-        verify(projectRepository, never()).findOne(EXISTING_PROJECT_ID);
-        verify(userRepository, never()).findByEmail(EXISTING_USER_MAIL);
-        verify(commentRepository, never()).save(any(CommentEntity.class));
+        verify(commentService, never()).addComment(any(Comment.class), any(String.class), any(String.class));
     }
 
     @Test
-    public void testStoreCommentInvalidProjectId() throws Exception {
+    public void storeComment_shouldThrowNotFoundExceptionOnUnknownProjectId() throws Exception {
 
         Comment comment = new Comment();
         comment.setComment("this is an example comment that respects the length constraint");
+
+        doThrow(new ResourceNotFoundException()).when(commentService).addComment(any(Comment.class), any(String.class), any(String.class));
+
         mockMvc.perform(post("/project/" + NON_EXISTING_PROJECT_ID + "/comment")
                 .principal(new UsernamePasswordAuthenticationToken(EXISTING_USER_MAIL, "password"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(comment)))
                 .andExpect(status().isNotFound());
-
-        verify(projectRepository).findOne(NON_EXISTING_PROJECT_ID);
-        verify(userRepository, never()).findByEmail(EXISTING_USER_MAIL);
-        verify(commentRepository, never()).save(any(CommentEntity.class));
     }
 
     @Test
-    public void testStoreCommentUserNotFound() throws Exception {
+    public void storeComment_ShouldThrowUnauthorizedIfUserNotFound() throws Exception {
 
         Comment comment = new Comment();
         comment.setComment("this is an example comment that respects the length constraint");
+
+        doThrow(new NotAuthorizedException("No user found with email " + NON_EXISTING_USER_MAIL)).when(commentService)
+                .addComment(any(Comment.class), any(String.class), any(String.class));
+
         mockMvc.perform(post("/project/" + EXISTING_PROJECT_ID + "/comment")
                 .principal(new UsernamePasswordAuthenticationToken(NON_EXISTING_USER_MAIL, "password"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(mapper.writeValueAsString(comment)))
                 .andExpect(status().isUnauthorized());
-
-        verify(projectRepository).findOne(EXISTING_PROJECT_ID);
-        verify(userRepository).findByEmail(NON_EXISTING_USER_MAIL);
-        verify(commentRepository, never()).save(any(CommentEntity.class));
     }
-
 
     @Configuration
     @EnableWebMvc
@@ -184,78 +163,8 @@ public class CommentControllerTest {
         }
 
         @Bean
-        public CommentRepository commentRepository() {
-            return mock(CommentRepository.class);
-        }
-
-        @Bean
-        public ProjectRepository projectRepository() {
-            return mock(ProjectRepository.class);
-        }
-
-        @Bean
-        public UserRepository userRepository() {
-            return mock(UserRepository.class);
-        }
-
-        @Bean
-        public UserNotificationService userNotificationService() {
-            return mock(UserNotificationService.class);
-        }
-
-        @Bean
-        public JavaMailSender javaMailSender() {
-            return mock(JavaMailSender.class);
-        }
-
-        @Bean
-        public UserService userService(UserRepository userRepository, UserNotificationService userNotificationService) {
-            return new UserService(userRepository, userNotificationService);
-        }
-
-        @Bean
-        public Expression activationEmailTemplate() {
-            return mock(Expression.class);
-        }
-
-        @Bean
-        public Expression newProjectEmailTemplate() {
-            return mock(Expression.class);
-        }
-
-        @Bean
-        public Expression passwordForgottenEmailTemplate() {
-            return mock(Expression.class);
-        }
-
-        @Bean
-        public Expression projectPublishedEmailTemplate() {
-            return mock(Expression.class);
-        }
-
-        @Bean
-        public Expression projectRejectedEmailTemplate() {
-            return mock(Expression.class);
-        }
-
-        @Bean
-        public Expression projectDeferredEmailTemplate() {
-            return mock(Expression.class);
-        }
-
-        @Bean
-        public Expression projectModifiedEmailTemplate() {
-            return mock(Expression.class);
-        }
-
-        @Bean
-        public Expression projectCommentedEmailTemplate() {
-            return mock(Expression.class);
-        }
-
-        @Bean
-        public AsyncTaskExecutor taskExecutorSmtp() {
-            return mock(AsyncTaskExecutor.class);
+        public CommentService commentService(){
+            return mock(CommentService.class);
         }
     }
 }

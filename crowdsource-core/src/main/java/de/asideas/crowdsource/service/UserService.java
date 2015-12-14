@@ -27,11 +27,9 @@ public class UserService {
 
     public UserEntity getUserByEmail(String email) {
 
-        email = email.toLowerCase();
-
-        UserEntity userEntity = userRepository.findByEmail(email);
+        UserEntity userEntity = userRepository.findByEmail(email.toLowerCase());
         if (userEntity == null) {
-            throw new NotAuthorizedException("No user found with email " + email);
+            throw new NotAuthorizedException("No user found with email " + email.toLowerCase());
         }
         return userEntity;
     }
