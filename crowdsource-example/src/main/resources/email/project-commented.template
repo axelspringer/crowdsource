@@ -1,0 +1,12 @@
+Hallo #{#recipientName},
+
+zu Deinem Projekt "#{#projectName}" wurde ein Kommentar hinzugefügt:
+
+"#{#commentExcerpt}"
+
+Zu Deinem Projekt:
+
+#{#link}
+
+Mit freundlichen Grüßen
+Dein CrowdSource Team
