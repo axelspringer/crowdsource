@@ -4,7 +4,7 @@ Feature: Add project
     Given a user is logged in
     When he clicks on the New Project link in the navigation bar
     Then he is redirected to the project creation page
-    When he submits the form with valid project data
+    When he submits the project form with valid project data
     Then the project creation success page is shown
     When he clicks the project details link
     Then the project details page shows the new project
@@ -16,7 +16,7 @@ Feature: Add project
     Given a user is logged in
     When he clicks on the New Project link in the navigation bar
     Then he is redirected to the project creation page
-    When he submits the form with valid project data
+    When he submits the project form with valid project data
     Then the project creation success page is shown
     When an admin publishs the project
     When he clicks the project details link
@@ -29,7 +29,7 @@ Feature: Add project
     Given a user is logged in
     When he clicks on the New Project link in the navigation bar
     Then he is redirected to the project creation page
-    When he submits the form with valid project data
+    When he submits the project form with valid project data
     Then the project creation success page is shown
     When an admin defers the project
     When he clicks the project details link

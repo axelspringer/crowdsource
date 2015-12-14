@@ -37,7 +37,7 @@ public class ProjectDetailPage {
     @FindBy(className = "project-short-description")
     private WebElement shortDescription;
 
-    @FindBy(css = ".project-details .project-description")
+    @FindBy(css = ".project-details .project-description .ng-binding")
     private WebElement description;
 
     @FindBy(className = "comments")
@@ -78,6 +78,9 @@ public class ProjectDetailPage {
 
     public String getDescription() {
         return description.getText();
+    }
+    public String getDescriptionAsHtml() {
+        return description.getAttribute("innerHTML").replaceAll("\\r|\\n", "").trim();
     }
 
     public String getShortDescription() {

@@ -85,7 +85,7 @@
 
     <p class="project-short-description">{{ projectDetails.project.shortDescription}}</p>
 
-    <div class="project-description">{{ projectDetails.project.description }}</div>
+    <div class="project-description" markdown-to-html="projectDetails.project.description"></div>
 
     <project-pledging-form id="project-pledging-form" project="projectDetails.project"></project-pledging-form>
 

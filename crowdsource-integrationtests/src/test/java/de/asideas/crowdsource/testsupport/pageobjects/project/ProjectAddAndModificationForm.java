@@ -37,6 +37,13 @@ public class ProjectAddAndModificationForm {
     @FindBy(css = ".project-form button[type='submit']")
     private WebElement submitButton;
 
+    @FindBy(css = ".description-preview.button")
+    private WebElement previewButton;
+
+    @FindBy(css = ".project-description-preview .ng-binding")
+    private WebElement descriptionPreview;
+
+
     @Autowired
     private SeleniumWait wait;
 
@@ -94,8 +101,24 @@ public class ProjectAddAndModificationForm {
         return descriptionInputField.getAttribute("value");
     }
 
+    public boolean descriptionInputVisible(){
+        return descriptionInputField.isDisplayed();
+    }
+
+    public boolean descriptionPreviewVisible(){
+        return descriptionPreview.isDisplayed();
+    }
+
     public void submit() {
         submitButton.click();
+    }
+
+    public void clickPreviewButton(){
+        previewButton.click();
+    }
+
+    public String getDescriptionPreviewAsHtml(){
+        return descriptionPreview.getAttribute("innerHTML").replaceAll("\\r|\\n", "").trim();
     }
 
     public boolean currencyConversionTooltipVisible() {

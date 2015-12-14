@@ -264,4 +264,65 @@ describe('project form', function () {
         expect(projectForm.headline.text()).toBe('Projekt Editieren');
     });
 
+    it('should show a markdown rendered preview for the description when pressing the preview button', function () {
+        // Given
+        var existingProject = {
+            "title": "Title 2 Edit",
+            "shortDescription": "Short description 2 Edit",
+            "pledgeGoal": 42000,
+            "description":  "# First Heading in Markdown is configured to be 3\n\n " +
+                            "| Tables        | are           |\n" +
+                            "| ------------- | ------------- |\n" +
+                            "| supported     | as well       |\n"
+        };
+
+        mockedRouteParams.projectId = 'pId';
+        $httpBackend.expectGET('/project/pId').respond(200, existingProject);
+
+        // When
+        controller.init(); // Re-Init to use mocked route params
+        $scope.$digest();
+        $httpBackend.flush();
+        projectForm.getDescriptionPreviewButton().click();
+        reInitProjectForm();
+
+        // Then
+        expect(projectForm.description).not.toBeVisible();
+        expect(projectForm.getDescriptionPreview()).toExist();
+        var actualDescriptionHtml = projectForm.getDescriptionPreviewActualContent()
+            .html().replace(/(\r\n|\n|\r)/gm,"");
+        expect(actualDescriptionHtml).toBe("<h3>First Heading in Markdown is configured to be 3</h3>" +
+            "<table><thead><tr><th>Tables</th><th>are</th></tr></thead><tbody><tr><td>supported</td><td>as well</td></tr></tbody></table>");
+    });
+
+    it('should show description textarea again after clicking preview button twice', function () {
+        // Given
+        var existingProject = {
+            "title": "Title 2 Edit",
+            "shortDescription": "Short description 2 Edit",
+            "pledgeGoal": 42000,
+            "description":  "# First Heading in Markdown is configured to be 3\n\n " +
+            "| Tables        | are           |\n" +
+            "| ------------- | ------------- |\n" +
+            "| supported     | as well       |\n"
+        };
+
+        mockedRouteParams.projectId = 'pId';
+        $httpBackend.expectGET('/project/pId').respond(200, existingProject);
+
+        // When
+        controller.init(); // Re-Init to use mocked route params
+        $scope.$digest();
+        $httpBackend.flush();
+        projectForm.getDescriptionPreviewButton().click();
+        projectForm.getDescriptionPreviewButton().click();
+        reInitProjectForm();
+
+        // Then
+        expect(projectForm.description).toExist();
+        expect(projectForm.getDescriptionPreview()).not.toBeVisible();
+
+        expect(projectForm.description.getInputField().val()).toBe(existingProject.description);
+    });
+
 });

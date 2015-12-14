@@ -20,8 +20,8 @@
     /**
      * global application configuration
      */
-    angular.module('crowdsource', ['ngRoute', 'ngResource', 'ngMessages', 'dibari.angular-ellipsis', 'ngScrollTo', 'angulartics', 'angulartics.piwik'])
-        .config(function ($routeProvider, $locationProvider, $httpProvider, $analyticsProvider) {
+    angular.module('crowdsource', ['ngRoute', 'ngResource', 'ngMessages', 'dibari.angular-ellipsis', 'ngScrollTo', 'angulartics', 'angulartics.piwik', 'ngSanitize', 'ng-showdown'])
+        .config(function ($routeProvider, $locationProvider, $httpProvider, $analyticsProvider, $showdownProvider) {
             $routeProvider
                 .when('/projects', {
                     templateUrl: 'app/project/list/project-list.html',
@@ -128,6 +128,11 @@
             $httpProvider.interceptors.push('LoggingInterceptor');
 
             $analyticsProvider.firstPageview(false);
+
+            $showdownProvider.setOption("tables", true);
+            $showdownProvider.setOption("literalMidWordUnderscores", true);
+            $showdownProvider.setOption("headerLevelStart", 3);
+            $showdownProvider.setOption("sanitize", true);
         })
 
         .run(function (Authentication, Route) {

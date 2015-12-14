@@ -69,16 +69,27 @@
         <div class="form-controls-description">
             <label form-group="description">
 
-                <span form-label-valid="description">Beschreibung</span>
+                <span form-label-valid="description">Beschreibung (Du kannst <a onclick="window.open('https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet', 'newwindow', 'width=800, height=600');"><strong>Markdown (?)</strong></a> verwenden.)</span>
 
                 <span form-label-invalid="description" ng-messages="projectForm.form.description.$error">
-                    <span ng-message="required">Bitte gib eine ausführliche Beschreibung an</span>
+                    <span ng-message="required">Bitte gib eine ausführliche Beschreibung an.</span>
                 </span>
 
                 <textarea name="description" ng-model="projectForm.project.description"
+                          ng-change="projectForm.descriptionChanged()"
+                          ng-show="!projectForm.md.preview"
                           placeholder="Beschreibe Deine Idee ausführlich. Diese Information ist in der Detailansicht sichtbar (keine Zeichenbeschränkung, kein HTML)"
                           required reset-remote-validation></textarea>
             </label>
+
+            <div class="project-description-preview" ng-show="projectForm.md.preview" markdown-to-html="projectForm.project.description != undefined ? projectForm.project.description : ''"></div>
+
+            <button class="description-preview button tiny ultra-tiny secondary round"
+                    ng-class="{success: projectForm.md.preview}"
+                    ng-click="projectForm.switchPreview()"
+                    title="Vorschau">
+                <span class="project-form__icon--preview ng-binding"></span>
+            </button>
         </div>
 
         <button type="submit" class="crwd-success radius shadow margin-top" ng-click="projectForm.submitProject()" ng-disabled="projectForm.loading"

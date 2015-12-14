@@ -3,6 +3,9 @@ angular.module('crowdsource')
     .controller('ProjectFormController', function ($location, $routeParams, Project, RemoteFormValidation) {
 
         var vm = this;
+        vm.md = {
+            preview: false
+        };
 
         vm.isEditMode = function () {
             return $routeParams.projectId !== undefined;
@@ -31,6 +34,10 @@ angular.module('crowdsource')
                     }
                 }
             );
+        };
+
+        vm.switchPreview = function(){
+            vm.md.preview = !vm.md.preview;
         };
 
         vm.submitProject = function () {

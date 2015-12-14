@@ -78,6 +78,14 @@ button, .button {
     &:focus {
         outline: 0;
     }
+
+    &.ultra-tiny {
+        padding-top: 0.525rem;
+        padding-right: 0.7rem;
+        padding-bottom: 0.5875rem;
+        padding-left: 1.25rem;
+        font-size: 0.6875rem;
+    }
 }
 
 .form-horizontal {

@@ -18,8 +18,20 @@ Scenario: A user modifies a project
   And there is no financing round active
   And a user is logged in
   And he directly opens the project edit view
-  When he adapts the project details and submits the form
+  When he adapts the project details
+  And he submits the edit project form
   Then he is redirected to the project detail page containing updated project data
+
+Scenario: While modifying a project a user displays the rendered markdown description preview
+  Given a project is available
+  And there is no financing round active
+  And a user is logged in
+  And he directly opens the project edit view
+  When he adapts the project details
+  And he clicks the preview button
+  Then he sees the rendered description markdown instead of the textarea
+  When he clicks the preview button again
+  Then he sees the textarea with the markdown source again.
 
 Scenario: A user intending to edit a project in financing round just sees a disabled edit button
   Given a project is available
