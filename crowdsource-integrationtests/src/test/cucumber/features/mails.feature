@@ -36,3 +36,10 @@ Feature: Mail-Notifications
     And the sent mail is cleared
     And an administrator publishes the project
     Then an email notification about the published project is sent to the user
+
+  @ClearMailServer
+  Scenario: A notification on a commented project is sent to the project creator
+    When a new project is submitted via the HTTP-Endpoint
+    And the sent mail is cleared
+    And an administrator comments the project
+    Then an email notification about that comment is sent to the project creator
