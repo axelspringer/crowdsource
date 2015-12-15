@@ -52,34 +52,46 @@ public class CommentServiceTest {
 
     @Before
     public void init(){
-
         reset(projectService, userService, commentRepository);
         projectEntity = new ProjectEntity(userEntity, new Project(), new FinancingRoundEntity());
         userEntity = new UserEntity("test.name@test.de", "password");
-
-        when(userService.getUserByEmail(EXISTING_USER_MAIL)).thenReturn(userEntity);
-        when(projectService.loadProjectEntity(EXISTING_PROJECT_ID)).thenReturn(projectEntity);
         aComment = new CommentEntity(projectEntity, userEntity, "some comment");
-        when(commentRepository.findByProject(projectEntity)).thenReturn(Collections.singletonList(aComment));
-
     }
 
     @Test
-    public void addComment() throws Exception {
+    public void addComment_ShouldPersistCommentAndNotifyCreator() throws Exception {
         Comment comment = new Comment(null, null, "Awesome project, dude!");
+
+        prepareProjectServiceMock();
+        prepareUserServiceMock();
+
         commentService.addComment(comment, EXISTING_PROJECT_ID, EXISTING_USER_MAIL);
 
         final CommentEntity expectedComment2BPersisted = new CommentEntity(projectEntity, userEntity, comment.getComment());
-
         verify(commentRepository).save(expectedComment2BPersisted);
         verify(userNotificationService).notifyCreatorOnComment(expectedComment2BPersisted);
     }
 
     @Test
-    public void loadCommentsByProject() throws Exception {
+    public void loadCommentsByProject_ShouldReturnViewRepresentation() throws Exception {
+        prepareProjectServiceMock();
+        prepareCommentRepositoryMock();
+
         final List<Comment> res = commentService.loadCommentsByProject(EXISTING_PROJECT_ID);
 
         assertThat(res.size(), is(1));
         assertThat(res.get(0), is(new Comment(aComment)));
+    }
+
+    private void prepareUserServiceMock() {
+        when(userService.getUserByEmail(EXISTING_USER_MAIL)).thenReturn(userEntity);
+    }
+
+    private void prepareCommentRepositoryMock() {
+        when(commentRepository.findByProject(projectEntity)).thenReturn(Collections.singletonList(aComment));
+    }
+
+    private void prepareProjectServiceMock() {
+        when(projectService.loadProjectEntity(EXISTING_PROJECT_ID)).thenReturn(projectEntity);
     }
 }
