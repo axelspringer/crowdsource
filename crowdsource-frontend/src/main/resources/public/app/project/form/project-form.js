@@ -1,11 +1,16 @@
 angular.module('crowdsource')
 
-    .controller('ProjectFormController', function ($location, $routeParams, Project, RemoteFormValidation) {
+    .controller('ProjectFormController', function ($location, $routeParams, Project,
+                                                   RemoteFormValidation, FileUploader) {
 
         var vm = this;
+
         vm.md = {
             preview: false
         };
+
+        // https://github.com/nervgh/angular-file-upload/wiki/Module-API
+        vm.uploader = new FileUploader();
 
         vm.isEditMode = function () {
             return $routeParams.projectId !== undefined;

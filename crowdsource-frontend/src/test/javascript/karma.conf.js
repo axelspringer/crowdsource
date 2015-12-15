@@ -21,6 +21,7 @@ module.exports = function (config) {
             'bower_components/angulartics/src/angulartics-piwik.js',
             'bower_components/showdown/dist/showdown.min.js',
             'bower_components/ng-showdown/dist/ng-showdown.min.js',
+            'bower_components/angular-file-upload/dist/angular-file-upload.min.js',
 
 
             // actually, this file would have been picked up by the wildcard pattern app/**/*.js

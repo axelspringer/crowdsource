@@ -19,6 +19,7 @@
     "angulartics": "0.20.1",
     "bowser": "~0.7.2",
     "showdown": "~1.3.0",
-    "ng-showdown": "~1.0.1"
+    "ng-showdown": "~1.0.1",
+    "angular-file-upload": "^2.2.0"
   }
 }
