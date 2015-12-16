@@ -179,7 +179,6 @@ public class MailTest {
                         "Dein CrowdSource Team"));
     }
 
-
     @Test
     public void notifyCreatorAndAdminOnProjectModification() {
         final UserEntity creator = aProjectCreator();
@@ -210,26 +209,26 @@ public class MailTest {
         final String projectLink = "https://crowd.asideas.de#/project/proj3ctId";
         final String testComment = aTestComment(UserNotificationService.COMMENT_EXCERPT_LENGTH + 5);
         final CommentEntity comment = new CommentEntity(project, commentingUser, testComment);
-        final String expMessage = "Hallo %s,\n\n" +
+
+        userNotificationService.notifyCreatorOnComment(comment);
+
+        assertCommentMessage(comment, projectLink, getMessageFromMailSender());
+    }
+
+    private void assertCommentMessage(CommentEntity comment, String projectLink, SimpleMailMessage actualMessage) {
+        final String expectedMessage = "Hallo %s,\n\n" +
                 "zu Deinem Projekt \"%s\" wurde ein Kommentar von %s hinzugefügt:\n\n" +
                 "\"%s\"\n\n" +
                 "Zu Deinem Projekt:\n\n%s\n\n" +
                 "Mit freundlichen Grüßen\n" +
                 "Dein CrowdSource Team";
 
-        userNotificationService.notifyCreatorOnComment(comment);
+        assertThat(actualMessage.getText(), is(String.format(expectedMessage,
+                comment.getProject().getCreator().fullNameFromEmail(), comment.getProject().getTitle(), comment.getUser().fullNameFromEmail(),
+                comment.getComment().substring(0, UserNotificationService.COMMENT_EXCERPT_LENGTH) + " ...", projectLink)));
 
-        final List<SimpleMailMessage> capturedMessages = getMessagesFromMailSender();
-        assertThat(capturedMessages.size(), is(1));
-
-        assertThat(capturedMessages.get(0).getText(), is(String.format(expMessage,
-                project.getCreator().fullNameFromEmail(), project.getTitle(), commentingUser.fullNameFromEmail(),
-                testComment.substring(0, UserNotificationService.COMMENT_EXCERPT_LENGTH) + " ...", projectLink)));
-
-        capturedMessages.stream().forEach(mail -> {
-            assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
-            assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_COMMENTED));
-        });
+        assertThat(actualMessage.getFrom(), is(UserNotificationService.FROM_ADDRESS));
+        assertThat(actualMessage.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_COMMENTED));
     }
 
     private UserEntity aProjectCreator() {
