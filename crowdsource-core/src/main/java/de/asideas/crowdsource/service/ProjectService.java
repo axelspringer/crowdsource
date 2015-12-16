@@ -160,7 +160,7 @@ public class ProjectService {
         LOG.debug("Project pledged using post round budget: {}", pledgeResult);
     }
 
-    private ProjectEntity loadProjectEntity(String projectId) {
+    protected ProjectEntity loadProjectEntity(String projectId) {
         ProjectEntity projectEntity = projectRepository.findOne(projectId);
         if (projectEntity == null) {
             throw new ResourceNotFoundException();

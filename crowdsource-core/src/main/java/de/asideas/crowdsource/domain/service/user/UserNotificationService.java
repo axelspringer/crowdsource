@@ -1,5 +1,6 @@
 package de.asideas.crowdsource.domain.service.user;
 
+import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.repository.UserRepository;
@@ -17,6 +18,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 @Service
 public class UserNotificationService {
 
+    public static final Integer COMMENT_EXCERPT_LENGTH = 160;
     public static final String FROM_ADDRESS = "noreply@crowd.asideas.de";
 
     public static final String PROJECT_LINK_PATTERN = "/project/{id}";
@@ -39,6 +42,7 @@ public class UserNotificationService {
     public static final String SUBJECT_PROJECT_PUBLISHED = "Freigabe Deines Projektes";
     public static final String SUBJECT_PROJECT_REJECTED = "Freigabe Deines Projektes";
     public static final String SUBJECT_PROJECT_DEFERRED = "Dein Projekt setzt in der nächsten Finanzierungsrunde aus.";
+    public static final String SUBJECT_PROJECT_COMMENTED = "Ein neuer Kommentar in Deinem Projekt";
 
     private static final Logger LOG = LoggerFactory.getLogger(UserNotificationService.class);
 
@@ -65,6 +69,9 @@ public class UserNotificationService {
 
     @Autowired
     private Expression projectModifiedEmailTemplate;
+
+    @Autowired
+    private Expression projectCommentedEmailTemplate;
 
     @Autowired
     private UserRepository userRepository;
@@ -133,6 +140,28 @@ public class UserNotificationService {
         }
     }
 
+    public void notifyCreatorOnComment(CommentEntity comment) {
+        ProjectEntity project = comment.getProject();
+        if (comment.getUser().equals(project.getCreator())) {
+            return;
+        }
+
+        final String projectLink = getProjectLink(project.getId());
+        UserEntity recipient = project.getCreator();
+
+        StandardEvaluationContext context = new StandardEvaluationContext();
+        context.setVariable("recipientName", recipient.fullNameFromEmail());
+        context.setVariable("projectName", project.getTitle());
+        context.setVariable("commentingUser", comment.getUser().fullNameFromEmail());
+        context.setVariable("commentExcerpt", commentExcerpt(comment));
+        context.setVariable("link", projectLink);
+        final String mailContent = projectCommentedEmailTemplate.getValue(context, String.class);
+
+        final SimpleMailMessage message = newMailMessage(recipient.getEmail(), SUBJECT_PROJECT_COMMENTED, mailContent);
+        sendMails(Collections.singleton(message));
+
+    }
+
     public void notifyCreatorAndAdminOnProjectModification(ProjectEntity project, UserEntity modifier) {
 
         final String projectLink = getProjectLink(project.getId());
@@ -180,6 +209,14 @@ public class UserNotificationService {
         uriBuilder.fragment(urlPattern);
 
         return uriBuilder.buildAndExpand(emailAddress, activationToken).toUriString();
+    }
+
+    private String commentExcerpt(CommentEntity comment){
+        final String commentString = comment.getComment();
+        if (commentString.length() <= COMMENT_EXCERPT_LENGTH){
+            return commentString;
+        }
+        return commentString.substring(0, COMMENT_EXCERPT_LENGTH) + " ...";
     }
 
     private void sendMail(String email, String subject, String messageText) {

@@ -29,6 +29,8 @@ import static org.junit.Assert.assertThat;
 @ContextConfiguration(classes = CrowdSourceTestConfig.class)
 public class MailSteps {
 
+    public static final String TEST_COMMENT = "Hot project, dude!";
+
     @Autowired
     private CrowdSourceClient crowdSourceClient;
 
@@ -39,7 +41,6 @@ public class MailSteps {
     private String allowedEmailDomain;
 
     private String userEmail;
-
     private Project createdProject;
 
     @When("^a new user registers$")
@@ -121,6 +122,11 @@ public class MailSteps {
         crowdSourceClient.defer(createdProject, crowdSourceClient.authorizeWithAdminUser());
     }
 
+    @And("^an administrator comments the project.*$")
+    public void an_Administrator_Comments_The_Project() throws Throwable {
+        crowdSourceClient.comment(createdProject, TEST_COMMENT, crowdSourceClient.authorizeWithAdminUser());
+    }
+
     @Then("^an email notification about the rejected project is sent to the user$")
     public void an_email_notification_about_the_rejected_project_is_sent_to_the_user() throws Throwable {
 
@@ -149,6 +155,17 @@ public class MailSteps {
         assertEquals(DEFAULT_USER_EMAIL, receivedMessage.to);
         assertEquals(UserNotificationService.SUBJECT_PROJECT_DEFERRED, receivedMessage.subject);
         assertThat(receivedMessage.message, containsString("Dein Projekt wurde leider zurückgestellt"));
+    }
+
+    @Then("^an email notification about that comment is sent to the project creator$")
+    public void an_Email_Notification_About_That_Comment_Is_Sent_To_The_Project_Creator() throws Throwable {
+        final MailServerClient.Message receivedMessage = grabMessage();
+        
+        assertThat(receivedMessage.from, is(UserNotificationService.FROM_ADDRESS) );
+        assertThat(receivedMessage.to, is(DEFAULT_USER_EMAIL));
+        assertThat(receivedMessage.subject, is(UserNotificationService.SUBJECT_PROJECT_COMMENTED));
+        assertThat(receivedMessage.message, containsString(TEST_COMMENT));
+        assertThat(receivedMessage.message, containsString("zu Deinem Projekt \"" + createdProject.getTitle() + "\" wurde ein Kommentar von"));
     }
 
     @And("^the sent mail is cleared$")

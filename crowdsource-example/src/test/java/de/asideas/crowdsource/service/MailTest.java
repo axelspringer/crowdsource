@@ -1,6 +1,7 @@
 package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.config.mail.MailTemplateConfig;
+import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
@@ -22,6 +23,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContaining;
@@ -177,7 +179,6 @@ public class MailTest {
                         "Dein CrowdSource Team"));
     }
 
-
     @Test
     public void notifyCreatorAndAdminOnProjectModification() {
         final UserEntity creator = aProjectCreator();
@@ -198,6 +199,36 @@ public class MailTest {
             assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_MODIFIED));
         });
 
+    }
+
+    @Test
+    public void notifyCreatorOnComment_mailShouldContainAbridgedCommentAndItsCreatorName() {
+        final UserEntity creator = aProjectCreator();
+        final UserEntity commentingUser = aUser("test_id_modifier");
+        final ProjectEntity project = project("proj3ctId", ProjectStatus.PUBLISHED, creator, "My Super Project");
+        final String projectLink = "https://crowd.asideas.de#/project/proj3ctId";
+        final String testComment = aTestComment(UserNotificationService.COMMENT_EXCERPT_LENGTH + 5);
+        final CommentEntity comment = new CommentEntity(project, commentingUser, testComment);
+
+        userNotificationService.notifyCreatorOnComment(comment);
+
+        assertCommentMessage(comment, projectLink, getMessageFromMailSender());
+    }
+
+    private void assertCommentMessage(CommentEntity comment, String projectLink, SimpleMailMessage actualMessage) {
+        final String expectedMessage = "Hallo %s,\n\n" +
+                "zu Deinem Projekt \"%s\" wurde ein Kommentar von %s hinzugefügt:\n\n" +
+                "\"%s\"\n\n" +
+                "Zu Deinem Projekt:\n\n%s\n\n" +
+                "Mit freundlichen Grüßen\n" +
+                "Dein CrowdSource Team";
+
+        assertThat(actualMessage.getText(), is(String.format(expectedMessage,
+                comment.getProject().getCreator().fullNameFromEmail(), comment.getProject().getTitle(), comment.getUser().fullNameFromEmail(),
+                comment.getComment().substring(0, UserNotificationService.COMMENT_EXCERPT_LENGTH) + " ...", projectLink)));
+
+        assertThat(actualMessage.getFrom(), is(UserNotificationService.FROM_ADDRESS));
+        assertThat(actualMessage.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_COMMENTED));
     }
 
     private UserEntity aProjectCreator() {
@@ -263,6 +294,12 @@ public class MailTest {
             return message.replace("\r\n", "\n");
         }
         return message;
+    }
+
+    private String aTestComment(int length){
+        StringBuilder res = new StringBuilder();
+        IntStream.range(0, length).forEach(i-> res.append(i % 10));
+        return res.toString();
     }
 
     @Configuration
