@@ -28,7 +28,8 @@ var config = {
             'bower_components/angulartics/dist/angulartics-piwik.min.js',
             'bower_components/showdown/dist/showdown.min.js',
             'bower_components/ng-showdown/dist/ng-showdown.min.js',
-            'bower_components/angular-file-upload/dist/angular-file-upload.min.js'
+            'bower_components/ng-file-upload/ng-file-upload-shim.min.js',
+            'bower_components/ng-file-upload/ng-file-upload.min.js',
         ],
         unminified: [
             'bower_components/foundation/js/vendor/modernizr.js',

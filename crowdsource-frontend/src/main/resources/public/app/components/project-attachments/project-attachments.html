@@ -1,0 +1,83 @@
+<form ng-if="uploadEnabled" name="attachments_form" id="attachments_form" novalidate>
+
+    <label form-group="attachment">
+        <span form-label-valid="attachment">
+            Füge hier Dateien hinzu, um Deine Projektidee noch genauer zu beschreiben. Du kannst Bilder und PDF-Dokumente bis 20MB hochladen.
+        </span>
+
+        <span form-label-invalid="attachment" ng-messages="attachments_form.attachment.$error">
+            <span ng-message="maxSize">Die Datei ist leider zu groß. Du kannst maximal 20MB hochladen.</span>
+        </span>
+    </label>
+
+    <p>
+        <input type="file" name="attachment"
+               ng-show="!currentAttachment"
+               ng-model="currentAttachment"
+               ngf-select
+               ngf-change="clearErrors()"
+               accept="image/*, .pdf, text/plain" ngf-max-size="20MB" required>
+    </p>
+
+    <div class="file-info" ng-show="attachments_form.attachment.$valid">
+        <div><strong>{{currentAttachment.name}}</strong> - {{currentAttachment.size / 1024 / 1024 |number:2}}MB</div>
+        <img ngf-thumbnail="currentAttachment" class="attachment-thumb">
+    </div>
+
+    <div class="progress" ng-show="currentAttachment.progress >= 0">
+        <div style="width:{{currentAttachment.progress}}%"
+             ng-bind="currentAttachment.progress + '%'"></div>
+    </div>
+
+    <div>
+        <button ng-click="currentAttachment = null" class="button tiny alert margin-top" ng-show="currentAttachment">
+            Entfernen
+        </button>
+        <button ng-disabled="!attachments_form.$valid"
+                class="button tiny margin-top upload"
+                ng-click="uploadAttachment(currentAttachment)">
+            Hochladen
+        </button>
+    </div>
+
+    <div class="upload-messages">
+        <span class="upload-messages__success" ng-show="lastUploadSuccessful">Upload erfolgreich</span>
+
+        <!-- Remote Error Message output -->
+        <div ng-if="generalErrors" class="upload-messages__error" ng-messages="generalErrors">
+            <span ng-message="remote_unknown_error">
+                Upload aus unbekannten Gründen leider fehlgeschlagen.
+            </span>
+            <span ng-message="remote_file_size_exceeded">
+                Die Datei wurde aufgrund ihrer Größe abgelehnt.
+            </span>
+        </div>
+    </div>
+</form>
+
+<!--<div ng-if="projectForm.isEditMode()" class="form-controls-attachments">-->
+<!--<label form-group="attachments">-->
+<!--<span>Datei-Anhänge</span>-->
+<!--<br />-->
+<!--</label>-->
+<!--<table ng-show="projectForm.uploader.queue.length > 0" class="attachments">-->
+<!--<thead>-->
+<!--<tr>-->
+<!--<th>Dateiname</th>-->
+<!--<th ng-show="projectForm.uploader.isHTML5">Größe</th>-->
+<!--<th>Aktion</th>-->
+<!--</tr>-->
+<!--</thead>-->
+<!--<tbody>-->
+<!--<tr ng-repeat="item in projectForm.uploader.queue">-->
+<!--<td><strong>{{item.file.name}}</strong></td>-->
+<!--<td ng-show="projectForm.uploader.isHTML5">{{ item.file.size/1024/1024|number:2 }} MB</td>-->
+<!--<td><strong><button ng-click="item.remove()" type="button" class="tiny ultra-tiny pm-btn&#45;&#45;alert">Entfernen</button> </strong></td>-->
+<!--</tr>-->
+<!--</tbody>-->
+<!--</table>-->
+<!--<input  type="file" nv-file-select uploader="projectForm.uploader" multiple="true">-->
+<!--<button type="button" class="button tiny" ng-click="projectForm.uploader.uploadAll()" ng-disabled="!projectForm.uploader.getNotUploadedItems().length">-->
+<!--Hochladen-->
+<!--</button>-->
+<!--</div>-->
