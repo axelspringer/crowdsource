@@ -69,4 +69,12 @@ public class InvalidRequestException extends RuntimeException {
     public static InvalidRequestException masterdataChangeNotAllowed() {
         return new InvalidRequestException("master_data_change_not_allowed");
     }
+
+    public static InvalidRequestException fileMustNotBeEmpty() {
+        return new InvalidRequestException("file_must_not_be_empty");
+    }
+
+    public static InvalidRequestException filetypeNotAllowed() {
+        return new InvalidRequestException("file_type_not_alloed");
+    }
 }

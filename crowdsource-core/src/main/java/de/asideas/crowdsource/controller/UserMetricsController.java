@@ -1,7 +1,7 @@
 package de.asideas.crowdsource.controller;
 
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.user.UserMetrics;
+import de.asideas.crowdsource.presentation.user.UserMetrics;
 import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.security.Roles;
 import org.springframework.beans.factory.annotation.Autowired;

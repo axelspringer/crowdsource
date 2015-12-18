@@ -1,9 +1,9 @@
-package de.asideas.crowdsource.domain.presentation;
+package de.asideas.crowdsource.presentation;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
-import de.asideas.crowdsource.domain.presentation.project.PublicFinancingRoundInformationView;
+import de.asideas.crowdsource.presentation.project.PublicFinancingRoundInformationView;
 import de.asideas.crowdsource.util.validation.financinground.FinancingRoundNotColliding;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;

@@ -1,4 +1,4 @@
-package de.asideas.crowdsource.domain.presentation.project;
+package de.asideas.crowdsource.presentation.project;
 
 import org.junit.Test;
 

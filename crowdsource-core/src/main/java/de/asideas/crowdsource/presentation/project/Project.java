@@ -1,10 +1,10 @@
-package de.asideas.crowdsource.domain.presentation.project;
+package de.asideas.crowdsource.presentation.project;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.user.ProjectCreator;
+import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -14,6 +14,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import javax.validation.constraints.Min;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 // needed for serialization
 public class Project {
@@ -64,6 +65,8 @@ public class Project {
     @JsonView(ProjectSummaryView.class)
     private int pledgedAmountByPostRoundBudget;
 
+    private List<Attachment> attachments;
+
     public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser) {
         this.id = projectEntity.getId();
         this.status = projectEntity.getStatus();
@@ -79,6 +82,8 @@ public class Project {
         this.pledgedAmountByPostRoundBudget = projectEntity.pledgedAmountPostRound(pledges);
 
         this.creator = new ProjectCreator(projectEntity.getCreator());
+
+        this.attachments = projectEntity.getAttachments().stream().map(Attachment::new).collect(Collectors.toList());
     }
 
     public Project() {
@@ -132,6 +137,10 @@ public class Project {
         return pledgedAmountByPostRoundBudget;
     }
 
+    public List<Attachment> getAttachments() {
+        return attachments;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -180,6 +189,10 @@ public class Project {
         this.pledgedAmountByPostRoundBudget = pledgedAmountByPostRoundBudget;
     }
 
+    public void setAttachments(List<Attachment> attachments) {
+        this.attachments = attachments;
+    }
+
     @Override
     public boolean equals(Object o) {
         return EqualsBuilder.reflectionEquals(this, o);
@@ -196,7 +209,7 @@ public class Project {
     }
 
     /**
-     * Used as Marker for {@link de.asideas.crowdsource.domain.presentation.project.Project} Validation on update requests
+     * Used as Marker for {@link de.asideas.crowdsource.presentation.project.Project} Validation on update requests
      */
     public interface UpdateProject {
     }

@@ -5,7 +5,7 @@ import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import de.asideas.crowdsource.domain.presentation.user.UserActivation;
+import de.asideas.crowdsource.presentation.user.UserActivation;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.service.UserService;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;

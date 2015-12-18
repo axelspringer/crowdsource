@@ -5,7 +5,7 @@ import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import de.asideas.crowdsource.domain.presentation.project.Project;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectAddAndModificationForm;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectDetailPage;

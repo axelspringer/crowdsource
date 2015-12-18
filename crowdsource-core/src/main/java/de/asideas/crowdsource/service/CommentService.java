@@ -3,7 +3,7 @@ package de.asideas.crowdsource.service;
 import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.Comment;
+import de.asideas.crowdsource.presentation.Comment;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,41 +1,44 @@
-package de.asideas.crowdsource.domain.presentation.user;
+package de.asideas.crowdsource.presentation.user;
 
-import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.project.Project;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-public class ProjectCreator {
+import java.util.List;
 
-    private String id;
+// required for serialization
+public class User {
 
-    @JsonView(Project.ProjectSummaryView.class)
+    private String email;
+    private List<String> roles;
+    private int budget;
     private String name;
 
-    @JsonView(Project.ProjectSummaryView.class)
-    private String email;
-
-    public ProjectCreator(UserEntity user) {
-        this.id = user.getId();
-        this.name = user.fullNameFromEmail();
-        this.email = user.getEmail();
+    public User(final UserEntity userEntity) {
+        this.email = userEntity.getEmail();
+        this.budget = userEntity.getBudget();
+        this.roles = userEntity.getRoles();
+        this.name = userEntity.fullNameFromEmail();
     }
 
-    public ProjectCreator() {
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public String getName() {
-        return this.name;
+    public User() {
     }
 
     public String getEmail() {
         return this.email;
+    }
+
+    public List<String> getRoles() {
+        return this.roles;
+    }
+
+    public int getBudget() {
+        return this.budget;
+    }
+
+    public String getName() {
+        return this.name;
     }
 
     @Override

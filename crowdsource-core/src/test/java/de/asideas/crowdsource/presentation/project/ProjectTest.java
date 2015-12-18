@@ -1,17 +1,15 @@
-package de.asideas.crowdsource.domain.presentation.project;
+package de.asideas.crowdsource.presentation.project;
 
-import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.model.PledgeEntity;
-import de.asideas.crowdsource.domain.model.ProjectEntity;
-import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.Pledge;
-import de.asideas.crowdsource.domain.presentation.user.ProjectCreator;
+import de.asideas.crowdsource.domain.model.*;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -34,6 +32,7 @@ public class ProjectTest {
         activeFinancingRoundEntity.setEndDate(DateTime.now().plusDays(1));
         Project project = new Project();
         projectEntity = new ProjectEntity(creator, project, activeFinancingRoundEntity);
+        projectEntity.addAttachment(new AttachmentValue("test_fileRef", "test_contentType", "test_filename", 17, DateTime.now()));
 
         user1 = new UserEntity("user1@xyz.com");
         user1.setId("test_id1");
@@ -61,6 +60,7 @@ public class ProjectTest {
         assertThat(res.getPledgeGoal(), is(projectEntity.getPledgeGoal()));
         assertThat(res.getShortDescription(), is(projectEntity.getDescription()));
         assertThat(res.getTitle(), is(projectEntity.getTitle()));
+        assertThat(res.getAttachments(), is(projectEntity.getAttachments().stream().map(Attachment::new).collect(Collectors.toList())));
     }
 
     @Test

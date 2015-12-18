@@ -2,18 +2,13 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
-import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.model.PledgeEntity;
-import de.asideas.crowdsource.domain.model.ProjectEntity;
-import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.Pledge;
-import de.asideas.crowdsource.domain.presentation.project.Project;
+import de.asideas.crowdsource.domain.model.*;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import de.asideas.crowdsource.repository.FinancingRoundRepository;
-import de.asideas.crowdsource.repository.PledgeRepository;
-import de.asideas.crowdsource.repository.ProjectRepository;
-import de.asideas.crowdsource.repository.UserRepository;
+import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -22,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.io.InputStream;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -37,21 +33,25 @@ public class ProjectService {
     private FinancingRoundRepository financingRoundRepository;
     private UserNotificationService userNotificationService;
     private FinancingRoundService financingRoundService;
-
+    private ProjectAttachmentRepository projectAttachmentRepository;
     private ProjectService thisInstance;
 
     @Autowired
     public ProjectService(ProjectRepository projectRepository, PledgeRepository pledgeRepository,
                           UserRepository userRepository, FinancingRoundRepository financingRoundRepository,
                           UserNotificationService userNotificationService,
-                          FinancingRoundService financingRoundService) {
+                          FinancingRoundService financingRoundService,
+                          ProjectAttachmentRepository projectAttachmentRepository) {
+
         this.projectRepository = projectRepository;
         this.pledgeRepository = pledgeRepository;
         this.userRepository = userRepository;
         this.financingRoundRepository = financingRoundRepository;
         this.userNotificationService = userNotificationService;
         this.financingRoundService = financingRoundService;
+        this.projectAttachmentRepository = projectAttachmentRepository;
         this.thisInstance = this;
+
     }
 
     public Project getProject(String projectId, UserEntity requestingUser) {
@@ -110,7 +110,7 @@ public class ProjectService {
                 financingRound.getTerminationPostProcessingDone() &&
                 userEntity.getRoles().contains(Roles.ROLE_ADMIN)) {
 
-            if (!financingRound.idenitityEquals(projectEntity.getFinancingRound()) ) {
+            if (!financingRound.idenitityEquals(projectEntity.getFinancingRound())) {
                 throw InvalidRequestException.projectTookNotPartInLastFinancingRond();
             }
             thisInstance.pledgeProjectUsingPostRoundBudget(projectEntity, userEntity, pledge);
@@ -118,6 +118,19 @@ public class ProjectService {
             thisInstance.pledgeProjectInFinancingRound(projectEntity, userEntity, pledge);
         }
     }
+
+    public Attachment addProjectAttachment(String projectId, InputStream fileInput, Attachment attachment, UserEntity savingUser) {
+        ProjectEntity projectEntity = loadProjectEntity(projectId);
+
+        projectEntity.addAttachmentAllowed(savingUser);
+
+        AttachmentValue attachmentStored = new AttachmentValue(attachment.getName(), attachment.getType());
+        attachmentStored = projectAttachmentRepository.storeFile(attachmentStored, fileInput);
+        projectEntity.addAttachment(attachmentStored);
+        projectRepository.save(projectEntity);
+        return new Attachment(attachmentStored);
+    }
+
 
     void pledgeProjectInFinancingRound(ProjectEntity projectEntity, UserEntity userEntity, Pledge pledge) {
         List<PledgeEntity> pledgesSoFar = pledgeRepository.findByProjectAndFinancingRound(

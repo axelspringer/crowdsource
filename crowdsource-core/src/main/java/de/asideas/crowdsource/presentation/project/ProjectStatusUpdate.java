@@ -1,4 +1,4 @@
-package de.asideas.crowdsource.domain.presentation.project;
+package de.asideas.crowdsource.presentation.project;
 
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 

@@ -53,7 +53,7 @@ angular.module('crowdsource')
                 };
 
                 vm.clearErrors = function () {
-                    RemoteFormValidation.clearRemoteErrors();
+                    RemoteFormValidation.clearRemoteErrors(vm);
                 };
 
                 vm.reloadProject = function () {

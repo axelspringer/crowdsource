@@ -1,4 +1,4 @@
-package de.asideas.crowdsource.domain.presentation.user;
+package de.asideas.crowdsource.presentation.user;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;

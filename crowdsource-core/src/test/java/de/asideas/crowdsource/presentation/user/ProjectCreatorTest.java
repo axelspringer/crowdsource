@@ -1,4 +1,4 @@
-package de.asideas.crowdsource.domain.presentation.user;
+package de.asideas.crowdsource.presentation.user;
 
 import de.asideas.crowdsource.domain.model.UserEntity;
 import org.junit.Test;

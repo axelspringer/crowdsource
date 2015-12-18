@@ -1,4 +1,4 @@
-package de.asideas.crowdsource.domain.presentation.project;
+package de.asideas.crowdsource.presentation.project;
 
 /**
  * A view on a FinancingRound that does not contain sensitive information

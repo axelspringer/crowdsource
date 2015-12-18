@@ -1,6 +1,6 @@
 package de.asideas.crowdsource.testsupport.pageobjects.project;
 
-import de.asideas.crowdsource.domain.presentation.project.Project;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.testsupport.selenium.SeleniumWait;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverProvider;
 import org.openqa.selenium.By;

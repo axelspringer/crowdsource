@@ -1,4 +1,4 @@
-package de.asideas.crowdsource.domain.presentation;
+package de.asideas.crowdsource.presentation;
 
 import de.asideas.crowdsource.domain.model.CommentEntity;
 import org.apache.commons.lang3.builder.EqualsBuilder;

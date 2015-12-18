@@ -8,11 +8,13 @@ import com.mongodb.WriteConcern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import java.net.UnknownHostException;
@@ -68,6 +70,11 @@ public class MongoDBConfig extends AbstractMongoConfiguration {
                     .build();
             return new MongoClient(serverAddresses, options);
         }
+    }
+
+    @Bean
+    public GridFsTemplate gridFsTemplate() throws Exception{
+        return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
     }
 
     @Override

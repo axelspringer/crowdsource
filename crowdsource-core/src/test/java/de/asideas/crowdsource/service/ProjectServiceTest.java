@@ -2,19 +2,14 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
-import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.model.PledgeEntity;
-import de.asideas.crowdsource.domain.model.ProjectEntity;
-import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.FinancingRound;
-import de.asideas.crowdsource.domain.presentation.Pledge;
-import de.asideas.crowdsource.domain.presentation.project.Project;
+import de.asideas.crowdsource.domain.model.*;
+import de.asideas.crowdsource.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import de.asideas.crowdsource.repository.FinancingRoundRepository;
-import de.asideas.crowdsource.repository.PledgeRepository;
-import de.asideas.crowdsource.repository.ProjectRepository;
-import de.asideas.crowdsource.repository.UserRepository;
+import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -28,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,14 +37,12 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("Duplicates")
 public class ProjectServiceTest {
 
     private static final String USER_EMAIL = "user@some.host";
@@ -83,6 +77,9 @@ public class ProjectServiceTest {
 
     @Mock
     private ProjectService thisInstance;
+
+    @Mock
+    private ProjectAttachmentRepository projectAttachmentRepository;
 
 
     @Before
@@ -428,7 +425,7 @@ public class ProjectServiceTest {
     public void modifyProjectMasterdata_doesNotNotifyAndSaveOnNoModification() throws Exception {
         final String projectId = "test_ID";
         final UserEntity user = user(USER_EMAIL);
-        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.FULLY_PLEDGED);
+        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.PROPOSED);
         final ProjectEntity project = new ProjectEntity(user, projectCmd, null);
 
         when(projectRepository.findOne(projectId)).thenReturn(project);
@@ -447,6 +444,61 @@ public class ProjectServiceTest {
 
         verify(projectRepository, never()).save(any(ProjectEntity.class));
         verify(userNotificationService, never()).notifyCreatorAndAdminOnProjectModification(any(ProjectEntity.class), any(UserEntity.class));
+    }
+
+    @Test
+    public void addAttachment_ShouldStoreAttachmentAndProject(){
+        final String projectId = "test_ID";
+        final UserEntity projectCreator = user(USER_EMAIL);
+        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.PROPOSED);
+        final ProjectEntity project = new ProjectEntity(projectCreator, projectCmd, null);
+        final Attachment attachmentSaveCmd = aStoringRequestAttachment();
+        final AttachmentValue expAttachmentValue = aPersitedAttachment();
+
+        ArgumentCaptor<AttachmentValue> writeAttachmentCaptor = ArgumentCaptor.forClass(AttachmentValue.class);
+        when(projectRepository.findOne(projectId)).thenReturn(project);
+        when(projectAttachmentRepository.storeFile(writeAttachmentCaptor.capture(), any(InputStream.class))).thenReturn(expAttachmentValue);
+        Attachment res = projectService.addProjectAttachment(projectId, mockedInputStream(), attachmentSaveCmd, projectCreator);
+
+        ArgumentCaptor<ProjectEntity> projectCaptor = ArgumentCaptor.forClass(ProjectEntity.class);
+        assertThat(writeAttachmentCaptor.getValue().getContentType(), is(attachmentSaveCmd.getType()));
+        assertThat(writeAttachmentCaptor.getValue().getFilename(), is(attachmentSaveCmd.getName()));
+        verify(projectRepository).save(projectCaptor.capture());
+        assertThat("Project should contain new attachment", projectCaptor.getValue().getAttachments().contains(expAttachmentValue));
+        presentationAttachmentConformsPersited(res, expAttachmentValue);
+    }
+
+    private void presentationAttachmentConformsPersited(Attachment presentationAttachment, AttachmentValue persisted) {
+        assertThat(presentationAttachment.getCreated(), is(persisted.getCreated()));
+        assertThat(presentationAttachment.getId(), is(persisted.getFileReference()));
+        assertThat(presentationAttachment.getName(), is(persisted.getFilename()));
+        assertThat(presentationAttachment.getSize(), is(persisted.getSize()));
+        assertThat(presentationAttachment.getType(), is(persisted.getContentType()));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void addAttachment_ThrowsResourceNotFoundExOnNotExistingProject(){
+        final String projectId = "test_ID";
+        when(projectRepository.findOne(projectId)).thenReturn(null);
+
+        projectService.addProjectAttachment(projectId, mockedInputStream(), aStoringRequestAttachment(), user("blub"));
+    }
+
+    @Test
+    public void addAttachment_shouldThrowExceptionWhenChangesNotAllowed(){
+        final String projectId = "test_ID";
+        final UserEntity projectCreator = user(USER_EMAIL);
+        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.PROPOSED);
+        final ProjectEntity project = new ProjectEntity(projectCreator, projectCmd, null);
+        project.setStatus(ProjectStatus.FULLY_PLEDGED);
+        when(projectRepository.findOne(projectId)).thenReturn(project);
+
+        try {
+            projectService.addProjectAttachment(projectId, mockedInputStream(), aStoringRequestAttachment(), projectCreator);
+            fail("InvalidRequestException expected!");
+        } catch (InvalidRequestException e) {
+            assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
+        }
     }
 
     private void assertPledgeNotExecuted(RuntimeException actualEx, RuntimeException expEx, ProjectEntity project, UserEntity user, int userBudgetBeforePledge, ProjectStatus expStatus) {
@@ -546,5 +598,17 @@ public class ProjectServiceTest {
         FinancingRoundEntity res = FinancingRoundEntity.newFinancingRound(creationCmd, 7);
         res.setStartDate(new DateTime().minusDays(2));
         return res;
+    }
+
+    private AttachmentValue aPersitedAttachment(){
+        return new AttachmentValue("a_fieldRef", "text/plain", "a_filename", 17, DateTime.now());
+    }
+
+    private Attachment aStoringRequestAttachment() {
+        return Attachment.asCreationCommand("test_filename", "text/plain");
+    }
+
+    private InputStream mockedInputStream(){
+        return mock(InputStream.class);
     }
 }
