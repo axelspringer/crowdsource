@@ -2,13 +2,21 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
-import de.asideas.crowdsource.domain.model.*;
+import de.asideas.crowdsource.domain.model.AttachmentValue;
+import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
+import de.asideas.crowdsource.domain.model.PledgeEntity;
+import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.service.user.UserNotificationService;
+import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.domain.service.user.UserNotificationService;
-import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import de.asideas.crowdsource.repository.*;
+import de.asideas.crowdsource.repository.FinancingRoundRepository;
+import de.asideas.crowdsource.repository.PledgeRepository;
+import de.asideas.crowdsource.repository.ProjectAttachmentRepository;
+import de.asideas.crowdsource.repository.ProjectRepository;
+import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.security.Roles;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -128,9 +136,21 @@ public class ProjectService {
         attachmentStored = projectAttachmentRepository.storeFile(attachmentStored, fileInput);
         projectEntity.addAttachment(attachmentStored);
         projectRepository.save(projectEntity);
-        return new Attachment(attachmentStored);
+        return new Attachment(attachmentStored, projectEntity);
     }
 
+    public Attachment loadProjectAttachment(String projectId, Attachment attachmentRequested){
+        final ProjectEntity project = loadProjectEntity(projectId);
+
+        final AttachmentValue attachment2Serve = project.findAttachmentByReference(attachmentRequested);
+        final InputStream payload = projectAttachmentRepository.loadAttachment(attachment2Serve);
+
+        if(payload == null){
+            throw new ResourceNotFoundException();
+        }
+
+        return new Attachment(attachment2Serve, project, payload);
+    }
 
     void pledgeProjectInFinancingRound(ProjectEntity projectEntity, UserEntity userEntity, Pledge pledge) {
         List<PledgeEntity> pledgesSoFar = pledgeRepository.findByProjectAndFinancingRound(

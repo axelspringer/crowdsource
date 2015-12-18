@@ -12,16 +12,25 @@ import de.asideas.crowdsource.presentation.project.ProjectStatusUpdate;
 import de.asideas.crowdsource.security.Roles;
 import de.asideas.crowdsource.service.ProjectService;
 import de.asideas.crowdsource.service.UserService;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
@@ -47,7 +56,7 @@ public class ProjectController {
     @Autowired
     private UserService userService;
 
-    private static final List<MediaType> attachmentTypesAllowed = Arrays.asList(
+    private List<MediaType> attachmentTypesAllowed = Arrays.asList(
             MediaType.parseMediaType("image/*"),
             MediaType.parseMediaType("application/pdf"),
             MediaType.parseMediaType("text/plain")
@@ -127,6 +136,18 @@ public class ProjectController {
         }
     }
 
+    @Secured(Roles.ROLE_USER)
+    @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.GET)
+    public ResponseEntity<byte[]> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference) throws IOException {
+
+        final HttpHeaders headers = new HttpHeaders();
+
+        final Attachment attachment = projectService.loadProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference));
+        headers.setContentType(MediaType.valueOf(attachment.getType()));
+
+        return new ResponseEntity<>(IOUtils.toByteArray(attachment.getPayload()), headers, HttpStatus.OK);
+    }
+
     private boolean contentTypeAllowed(String contentType) throws InvalidRequestException {
         MediaType mediaType;
         try {
@@ -135,7 +156,7 @@ public class ProjectController {
             return false;
         }
         for (MediaType el : attachmentTypesAllowed) {
-            if(el.includes(mediaType)){
+            if (el.includes(mediaType)) {
                 return true;
             }
         }

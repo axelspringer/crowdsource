@@ -1,6 +1,10 @@
 package de.asideas.crowdsource.presentation.project;
 
-import de.asideas.crowdsource.domain.model.*;
+import de.asideas.crowdsource.domain.model.AttachmentValue;
+import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
+import de.asideas.crowdsource.domain.model.PledgeEntity;
+import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import org.joda.time.DateTime;
@@ -60,14 +64,13 @@ public class ProjectTest {
         assertThat(res.getPledgeGoal(), is(projectEntity.getPledgeGoal()));
         assertThat(res.getShortDescription(), is(projectEntity.getDescription()));
         assertThat(res.getTitle(), is(projectEntity.getTitle()));
-        assertThat(res.getAttachments(), is(projectEntity.getAttachments().stream().map(Attachment::new).collect(Collectors.toList())));
+        assertThat(res.getAttachments(), is(projectEntity.getAttachments().stream().map(a-> new Attachment(a, projectEntity)).collect(Collectors.toList())));
     }
 
     @Test
     public void constructionWorks_NullSafe() throws Exception {
         Project res = new Project(projectEntity, pledges, user2);
         assertThat(res.getLastModifiedDate(), is(nullValue()));
-
     }
 
 }

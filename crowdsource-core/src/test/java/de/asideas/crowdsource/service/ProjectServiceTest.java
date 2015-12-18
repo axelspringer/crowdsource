@@ -2,14 +2,22 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
-import de.asideas.crowdsource.domain.model.*;
+import de.asideas.crowdsource.domain.model.AttachmentValue;
+import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
+import de.asideas.crowdsource.domain.model.PledgeEntity;
+import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.service.user.UserNotificationService;
+import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.domain.service.user.UserNotificationService;
-import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import de.asideas.crowdsource.repository.*;
+import de.asideas.crowdsource.repository.FinancingRoundRepository;
+import de.asideas.crowdsource.repository.PledgeRepository;
+import de.asideas.crowdsource.repository.ProjectAttachmentRepository;
+import de.asideas.crowdsource.repository.ProjectRepository;
+import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.security.Roles;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -37,7 +45,11 @@ import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
@@ -440,20 +452,20 @@ public class ProjectServiceTest {
         final String projectId = "test_ID";
         when(projectRepository.findOne(projectId)).thenReturn(null);
 
-        projectService.modifyProjectMasterdata(projectId, project(null, null, null, 17, null), user("blub") );
+        projectService.modifyProjectMasterdata(projectId, project(null, null, null, 17, null), user("blub"));
 
         verify(projectRepository, never()).save(any(ProjectEntity.class));
         verify(userNotificationService, never()).notifyCreatorAndAdminOnProjectModification(any(ProjectEntity.class), any(UserEntity.class));
     }
 
     @Test
-    public void addAttachment_ShouldStoreAttachmentAndProject(){
+    public void addAttachment_ShouldStoreAttachmentAndProject() throws Exception {
         final String projectId = "test_ID";
         final UserEntity projectCreator = user(USER_EMAIL);
         final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.PROPOSED);
         final ProjectEntity project = new ProjectEntity(projectCreator, projectCmd, null);
         final Attachment attachmentSaveCmd = aStoringRequestAttachment();
-        final AttachmentValue expAttachmentValue = aPersitedAttachment();
+        final AttachmentValue expAttachmentValue = aPersitedAttachment("fileRef");
 
         ArgumentCaptor<AttachmentValue> writeAttachmentCaptor = ArgumentCaptor.forClass(AttachmentValue.class);
         when(projectRepository.findOne(projectId)).thenReturn(project);
@@ -465,19 +477,11 @@ public class ProjectServiceTest {
         assertThat(writeAttachmentCaptor.getValue().getFilename(), is(attachmentSaveCmd.getName()));
         verify(projectRepository).save(projectCaptor.capture());
         assertThat("Project should contain new attachment", projectCaptor.getValue().getAttachments().contains(expAttachmentValue));
-        presentationAttachmentConformsPersited(res, expAttachmentValue);
-    }
-
-    private void presentationAttachmentConformsPersited(Attachment presentationAttachment, AttachmentValue persisted) {
-        assertThat(presentationAttachment.getCreated(), is(persisted.getCreated()));
-        assertThat(presentationAttachment.getId(), is(persisted.getFileReference()));
-        assertThat(presentationAttachment.getName(), is(persisted.getFilename()));
-        assertThat(presentationAttachment.getSize(), is(persisted.getSize()));
-        assertThat(presentationAttachment.getType(), is(persisted.getContentType()));
+        assertPresentationAttachmentConformsPersited(res, expAttachmentValue);
     }
 
     @Test(expected = ResourceNotFoundException.class)
-    public void addAttachment_ThrowsResourceNotFoundExOnNotExistingProject(){
+    public void addAttachment_ThrowsResourceNotFoundExOnNotExistingProject() throws Exception {
         final String projectId = "test_ID";
         when(projectRepository.findOne(projectId)).thenReturn(null);
 
@@ -485,7 +489,7 @@ public class ProjectServiceTest {
     }
 
     @Test
-    public void addAttachment_shouldThrowExceptionWhenChangesNotAllowed(){
+    public void addAttachment_shouldThrowExceptionWhenChangesNotAllowed() throws Exception {
         final String projectId = "test_ID";
         final UserEntity projectCreator = user(USER_EMAIL);
         final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.PROPOSED);
@@ -501,6 +505,48 @@ public class ProjectServiceTest {
         }
     }
 
+
+    @Test
+    public void loadProjectAttachment_shouldCallProjectAttachmentRepository() throws Exception {
+        final String fileRef = "attachId_0";
+        final ProjectEntity projectEntity = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
+        final InputStream expInputStream = mockedInputStream();
+        final ArgumentCaptor<AttachmentValue> repoReqCapture = ArgumentCaptor.forClass(AttachmentValue.class);
+
+        when(projectAttachmentRepository.loadAttachment(repoReqCapture.capture())).thenReturn(expInputStream);
+        final Attachment res = projectService.loadProjectAttachment(projectEntity.getId(),  Attachment.asLookupByIdCommand(fileRef));
+
+        assertThat(repoReqCapture.getValue().getFileReference(), is(fileRef));
+        assertThat("Expected specific input stream in result", res.getPayload() == expInputStream);
+        assertPresentationAttachmentConformsPersited(res, projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand(fileRef)));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void loadProjectAttachment_shouldThrowResourceNotFoundExceptionOnNullPayload() throws Exception {
+        final String fileRef = "attachId_0";
+        final ProjectEntity projectEntity = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
+
+        when(projectAttachmentRepository.loadAttachment(any(AttachmentValue.class))).thenReturn(null);
+        projectService.loadProjectAttachment(projectEntity.getId(),  Attachment.asLookupByIdCommand(fileRef));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void loadProjectAttachment_shouldThrowResourceNotFoundExceptionOnProjectNotExisting() throws Exception {
+        projectService.loadProjectAttachment("notExistingProjectId",  Attachment.asLookupByIdCommand("aFileRef"));
+    }
+
+
+    private ProjectEntity givenAProjectEntityWithAttachments(String... attachmentFileReferences) {
+        final ProjectEntity projectEntity = projectEntity("test_id", ProjectStatus.PROPOSED, user("a_user"));
+        if(attachmentFileReferences != null){
+            Arrays.asList(attachmentFileReferences).stream().forEach( r ->
+                projectEntity.addAttachment(aPersitedAttachment(r))
+            );
+        }
+        return projectEntity;
+    }
+
+
     private void assertPledgeNotExecuted(RuntimeException actualEx, RuntimeException expEx, ProjectEntity project, UserEntity user, int userBudgetBeforePledge, ProjectStatus expStatus) {
         assertThat(actualEx.getMessage(), is(expEx.getMessage()));
         assertThat(user.getBudget(), is(userBudgetBeforePledge));
@@ -508,6 +554,14 @@ public class ProjectServiceTest {
         verify(pledgeRepository, never()).save(any(PledgeEntity.class));
         verify(userRepository, never()).save(any(UserEntity.class));
         verify(projectRepository, never()).save(any(ProjectEntity.class));
+    }
+
+    private void assertPresentationAttachmentConformsPersited(Attachment presentationAttachment, AttachmentValue persisted) throws Exception {
+        assertThat(presentationAttachment.getCreated(), is(persisted.getCreated()));
+        assertThat(presentationAttachment.getId(), is(persisted.getFileReference()));
+        assertThat(presentationAttachment.getName(), is(persisted.getFilename()));
+        assertThat(presentationAttachment.getSize(), is(persisted.getSize()));
+        assertThat(presentationAttachment.getType(), is(persisted.getContentType()));
     }
 
     private void pledgedAssertionProject(ProjectEntity project, UserEntity user, int amount) {
@@ -570,7 +624,7 @@ public class ProjectServiceTest {
     private FinancingRoundEntity prepareActiveFinanzingRound(ProjectEntity project) {
         FinancingRoundEntity res = aFinancingRound(new DateTime().plusDays(1));
         res.setId(UUID.randomUUID().toString());
-        if(project != null ){
+        if (project != null) {
             project.setFinancingRound(res);
         }
 
@@ -582,7 +636,7 @@ public class ProjectServiceTest {
     private FinancingRoundEntity prepareInactiveFinancingRound(ProjectEntity project) {
         FinancingRoundEntity res = aFinancingRound(new DateTime().minusDays(1));
         res.setId("test_roundId");
-        if(project != null) {
+        if (project != null) {
             project.setFinancingRound(res);
         }
 
@@ -600,15 +654,15 @@ public class ProjectServiceTest {
         return res;
     }
 
-    private AttachmentValue aPersitedAttachment(){
-        return new AttachmentValue("a_fieldRef", "text/plain", "a_filename", 17, DateTime.now());
+    private AttachmentValue aPersitedAttachment(String fileRef) {
+        return new AttachmentValue(fileRef, "text/plain", "a_filename", 17, DateTime.now());
     }
 
     private Attachment aStoringRequestAttachment() {
         return Attachment.asCreationCommand("test_filename", "text/plain");
     }
 
-    private InputStream mockedInputStream(){
+    private InputStream mockedInputStream() {
         return mock(InputStream.class);
     }
 }

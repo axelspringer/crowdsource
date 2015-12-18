@@ -1,7 +1,11 @@
 package de.asideas.crowdsource.presentation.project;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.asideas.crowdsource.domain.model.AttachmentValue;
+import de.asideas.crowdsource.domain.model.ProjectEntity;
 import org.joda.time.DateTime;
+
+import java.io.InputStream;
 
 /**
  * Client representation of an {@link AttachmentValue}
@@ -14,16 +18,29 @@ public class Attachment {
     private String type;
     private DateTime created;
     private String linkToFile;
+    @JsonIgnore
+    private InputStream payload;
 
-    private Attachment() {}
-    public Attachment(AttachmentValue attachmentValue) {
+    private Attachment() {
+    }
+
+    public Attachment(AttachmentValue attachmentValue, ProjectEntity parentProject) {
         this.created = attachmentValue.getCreated();
         this.id = attachmentValue.getFileReference();
         this.name = attachmentValue.getFilename();
         this.size = attachmentValue.getSize();
         this.type = attachmentValue.getContentType();
-        //TODO:
-//        this.linkToFile = linkToFile;
+        this.linkToFile = attachmentValue.relativeUri(parentProject);
+    }
+
+    /**
+     * Full payload constructor
+     * @param attachmentValue
+     * @param payload
+     */
+    public Attachment(AttachmentValue attachmentValue, ProjectEntity parentProject, InputStream payload) {
+        this(attachmentValue, parentProject);
+        setPayload(payload);
     }
 
     public static Attachment asCreationCommand(String name, String type) {
@@ -32,6 +49,13 @@ public class Attachment {
         res.type = type;
         return res;
     }
+
+    public static Attachment asLookupByIdCommand(String id) {
+        Attachment res = new Attachment();
+        res.id = id;
+        return res;
+    }
+
 
     public DateTime getCreated() {
         return created;
@@ -55,6 +79,10 @@ public class Attachment {
 
     public String getType() {
         return type;
+    }
+
+    public InputStream getPayload() {
+        return payload;
     }
 
     private void setCreated(DateTime created) {
@@ -81,18 +109,36 @@ public class Attachment {
         this.type = type;
     }
 
+    public void setPayload(InputStream payload) {
+        this.payload = payload;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Attachment that = (Attachment) o;
 
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (size != null ? !size.equals(that.size) : that.size != null) return false;
-        if (type != null ? !type.equals(that.type) : that.type != null) return false;
-        if (created != null ? !created.equals(that.created) : that.created != null) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        if (name != null ? !name.equals(that.name) : that.name != null) {
+            return false;
+        }
+        if (size != null ? !size.equals(that.size) : that.size != null) {
+            return false;
+        }
+        if (type != null ? !type.equals(that.type) : that.type != null) {
+            return false;
+        }
+        if (created != null ? !created.equals(that.created) : that.created != null) {
+            return false;
+        }
         return !(linkToFile != null ? !linkToFile.equals(that.linkToFile) : that.linkToFile != null);
 
     }

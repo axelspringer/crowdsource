@@ -2,16 +2,19 @@ package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
+import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
+import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.security.Roles;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.http.MediaType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -264,7 +267,7 @@ public class ProjectEntityTest {
 
 
     @Test
-    public void pledgeUsingPostroundBudget(){
+    public void pledgeUsingPostroundBudget() {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         final List<PledgeEntity> pledgesDoneBefore = bunchOfWithPostRoundPledgesDone();
@@ -279,7 +282,7 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void pledgeUsingPostroundBudget_reverse(){
+    public void pledgeUsingPostroundBudget_reverse() {
         final FinancingRoundEntity round = aTerminatedFinancingRound();
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         projectEntity.setFinancingRound(round);
@@ -312,7 +315,7 @@ public class ProjectEntityTest {
         final List<PledgeEntity> postRoundPledges = bunchOfPostRoundPledges();
         final List<PledgeEntity> pledgesDone = new ArrayList<>(pledgesInRound);
         pledgesDone.addAll(postRoundPledges);
-        final Pledge pledge = new Pledge( -postRoundPledgedAmount - 1);
+        final Pledge pledge = new Pledge(-postRoundPledgedAmount - 1);
         int userBudgetBefore = adminUser.getBudget();
 
         InvalidRequestException res = null;
@@ -700,7 +703,7 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void masterdataModificationAllowed_shouldReturnTrueHavingNotActiveFinancingRound() throws Exception{
+    public void masterdataModificationAllowed_shouldReturnTrueHavingNotActiveFinancingRound() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         assertThat(projectEntity.masterdataModificationAllowed(), is(true));
 
@@ -714,28 +717,28 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void masterdataModificationAllowed_shouldReturnFalseHavingStatusFullyPledged() throws Exception{
+    public void masterdataModificationAllowed_shouldReturnFalseHavingStatusFullyPledged() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
         assertThat(projectEntity.masterdataModificationAllowed(), is(false));
     }
 
     @Test
-    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusProposed() throws Exception{
+    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusProposed() throws Exception {
         projectEntity.setFinancingRound(anActiveFinancingRound());
         projectEntity.setStatus(ProjectStatus.PROPOSED);
         assertThat(projectEntity.masterdataModificationAllowed(), is(true));
     }
 
     @Test
-    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusDeferred() throws Exception{
+    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusDeferred() throws Exception {
         projectEntity.setFinancingRound(anActiveFinancingRound());
         projectEntity.setStatus(ProjectStatus.DEFERRED);
         assertThat(projectEntity.masterdataModificationAllowed(), is(true));
     }
 
     @Test
-    public void masterdataChanged_returnsTrueIfOneFieldChanges() throws Exception{
+    public void masterdataChanged_returnsTrueIfOneFieldChanges() throws Exception {
         Project modifiedProject;
         // Given
         prepareMasterData(projectEntity);
@@ -772,7 +775,7 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void masterdataChanged_returnsFalseOnNoChange()throws Exception{
+    public void masterdataChanged_returnsFalseOnNoChange() throws Exception {
         prepareMasterData(projectEntity);
         Project unmodifiedProject = new Project(projectEntity, Collections.emptyList(), aUser);
 
@@ -787,6 +790,7 @@ public class ProjectEntityTest {
 
         assertThat(projectEntity.modifyMasterdata(modCmd, projectCreator), is(true));
     }
+
     @Test
     public void modifyMasterData_returnsTrueWhenSuccessfullyModifiedByAdmin() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
@@ -818,10 +822,10 @@ public class ProjectEntityTest {
         Project modCmd = new Project(projectEntity, Collections.emptyList(), aUser);
         modCmd.setDescription("CHANGED_DESCR");
 
-        try{
+        try {
             projectEntity.modifyMasterdata(modCmd, projectCreator);
             fail("Exception expected to be thrown");
-        }catch(InvalidRequestException e){
+        } catch (InvalidRequestException e) {
             assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
         }
         assertThat(projectEntity.getDescription(), not(equalTo(modCmd.getDescription())));
@@ -871,12 +875,12 @@ public class ProjectEntityTest {
 
     @Test
     public void addAttachmentAllowd_ThrowInvalidRequestExceptionWhenMasterdataChangesForbidden() {
-        try{
+        try {
             projectEntity.setStatus(ProjectStatus.PUBLISHED);
             projectEntity.setFinancingRound(anActiveFinancingRound());
             projectEntity.addAttachmentAllowed(adminUser);
             fail("Exception expected to be thrown");
-        }catch(InvalidRequestException e){
+        } catch (InvalidRequestException e) {
             assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
         }
     }
@@ -893,6 +897,34 @@ public class ProjectEntityTest {
     public void addAttachmentAllowd_DoNothingIffAllowed() {
         projectEntity.setStatus(ProjectStatus.PROPOSED);
         projectEntity.addAttachmentAllowed(projectCreator);
+    }
+
+    @Test
+    public void findAttachmentByReference_ShouldReturnExistingAttachment() {
+        final String existingFileRef = "an_Existing_File_Ref";
+        final AttachmentValue expAttachmentValue = anAttachmentValue(existingFileRef);
+
+        projectEntity.setAttachments(Arrays.asList(
+                anAttachmentValue("non_Matching_File_Ref"),
+                expAttachmentValue,
+                anAttachmentValue("another_non_Matching_File_Ref")));
+
+        assertThat(projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand(existingFileRef)), is(expAttachmentValue));
+
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void findAttachmentByReference_ShouldThrowIllegalArgExceptionOnIncompleteRequestObject() {
+        projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand(null));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void findAttachmentByReference_ShouldThrowResourceNotFoundExceptionOnNonExistingAttachment() {
+        projectEntity.setAttachments(Arrays.asList(
+                anAttachmentValue("non_Matching_File_Ref"),
+                anAttachmentValue("another_non_Matching_File_Ref")));
+
+        projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand("realyNotMatching!"));
     }
 
     private FinancingRoundEntity aTerminatedFinancingRound() {
@@ -914,7 +946,7 @@ public class ProjectEntityTest {
     }
 
     private List<PledgeEntity> pledgesAlreadyDone(int pledgeAmount) {
-        if(pledgeAmount == projectEntity.getPledgeGoal()){
+        if (pledgeAmount == projectEntity.getPledgeGoal()) {
             projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
         }
         return Collections.singletonList(new PledgeEntity(projectEntity, aUser, new Pledge(pledgeAmount), projectEntity.getFinancingRound()));
@@ -977,5 +1009,10 @@ public class ProjectEntityTest {
         projectEntity.setShortDescription("test_shortDescription");
         projectEntity.setPledgeGoal(17);
         return projectEntity;
+    }
+
+    private AttachmentValue anAttachmentValue(String fileReference) {
+        return new AttachmentValue(fileReference, MediaType.TEXT_PLAIN_VALUE, "fileName_" + fileReference, 617, DateTime.now()
+        );
     }
 }

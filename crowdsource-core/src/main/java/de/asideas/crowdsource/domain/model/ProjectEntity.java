@@ -2,9 +2,11 @@ package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
-import de.asideas.crowdsource.presentation.Pledge;
-import de.asideas.crowdsource.presentation.project.Project;
+import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.security.Roles;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -229,6 +231,25 @@ public class ProjectEntity {
 
     public void addAttachment(AttachmentValue attachment) {
         this.attachments.add(attachment);
+    }
+
+    /**
+     * Retrieve the attachment file reference entry that allows association of actual binary data.
+     * Currently fetching is only supported by file reference (<code>Attachment.id</code>).
+     *
+     * @param attachment the query object
+     * @return the attachment value if it exists
+     * @throws ResourceNotFoundException in case the attachment couldn't be found
+     */
+    public AttachmentValue findAttachmentByReference(Attachment attachment) throws ResourceNotFoundException{
+        Assert.notNull(attachment.getId());
+
+        final Optional<AttachmentValue> res = this.attachments.stream().filter(a -> a.getFileReference().equals(attachment.getId())).findFirst();
+
+        if(!res.isPresent()){
+            throw new ResourceNotFoundException();
+        }
+        return res.get();
     }
 
     boolean masterdataChanged(Project updatedProject) {

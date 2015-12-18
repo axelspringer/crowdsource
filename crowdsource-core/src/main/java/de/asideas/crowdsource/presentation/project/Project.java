@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -83,7 +83,7 @@ public class Project {
 
         this.creator = new ProjectCreator(projectEntity.getCreator());
 
-        this.attachments = projectEntity.getAttachments().stream().map(Attachment::new).collect(Collectors.toList());
+        this.attachments = projectEntity.getAttachments().stream().map(a -> new Attachment(a, projectEntity)).collect(Collectors.toList());
     }
 
     public Project() {

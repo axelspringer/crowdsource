@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.joda.JodaModule;
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.AttachmentValue;
+import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.ErrorResponse;
@@ -23,7 +24,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
-import org.springframework.beans.factory.config.PropertyResourceConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -42,9 +42,17 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -52,8 +60,17 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -464,7 +481,7 @@ public class ProjectControllerTest {
     public void addProjectAttachment_shouldDelegateToProjectService() throws Exception {
         final String email = "some@mail.com";
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
-        final Attachment expectedAttachment = anExpectedAttachment();
+        final Attachment expectedAttachment = anExpectedAttachment(aPersistedProjectEntity());
 
         MockMultipartFile content = mockedMultipart("somecontent", "test_filename", "text/plain");
         MediaType mediaType = mediaType();
@@ -530,6 +547,26 @@ public class ProjectControllerTest {
                 .principal(authentication(user)))
                 .andExpect(status().isOk())
                 .andReturn();
+    }
+
+    @Test
+    public void serveProjectAttachment_ReturnsResponseWithCorrectMediaType() throws Exception {
+        final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
+
+        final String expContent = "someContent";
+        final ProjectEntity project = aPersistedProjectEntity();
+        final Attachment expectedAttachment = anExpectedAttachmentWithPayload(project, Optional.of(expContent));
+
+        when(projectService.loadProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(expectedAttachment.getId())))
+            .thenReturn(expectedAttachment);
+
+        mockMvc.perform(get("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
+                .principal(authentication(user)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(expectedAttachment.getType()))
+                .andExpect(content().string(expContent))
+                .andReturn();
+
     }
 
     private void givenControllerSupportsMediaTypes(List<MediaType> mediaTypes) {
@@ -615,8 +652,18 @@ public class ProjectControllerTest {
         return expProject;
     }
 
-    private Attachment anExpectedAttachment(){
-        return new Attachment(new AttachmentValue("a_fieldRef", "text/plain", "a_filename", 17, DateTime.now()));
+    private ProjectEntity aPersistedProjectEntity() {
+        final ProjectEntity res = new ProjectEntity();
+        res.setId("aProjectId");
+        return res;
+    }
+
+    private Attachment anExpectedAttachment(ProjectEntity parentProject){
+        return anExpectedAttachmentWithPayload(parentProject, Optional.empty());
+    }
+    private Attachment anExpectedAttachmentWithPayload(ProjectEntity parentProject, Optional<String> payload){
+        return new Attachment(new AttachmentValue("a_fileRef", "text/plain", "a_filename", 17, DateTime.now()), parentProject,
+                payload.isPresent() ? new ByteArrayInputStream(payload.get().getBytes()) : null);
     }
 
     @Configuration

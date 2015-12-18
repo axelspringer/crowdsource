@@ -1,6 +1,7 @@
 package de.asideas.crowdsource.domain.model;
 
 import org.joda.time.DateTime;
+import org.springframework.util.Assert;
 
 /**
  * Represents a file attachment, belonging to a {@link de.asideas.crowdsource.domain.model.ProjectEntity}
@@ -27,9 +28,16 @@ public class AttachmentValue {
         this.contentType = contentType;
     }
 
-    public AttachmentValue() {
+    private AttachmentValue() {
     }
 
+    public String relativeUri(ProjectEntity parentProject){
+        Assert.notNull(parentProject);
+        if(this.fileReference == null){
+            throw new IllegalStateException("AttachmentValue has not yet an assigned 'fileReference' id and thus cannot serve its relative uri");
+        }
+        return "/projects/" + parentProject.getId() + "/attachments/" + fileReference;
+    }
 
     public String getContentType() {
         return contentType;
