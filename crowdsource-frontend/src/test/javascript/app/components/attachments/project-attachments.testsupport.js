@@ -12,6 +12,10 @@ function ProjectAttachments(element) {
         return element.find('button.upload');
     };
 
+    this.removeFileUploadButton  = function () {
+        return element.find('button.unselect-file');
+    };
+
     this.uploadNotification_Success = function () {
         return element.find('.upload-messages__success');
     };
@@ -21,7 +25,19 @@ function ProjectAttachments(element) {
     };
 
     this.fileInfo = function () {
-        return element.find(".file-info");
+        return element.find('.file-info');
+    };
+
+    this.attachmentsContainer = function () {
+        return element.find('.attachments');
+    };
+
+    this.attachmentsTable = function () {
+        return element.find('.attachments__list');
+    };
+
+    this.attachmentsTableRows = function () {
+        return element.find('.attachments__list').find('tr');
     };
 
 };

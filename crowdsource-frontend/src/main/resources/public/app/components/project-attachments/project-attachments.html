@@ -11,36 +11,24 @@
     </label>
 
     <input type="file" name="attachment"
-           ng-show="!currentAttachment"
-           ng-model="currentAttachment"
+           ng-show="!uploads.currentAttachment"
+           ng-model="uploads.currentAttachment"
            ngf-select
-           ngf-change="clearErrors()"
+           ngf-change="clearErrors(); uploads.lastUploadSuccessful = false;"
            analytics-category="Projects" analytics-event="AttachmentUploaded"
            accept="image/*, .pdf, text/plain" ngf-max-size="20MB" required>
 
-    <div class="file-info" ng-show="attachments_form.attachment.$valid">
-        <div><strong>{{currentAttachment.name}}</strong> - {{currentAttachment.size / 1024 / 1024 |number:2}}MB</div>
-        <img ngf-thumbnail="currentAttachment" class="attachment-thumb">
+    <div class="file-info margin-bottom-small" ng-show="attachments_form.attachment.$valid">
+        <div><strong>{{uploads.currentAttachment.name}}</strong> - {{uploads.currentAttachment.size | bytesAsMegabytes }}MB</div>
+        <img ngf-thumbnail="uploads.currentAttachment" class="attachment-thumb">
     </div>
 
-    <div class="progress" ng-show="currentAttachment.progress >= 0">
-        <div style="width:{{currentAttachment.progress}}%"
-             ng-bind="currentAttachment.progress + '%'"></div>
-    </div>
-
-    <div>
-        <button ng-click="currentAttachment = null; clearErrors(); " class="button tiny alert margin-top" ng-show="currentAttachment">
-            Entfernen
-        </button>
-        <button ng-disabled="!attachments_form.$valid"
-                class="button tiny margin-top upload"
-                ng-click="uploadAttachment(currentAttachment)">
-            Hochladen
-        </button>
+    <div class="cs-progress" ng-show="uploads.currentAttachment.progress >= 0 && uploads.currentAttachment.progress < 100">
+        <div class="cs-progress__meter" style="width:{{uploads.currentAttachment.progress}}%" ng-bind="uploads.currentAttachment.progress + '%'"></div>
     </div>
 
     <div class="upload-messages">
-        <span class="upload-messages__success" ng-show="lastUploadSuccessful">Upload erfolgreich</span>
+        <span class="upload-messages__success" ng-show="uploads.lastUploadSuccessful">Upload erfolgreich</span>
 
         <!-- Remote Error Message output -->
         <div ng-if="generalErrors" class="upload-messages__error" ng-messages="generalErrors">
@@ -58,25 +46,39 @@
             <span ng-message="remote_file_type_not_alloed"Der Dateityp wird leider nicht unterstützt.</span>
         </div>
     </div>
+
+    <div>
+        <button ng-show="uploads.currentAttachment"
+                class="button tiny alert margin-top unselect-file"
+                ng-click="uploads.currentAttachment = null; clearErrors(); ">
+            Entfernen
+        </button>
+        <button ng-disabled="!attachments_form.$valid"
+                class="button tiny margin-top upload"
+                ng-click="uploadAttachment(uploads.currentAttachment)">
+            Hochladen
+        </button>
+    </div>
+
 </form>
 
-<div ng-if="project.attachments.length" class="form-controls-attachments">
+<div ng-if="project.attachments.length" class="attachments">
     <h4>Anhänge</h4>
-    <table class="attachments">
+    <table class="attachments__list">
         <thead>
         <tr>
             <th>Dateiname</th>
-            <th ng-show="projectForm.uploader.isHTML5">Größe</th>
+            <th>Größe</th>
             <th>Aktion</th>
         </tr>
         </thead>
         <tbody>
         <tr ng-repeat="item in project.attachments">
-            <td><strong>{{item.name}}</strong></td>
-            <td ng-show="projectForm.uploader.isHTML5">{{ item.size / 1024 / 1024 | number : 2 }} MB</td>
-            <td><strong>
-                <button ng-show="uploadEnabled" ng-click="" type="button" class="tiny ultra-tiny pm-btn--alert">Löschen</button>
-            </strong></td>
+            <td><strong><a href="{{item.linkToFile}}">{{item.name}}</a> </strong></td>
+            <td>{{ item.size | bytesAsMegabytes }} MB</td>
+            <td>
+                <button ng-show="uploadEnabled" ng-click="" type="button" class="tiny ultra-tiny pm-btn--alert delete-attachment">Löschen</button>
+            </td>
         </tr>
         </tbody>
     </table>

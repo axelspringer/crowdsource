@@ -146,6 +146,8 @@ public class ProjectService {
         final InputStream payload = projectAttachmentRepository.loadAttachment(attachment2Serve);
 
         if(payload == null){
+            LOG.error("A project's attachment file entry's actual binary data couldn't be found: " +
+                    "projectId:{}; fileAttachmentMissing: {}", projectId, attachment2Serve);
             throw new ResourceNotFoundException();
         }
 

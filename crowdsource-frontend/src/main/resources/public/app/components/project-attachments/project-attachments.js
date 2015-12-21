@@ -14,7 +14,10 @@ angular.module('crowdsource')
             controller: function ($scope, Upload, $timeout, RemoteFormValidation, Project) {
                 var vm = $scope;
 
-                vm.lastUploadSuccessful = undefined;
+                vm.uploads = {
+                    currentAttachment: undefined,
+                    lastUploadSuccessful: undefined
+                };
 
                 $scope.$watch("project", function(project){
                     if(project == undefined){
@@ -25,20 +28,19 @@ angular.module('crowdsource')
                 });
 
                 vm.uploadAttachment = function(file) {
-                    console.log("Upload triggered for file: " + file.name);
                     file.upload = Upload.upload({
                         url: '/projects/' + vm.project.id + '/attachments',
                         data: {file: file, id: vm.project.id},
                     });
 
                     file.upload.then(function (response) {
-                        //$timeout(function () {
-                        console.log("Upload finished. " + response.data);
-                        file.result = response.data;
-                        vm.lastUploadSuccessful = true;
-                        vm.currentAttachment = undefined;
-                        vm.reloadProject();
-                        //});
+                        $timeout(function () {
+                            file.result = response.data;
+                            vm.uploads.lastUploadSuccessful = true;
+                            vm.uploads.currentAttachment = null;
+                            vm.clearErrors();
+                            vm.reloadProject();
+                        }, 0);
                     }, function (response) {
                         if (response.status > 0){
                             vm.lastUploadSuccessful = false;
@@ -64,4 +66,12 @@ angular.module('crowdsource')
 
             }
         };
+    })
+
+    .filter('bytesAsMegabytes', function ($filter) {
+
+        return function (input) {
+            return $filter('number')(input / 1024 / 1024, 2);
+        };
+
     });
