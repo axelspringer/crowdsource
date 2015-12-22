@@ -82,10 +82,10 @@
                         <a href="" class="tiny ultra-tiny ultra-tiny--alert button delete-attachment" ng-show="uploadEnabled" ng-click="">
                             Löschen
                         </a>
-                        <a href="" class="tiny ultra-tiny button copy-attachment-link" ngclipboard data-clipboard-text="{{ absoluteFileUrl(item) }}">
+                        <a href="" class="tiny ultra-tiny button secondary copy-attachment-link" ngclipboard data-clipboard-text="{{ absoluteFileUrl(item) }}">
                             Link Kopieren
                         </a>
-                        <a href="" class="tiny ultra-tiny button copy-attachment-md-link" ng-show="item.type.startsWith('image/') && uploadEnabled" ngclipboard data-clipboard-text="{{ markdownImageInclude(item) }}">
+                        <a href="" class="tiny ultra-tiny button secondary copy-attachment-md-link" ng-show="item.type.indexOf('image/') > -1 && uploadEnabled" ngclipboard data-clipboard-text="{{ markdownImageInclude(item) }}">
                             MD Link Kopieren
                         </a>
                     </li>

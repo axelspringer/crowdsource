@@ -24,6 +24,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -42,7 +43,7 @@ public class ProjectAttachmentRepositoryTest {
     }
 
     @Test
-    public void testStoreFile_shouldInvokeGridFsOps() throws Exception {
+    public void storeFile_shouldInvokeGridFsOps() throws Exception {
         final AttachmentValue attachment = aStoringRequestAttachment();
         final InputStream binaryData = mockedInputStream();
         final AttachmentValue expAttachment = aPersitedAttachment();
@@ -56,7 +57,7 @@ public class ProjectAttachmentRepositoryTest {
     }
 
     @Test
-    public void testLoadAttachment_shouldReturnNullWhenQueryReturnsNull() throws Exception {
+    public void loadAttachment_shouldReturnNullWhenQueryReturnsNull() throws Exception {
         when(gridFsOperations.findOne(any(Query.class))).thenReturn(null);
 
         InputStream res = projectAttachmentRepository.loadAttachment(aPersitedAttachment());
@@ -65,7 +66,7 @@ public class ProjectAttachmentRepositoryTest {
     }
 
     @Test
-    public void testLoadAttachment_shouldQueryByFileReference() throws Exception {
+    public void loadAttachment_shouldQueryByFileReference() throws Exception {
         AttachmentValue attachment = aPersitedAttachment();
         InputStream expRes = mockedInputStream();
 
@@ -75,6 +76,14 @@ public class ProjectAttachmentRepositoryTest {
         InputStream res = projectAttachmentRepository.loadAttachment(attachment);
 
         assertTrue(res == expRes);
+    }
+
+    @Test
+    public void deleteAttachment_shouldRemoveByFileReference() throws Exception {
+        AttachmentValue attachment = aPersitedAttachment();
+
+        projectAttachmentRepository.deleteAttachment(attachment);
+        verify(gridFsOperations).delete(eq(new Query(Criteria.where("_id").is(attachment.getFileReference()))));
     }
 
     private AttachmentValue aPersitedAttachment(){

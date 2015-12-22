@@ -229,8 +229,16 @@ public class ProjectEntity {
         modificationsAllowedByUserAndState(attachmentCreator);
     }
 
+    public void deleteAttachmentAllowed(UserEntity attachmentCreator) throws NotAuthorizedException, InvalidRequestException{
+        modificationsAllowedByUserAndState(attachmentCreator);
+    }
+
     public void addAttachment(AttachmentValue attachment) {
         this.attachments.add(attachment);
+    }
+
+    public void deleteAttachment(AttachmentValue attachment2Delete) {
+        attachments.remove(attachment2Delete);
     }
 
     /**

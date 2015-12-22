@@ -64,9 +64,8 @@ angular.module('crowdsource')
                 };
 
                 vm.absoluteFileUrl = function (attachment) {
-                    var res = $location.protocol() + "://" + $location.host() + ":" + $location.port()
+                    return $location.protocol() + "://" + $location.host() + ":" + $location.port()
                         + attachment.linkToFile;
-                    return res;
                 };
 
                 vm.markdownImageInclude = function (attachment) {

@@ -286,7 +286,7 @@ describe('project attachements', function () {
             expect( $(cells[2]).find('a.delete-attachment').hasClass('ng-hide')).toBe(!uploadEnabled);
             expect( $(cells[2]).find('a.copy-attachment-link').hasClass('ng-hide')).toBe(false);
             expect( $(cells[2]).find('a.copy-attachment-md-link').hasClass('ng-hide')).toBe(
-                !(attachment.type.startsWith('image/') && uploadEnabled));
+                !(attachment.type.indexOf('image/') > -1 && uploadEnabled));
 
         }
     }

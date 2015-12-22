@@ -64,6 +64,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -552,7 +553,6 @@ public class ProjectControllerTest {
     @Test
     public void serveProjectAttachment_ReturnsResponseWithCorrectMediaType() throws Exception {
         final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
-
         final String expContent = "someContent";
         final ProjectEntity project = aPersistedProjectEntity();
         final Attachment expectedAttachment = anExpectedAttachmentWithPayload(project, Optional.of(expContent));
@@ -567,6 +567,21 @@ public class ProjectControllerTest {
                 .andExpect(content().string(expContent))
                 .andReturn();
 
+    }
+
+    @Test
+    public void deleteAttachment_callsProjectServiceAndReturnsNoContent() throws Exception {
+        final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
+        final String expContent = "someContent";
+        final ProjectEntity project = aPersistedProjectEntity();
+        final Attachment expectedAttachment = anExpectedAttachmentWithPayload(project, Optional.of(expContent));
+
+        mockMvc.perform(delete("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
+                .principal(authentication(user)))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        verify(projectService).deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(expectedAttachment.getId()), user);
     }
 
     private void givenControllerSupportsMediaTypes(List<MediaType> mediaTypes) {

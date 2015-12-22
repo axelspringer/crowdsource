@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -139,19 +140,37 @@ public class ProjectService {
         return Attachment.asResponseWithoutPayload(attachmentStored, projectEntity);
     }
 
-    public Attachment loadProjectAttachment(String projectId, Attachment attachmentRequested){
+    public Attachment loadProjectAttachment(String projectId, Attachment attachmentRequest) {
         final ProjectEntity project = loadProjectEntity(projectId);
 
-        final AttachmentValue attachment2Serve = project.findAttachmentByReference(attachmentRequested);
+        final AttachmentValue attachment2Serve = project.findAttachmentByReference(attachmentRequest);
         final InputStream payload = projectAttachmentRepository.loadAttachment(attachment2Serve);
 
-        if(payload == null){
+        if (payload == null) {
             LOG.error("A project's attachment file entry's actual binary data couldn't be found: " +
                     "projectId:{}; fileAttachmentMissing: {}", projectId, attachment2Serve);
             throw new ResourceNotFoundException();
         }
 
         return Attachment.asResponse(attachment2Serve, project, payload);
+    }
+
+    public void deleteProjectAttachment(String projectId, Attachment attachmentRequest, UserEntity deletingUser) {
+        final ProjectEntity project = loadProjectEntity(projectId);
+        final AttachmentValue attachment2Delete = project.findAttachmentByReference(attachmentRequest);
+
+        project.deleteAttachmentAllowed(deletingUser);
+
+        final InputStream attachmentBinary = projectAttachmentRepository.loadAttachment(attachment2Delete);
+        if(attachmentBinary != null){
+            try {
+                attachmentBinary.close();
+            } catch (IOException e) {}
+            projectAttachmentRepository.deleteAttachment(attachment2Delete);
+        }
+
+        project.deleteAttachment(attachment2Delete);
+        projectRepository.save(project);
     }
 
     void pledgeProjectInFinancingRound(ProjectEntity projectEntity, UserEntity userEntity, Pledge pledge) {

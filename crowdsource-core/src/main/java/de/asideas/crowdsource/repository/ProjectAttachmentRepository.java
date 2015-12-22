@@ -34,4 +34,7 @@ public class ProjectAttachmentRepository {
         return res.getInputStream();
     }
 
+    public void deleteAttachment(AttachmentValue attachment) {
+        gridFsOperations.delete(new Query(Criteria.where("_id").is(attachment.getFileReference())));
+    }
 }

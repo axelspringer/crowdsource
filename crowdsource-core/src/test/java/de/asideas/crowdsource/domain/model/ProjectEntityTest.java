@@ -874,7 +874,21 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void addAttachmentAllowd_ThrowInvalidRequestExceptionWhenMasterdataChangesForbidden() {
+    public void addAttachmentAllowed_DoNothingIfAllowed() {
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        projectEntity.addAttachmentAllowed(projectCreator);
+    }
+
+    @Test(expected = NotAuthorizedException.class)
+    public void addAttachmentAllowed_ThrowsNotAuthorizeddExceptionWhenUserForbidden() {
+        projectEntity.setStatus(ProjectStatus.PUBLISHED);
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+
+        projectEntity.addAttachmentAllowed(aUser);
+    }
+
+    @Test
+    public void addAttachmentAllowed_ThrowInvalidRequestExceptionWhenMasterdataChangesForbidden() {
         try {
             projectEntity.setStatus(ProjectStatus.PUBLISHED);
             projectEntity.setFinancingRound(anActiveFinancingRound());
@@ -883,20 +897,6 @@ public class ProjectEntityTest {
         } catch (InvalidRequestException e) {
             assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
         }
-    }
-
-    @Test(expected = NotAuthorizedException.class)
-    public void addAttachmentAllowd_ThrowsNotAuthorizeddExceptionWhenUserForbidden() {
-        projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        projectEntity.setFinancingRound(anActiveFinancingRound());
-
-        projectEntity.addAttachmentAllowed(aUser);
-    }
-
-    @Test
-    public void addAttachmentAllowd_DoNothingIffAllowed() {
-        projectEntity.setStatus(ProjectStatus.PROPOSED);
-        projectEntity.addAttachmentAllowed(projectCreator);
     }
 
     @Test
@@ -925,6 +925,45 @@ public class ProjectEntityTest {
                 anAttachmentValue("another_non_Matching_File_Ref")));
 
         projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand("realyNotMatching!"));
+    }
+
+    @Test
+    public void deleteAttachmentAllowed_DoNothingIfAllowed() {
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        projectEntity.deleteAttachmentAllowed(projectCreator);
+    }
+
+    @Test(expected = NotAuthorizedException.class)
+    public void deleteAttachmentAllowed_ThrowsNotAuthorizeddExceptionWhenUserForbidden() {
+        projectEntity.setStatus(ProjectStatus.PUBLISHED);
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+
+        projectEntity.deleteAttachmentAllowed(aUser);
+    }
+
+    @Test
+    public void deleteAttachmentAllowed_ThrowInvalidRequestExceptionWhenMasterdataChangesForbidden() {
+        try {
+            projectEntity.setStatus(ProjectStatus.PUBLISHED);
+            projectEntity.setFinancingRound(anActiveFinancingRound());
+            projectEntity.deleteAttachmentAllowed(adminUser);
+            fail("Exception expected to be thrown");
+        } catch (InvalidRequestException e) {
+            assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
+        }
+    }
+
+    @Test
+    public void deleteAttachment_ShouldDeleteByFileReferenceOnly() throws Exception {
+        final String fileRef2Del = "file_ref_1";
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        projectEntity.addAttachment(anAttachmentValue("file_ref_0"));
+        projectEntity.addAttachment(anAttachmentValue(fileRef2Del));
+
+        projectEntity.deleteAttachment(new AttachmentValue(fileRef2Del, null, "", 17L, DateTime.now()));
+
+        assertThat(projectEntity.getAttachments().size(), is(1));
+        assertThat(projectEntity.getAttachments().get(0).getFileReference(), is(not(fileRef2Del)));
     }
 
     private FinancingRoundEntity aTerminatedFinancingRound() {
