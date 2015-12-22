@@ -64,7 +64,7 @@ public class ProjectTest {
         assertThat(res.getPledgeGoal(), is(projectEntity.getPledgeGoal()));
         assertThat(res.getShortDescription(), is(projectEntity.getDescription()));
         assertThat(res.getTitle(), is(projectEntity.getTitle()));
-        assertThat(res.getAttachments(), is(projectEntity.getAttachments().stream().map(a-> new Attachment(a, projectEntity)).collect(Collectors.toList())));
+        assertThat(res.getAttachments(), is(projectEntity.getAttachments().stream().map(a-> Attachment.asResponseWithoutPayload(a, projectEntity)).collect(Collectors.toList())));
     }
 
     @Test

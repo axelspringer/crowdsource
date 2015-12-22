@@ -24,7 +24,7 @@ public class Attachment {
     private Attachment() {
     }
 
-    public Attachment(AttachmentValue attachmentValue, ProjectEntity parentProject) {
+    private Attachment(AttachmentValue attachmentValue, ProjectEntity parentProject) {
         this.created = attachmentValue.getCreated();
         this.id = attachmentValue.getFileReference();
         this.name = attachmentValue.getFilename();
@@ -33,20 +33,12 @@ public class Attachment {
         this.linkToFile = attachmentValue.relativeUri(parentProject);
     }
 
-    /**
-     * Full payload constructor
-     * @param attachmentValue
-     * @param payload
-     */
-    public Attachment(AttachmentValue attachmentValue, ProjectEntity parentProject, InputStream payload) {
-        this(attachmentValue, parentProject);
-        setPayload(payload);
-    }
 
-    public static Attachment asCreationCommand(String name, String type) {
+    public static Attachment asCreationCommand(String name, String type, InputStream payload) {
         Attachment res = new Attachment();
         res.name = name;
         res.type = type;
+        res.payload = payload;
         return res;
     }
 
@@ -54,6 +46,16 @@ public class Attachment {
         Attachment res = new Attachment();
         res.id = id;
         return res;
+    }
+
+    public static Attachment asResponse(AttachmentValue attachmentValue, ProjectEntity parentProject, InputStream payload) {
+        final Attachment res = new Attachment(attachmentValue, parentProject);
+        res.setPayload(payload);
+        return res;
+    }
+
+    public static Attachment asResponseWithoutPayload(AttachmentValue attachmentValue, ProjectEntity parentProject) {
+        return new Attachment(attachmentValue, parentProject);
     }
 
 

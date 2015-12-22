@@ -127,16 +127,16 @@ public class ProjectController {
 
         try {
             InputStream inputStream = file.getInputStream();
-            Attachment fileMeta = Attachment.asCreationCommand(file.getOriginalFilename(), file.getContentType());
+            Attachment attachment = Attachment.asCreationCommand(file.getOriginalFilename(), file.getContentType(), inputStream);
 
-            return projectService.addProjectAttachment(projectId, inputStream, fileMeta, userByPrincipal(principal));
+            return projectService.addProjectAttachment(projectId, attachment, userByPrincipal(principal));
+
         } catch (IOException e) {
             log.warn("Couldn' process file input, due stream threw IOException; ProjectId: " + projectId, e);
             throw new RuntimeException("Internal error, couldn't process file stream");
         }
     }
 
-    @Secured(Roles.ROLE_USER)
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.GET)
     public ResponseEntity<byte[]> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference) throws IOException {
 

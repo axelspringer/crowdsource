@@ -11,7 +11,7 @@ angular.module('crowdsource')
             },
             templateUrl: 'app/components/project-attachments/project-attachments.html',
 
-            controller: function ($scope, Upload, $timeout, RemoteFormValidation, Project) {
+            controller: function ($scope, Upload, $timeout, $location, RemoteFormValidation, Project) {
                 var vm = $scope;
 
                 vm.uploads = {
@@ -44,7 +44,6 @@ angular.module('crowdsource')
                     }, function (response) {
                         if (response.status > 0){
                             vm.lastUploadSuccessful = false;
-                            console.log("Retrieved response status: " + response);
                             RemoteFormValidation.applyServerErrorResponse(vm, vm.attachments_form, response);
                             vm.errorMsg = response.data;
                         }
@@ -62,7 +61,18 @@ angular.module('crowdsource')
                     Project.get(vm.project.id).then(function (resolvedProject){
                         angular.copy(resolvedProject, vm.project);
                     })
-                }
+                };
+
+                vm.absoluteFileUrl = function (attachment) {
+                    var res = $location.protocol() + "://" + $location.host() + ":" + $location.port()
+                        + attachment.linkToFile;
+                    return res;
+                };
+
+                vm.markdownImageInclude = function (attachment) {
+                    var res = "![" + attachment.name + "](" + vm.absoluteFileUrl(attachment) + ")";
+                    return res;
+                };
 
             }
         };

@@ -77,7 +77,19 @@
             <td><strong><a href="{{item.linkToFile}}">{{item.name}}</a> </strong></td>
             <td>{{ item.size | bytesAsMegabytes }} MB</td>
             <td>
-                <button ng-show="uploadEnabled" ng-click="" type="button" class="tiny ultra-tiny pm-btn--alert delete-attachment">Löschen</button>
+                <ul class="button-group">
+                    <li>
+                        <a href="" class="tiny ultra-tiny button" ngclipboard data-clipboard-text="{{ absoluteFileUrl(item) }}">
+                            Link Kopieren
+                        </a>
+                        <a href="" ng-if="item.type.startsWith('image/')" class="tiny ultra-tiny button" ngclipboard data-clipboard-text="{{ markdownImageInclude(item) }}">
+                            MD Link Kopieren
+                        </a>
+                        <a href="" ng-show="uploadEnabled" ng-click="" class="tiny ultra-tiny ultra-tiny--alert button delete-attachment">
+                            Löschen
+                        </a>
+                    </li>
+                </ul>
             </td>
         </tr>
         </tbody>

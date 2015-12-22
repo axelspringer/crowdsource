@@ -30,6 +30,8 @@ var config = {
             'bower_components/ng-showdown/dist/ng-showdown.min.js',
             'bower_components/ng-file-upload/ng-file-upload-shim.min.js',
             'bower_components/ng-file-upload/ng-file-upload.min.js',
+            'bower_components/clipboard/dist/clipboard.min.js',
+            'bower_components/ngclipboard/dist/ngclipboard.min.js',
         ],
         unminified: [
             'bower_components/foundation/js/vendor/modernizr.js',

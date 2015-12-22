@@ -21,7 +21,7 @@
      * global application configuration
      */
     angular.module('crowdsource', ['ngRoute', 'ngResource', 'ngMessages', 'dibari.angular-ellipsis', 'ngScrollTo',
-                    'angulartics', 'angulartics.piwik', 'ngSanitize', 'ng-showdown', 'ngFileUpload'])
+                    'angulartics', 'angulartics.piwik', 'ngSanitize', 'ng-showdown', 'ngFileUpload', 'ngclipboard'])
         .config(function ($routeProvider, $locationProvider, $httpProvider, $analyticsProvider, $showdownProvider) {
             $routeProvider
                 .when('/projects', {

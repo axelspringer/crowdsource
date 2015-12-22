@@ -83,7 +83,7 @@ public class Project {
 
         this.creator = new ProjectCreator(projectEntity.getCreator());
 
-        this.attachments = projectEntity.getAttachments().stream().map(a -> new Attachment(a, projectEntity)).collect(Collectors.toList());
+        this.attachments = projectEntity.getAttachments().stream().map(a -> Attachment.asResponseWithoutPayload(a, projectEntity)).collect(Collectors.toList());
     }
 
     public Project() {

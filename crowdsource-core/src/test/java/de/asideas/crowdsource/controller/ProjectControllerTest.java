@@ -43,7 +43,6 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -486,12 +485,13 @@ public class ProjectControllerTest {
         MockMultipartFile content = mockedMultipart("somecontent", "test_filename", "text/plain");
         MediaType mediaType = mediaType();
 
-        when(projectService.addProjectAttachment(eq("some_id"), any(InputStream.class), eq(Attachment.asCreationCommand("test_filename", "text/plain")), eq(user)))
+        when(projectService.addProjectAttachment(eq("some_id"), eq(Attachment.asCreationCommand("test_filename", "text/plain", content.getInputStream())), eq(user)))
                 .thenReturn(expectedAttachment);
+
         MvcResult mvcRes = mockMvc.perform(fileUpload("/projects/{projectId}/attachments", "some_id")
                 .file(content)
                 .principal(authentication(user))
-                .contentType(mediaType) )
+                .contentType(mediaType))
                 .andExpect(status().isOk())
                 .andReturn();
 
@@ -558,7 +558,7 @@ public class ProjectControllerTest {
         final Attachment expectedAttachment = anExpectedAttachmentWithPayload(project, Optional.of(expContent));
 
         when(projectService.loadProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(expectedAttachment.getId())))
-            .thenReturn(expectedAttachment);
+                .thenReturn(expectedAttachment);
 
         mockMvc.perform(get("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
                 .principal(authentication(user)))
@@ -658,11 +658,12 @@ public class ProjectControllerTest {
         return res;
     }
 
-    private Attachment anExpectedAttachment(ProjectEntity parentProject){
+    private Attachment anExpectedAttachment(ProjectEntity parentProject) {
         return anExpectedAttachmentWithPayload(parentProject, Optional.empty());
     }
-    private Attachment anExpectedAttachmentWithPayload(ProjectEntity parentProject, Optional<String> payload){
-        return new Attachment(new AttachmentValue("a_fileRef", "text/plain", "a_filename", 17, DateTime.now()), parentProject,
+
+    private Attachment anExpectedAttachmentWithPayload(ProjectEntity parentProject, Optional<String> payload) {
+        return Attachment.asResponse(new AttachmentValue("a_fileRef", "text/plain", "a_filename", 17, DateTime.now()), parentProject,
                 payload.isPresent() ? new ByteArrayInputStream(payload.get().getBytes()) : null);
     }
 
@@ -695,7 +696,7 @@ public class ProjectControllerTest {
         }
 
         @Bean
-        public PropertyPlaceholderConfigurer propertyPlaceholderConfigurer(){
+        public PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
             return new PropertyPlaceholderConfigurer();
         }
     }

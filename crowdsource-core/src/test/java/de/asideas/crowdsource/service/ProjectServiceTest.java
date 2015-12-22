@@ -470,7 +470,7 @@ public class ProjectServiceTest {
         ArgumentCaptor<AttachmentValue> writeAttachmentCaptor = ArgumentCaptor.forClass(AttachmentValue.class);
         when(projectRepository.findOne(projectId)).thenReturn(project);
         when(projectAttachmentRepository.storeFile(writeAttachmentCaptor.capture(), any(InputStream.class))).thenReturn(expAttachmentValue);
-        Attachment res = projectService.addProjectAttachment(projectId, mockedInputStream(), attachmentSaveCmd, projectCreator);
+        Attachment res = projectService.addProjectAttachment(projectId, attachmentSaveCmd, projectCreator);
 
         ArgumentCaptor<ProjectEntity> projectCaptor = ArgumentCaptor.forClass(ProjectEntity.class);
         assertThat(writeAttachmentCaptor.getValue().getContentType(), is(attachmentSaveCmd.getType()));
@@ -485,7 +485,7 @@ public class ProjectServiceTest {
         final String projectId = "test_ID";
         when(projectRepository.findOne(projectId)).thenReturn(null);
 
-        projectService.addProjectAttachment(projectId, mockedInputStream(), aStoringRequestAttachment(), user("blub"));
+        projectService.addProjectAttachment(projectId, aStoringRequestAttachment(), user("blub"));
     }
 
     @Test
@@ -498,7 +498,7 @@ public class ProjectServiceTest {
         when(projectRepository.findOne(projectId)).thenReturn(project);
 
         try {
-            projectService.addProjectAttachment(projectId, mockedInputStream(), aStoringRequestAttachment(), projectCreator);
+            projectService.addProjectAttachment(projectId, aStoringRequestAttachment(), projectCreator);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
@@ -659,7 +659,7 @@ public class ProjectServiceTest {
     }
 
     private Attachment aStoringRequestAttachment() {
-        return Attachment.asCreationCommand("test_filename", "text/plain");
+        return Attachment.asCreationCommand("test_filename", "text/plain", mockedInputStream());
     }
 
     private InputStream mockedInputStream() {

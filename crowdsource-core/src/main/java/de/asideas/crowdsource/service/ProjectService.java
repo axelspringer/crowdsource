@@ -127,16 +127,16 @@ public class ProjectService {
         }
     }
 
-    public Attachment addProjectAttachment(String projectId, InputStream fileInput, Attachment attachment, UserEntity savingUser) {
+    public Attachment addProjectAttachment(String projectId, Attachment attachment, UserEntity savingUser) {
         ProjectEntity projectEntity = loadProjectEntity(projectId);
 
         projectEntity.addAttachmentAllowed(savingUser);
 
         AttachmentValue attachmentStored = new AttachmentValue(attachment.getName(), attachment.getType());
-        attachmentStored = projectAttachmentRepository.storeFile(attachmentStored, fileInput);
+        attachmentStored = projectAttachmentRepository.storeFile(attachmentStored, attachment.getPayload());
         projectEntity.addAttachment(attachmentStored);
         projectRepository.save(projectEntity);
-        return new Attachment(attachmentStored, projectEntity);
+        return Attachment.asResponseWithoutPayload(attachmentStored, projectEntity);
     }
 
     public Attachment loadProjectAttachment(String projectId, Attachment attachmentRequested){
@@ -151,7 +151,7 @@ public class ProjectService {
             throw new ResourceNotFoundException();
         }
 
-        return new Attachment(attachment2Serve, project, payload);
+        return Attachment.asResponse(attachment2Serve, project, payload);
     }
 
     void pledgeProjectInFinancingRound(ProjectEntity projectEntity, UserEntity userEntity, Pledge pledge) {

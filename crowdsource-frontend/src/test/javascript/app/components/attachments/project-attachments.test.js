@@ -1,6 +1,6 @@
 describe('project attachements', function () {
 
-    var $rootScope, $compile, projectAttachments, scope, $httpBackend, $filter, $timeout, FinancingRound, Authentication;
+    var $rootScope, $compile, projectAttachments, scope, $httpBackend, $filter, $timeout, $browser, $location;
     var attachmentsDirectiveCompiled;
 
     beforeEach(function () {
@@ -12,15 +12,15 @@ describe('project attachements', function () {
             _$analyticsProvider_.developerMode(true);
         });
 
-        inject(function (_$compile_, _$rootScope_, _$httpBackend_, _$filter_, _$timeout_, _FinancingRound_, _Authentication_) {
+        inject(function (_$compile_, _$rootScope_, _$httpBackend_, _$filter_, _$timeout_, _$browser_, _$location_) {
             $rootScope = _$rootScope_;
             scope = $rootScope.$new();
             $compile = _$compile_;
             $httpBackend = _$httpBackend_;
             $filter = _$filter_;
             $timeout = _$timeout_;
-            FinancingRound = _FinancingRound_;
-            Authentication = _Authentication_;
+            $browser = _$browser_;
+            $location = _$location_;
 
             scope['status'] = {};
             scope['project'] = {
@@ -30,18 +30,6 @@ describe('project attachements', function () {
 
             compileDirective();
 
-            //currentUser = {
-            //    loggedIn: false,
-            //    budget: 17,
-            //    hasRole: function (roleReq) {
-            //        return false;
-            //    }
-            //};
-            //currentRound = {
-            //    active: true,
-            //    postRoundBudgetDistributable: false,
-            //    postRoundBudgetRemaining: 0
-            //};
         });
     });
 
@@ -144,6 +132,28 @@ describe('project attachements', function () {
         expect($filter('bytesAsMegabytes')(givenBytes).replace(".", ",")).toBe("42,00");
     });
 
+    it("should output correct file link", function () {
+        givenUploadIsEnabled(false);
+        var project = givenAProjectWithAttachmentsWasInjected();
+        var expLocation = 'http://mycrowd.com:8080';
+        givenBrowserLocationIsSetTo("mycrowd.com", "8080");
+
+        scope.$digest();
+
+        thenExpectLinkToFileWithLocation(project.attachments[0], expLocation);
+    });
+
+    it("should output correct markdown link", function () {
+        givenUploadIsEnabled(false);
+        var project = givenAProjectWithAttachmentsWasInjected();
+        var expLocation = 'http://mycrowd.com:8080';
+        givenBrowserLocationIsSetTo("mycrowd.com", "8080");
+
+        scope.$digest();
+
+        thenExpectMarkdownImageSnippet(project.attachments[0], expLocation);
+    });
+
     // GIVEN
     function givenUploadIsEnabled(enabled) {
         attachmentsDirectiveCompiled.isolateScope().uploadEnabled = enabled;
@@ -192,6 +202,12 @@ describe('project attachements', function () {
         };
         attachmentsDirectiveCompiled.isolateScope().uploads.currentAttachment = res;
         return res;
+    }
+
+    function givenBrowserLocationIsSetTo(host, port) {
+        spyOn($location, 'protocol').and.returnValue('http');
+        spyOn($location, 'host').and.returnValue(host);
+        spyOn($location, 'port').and.returnValue(port);
     }
 
     // WHEN
@@ -266,9 +282,19 @@ describe('project attachements', function () {
 
             expect(cells[0].innerHTML).toContain(attachments[i].name);
             expect(cells[1].innerHTML).toContain($filter('number')(attachments[i].size / 1024 / 1024, 2) + " MB" );
-            expect( $(cells[2]).find('button.delete-attachment').hasClass('ng-hide')).toBe(!uploadEnabled);
+            expect( $(cells[2]).find('a.delete-attachment').hasClass('ng-hide')).toBe(!uploadEnabled);
 
         }
+    }
+
+    function thenExpectLinkToFileWithLocation(attachment, expectedLocation) {
+        expect(attachmentsDirectiveCompiled.isolateScope().absoluteFileUrl(attachment))
+            .toBe(expectedLocation + attachment.linkToFile);
+    }
+
+    function thenExpectMarkdownImageSnippet(attachment, expectedLocation) {
+        expect(attachmentsDirectiveCompiled.isolateScope().markdownImageInclude(attachment))
+            .toBe("![" + attachment.name + "](" + expectedLocation + attachment.linkToFile + ")");
     }
 
 });

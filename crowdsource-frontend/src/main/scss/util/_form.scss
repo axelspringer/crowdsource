@@ -80,6 +80,13 @@ button, .button {
     }
 
     &.ultra-tiny {
+
+    }
+    &.ultra-tiny--alert {
+        background-color: rgba(255, 60, 60, 0.65);
+    }
+
+    &.ultra-tiny--icon {
         padding-top: 0.525rem;
         padding-right: 0.7rem;
         padding-bottom: 0.5875rem;
