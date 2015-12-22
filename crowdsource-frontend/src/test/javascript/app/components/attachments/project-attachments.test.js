@@ -114,7 +114,7 @@ describe('project attachements', function () {
         scope.$digest();
 
         thenFileAttachmentsListContainerExists(uploadIsEnabled);
-        thenFileAttachmentListShowsFilesOfProjectAndDeletButtonIfUploadEnabled(project, uploadIsEnabled);
+        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadIsEnabled);
     });
 
     it("should display attachments of project although upload is disabled", function () {
@@ -124,7 +124,7 @@ describe('project attachements', function () {
         scope.$digest();
 
         thenFileAttachmentsListContainerExists(true);
-        thenFileAttachmentListShowsFilesOfProjectAndDeletButtonIfUploadEnabled(project, false);
+        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, false);
     });
 
     it("filter 'bytesAsMegabytes' should format correctly", function () {
@@ -178,7 +178,7 @@ describe('project attachements', function () {
             id: "test_attachment_id_0",
             name: "test_attachment_name_0",
             size: 2 * 1024 * 1024 * 1024, // e.g. 2MB
-            type: "image/jpeg",
+            type: "text/plain",
             created: moment(),
             linkToFile: "/projects/test_project_id/attachments/test_attachment_id_0"
         });
@@ -270,7 +270,7 @@ describe('project attachements', function () {
 
     }
 
-    function thenFileAttachmentListShowsFilesOfProjectAndDeletButtonIfUploadEnabled(project, uploadEnabled) {
+    function thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadEnabled) {
         var attachments = project.attachments;
         var attachmentRows = projectAttachments.attachmentsTableRows();
 
@@ -279,10 +279,14 @@ describe('project attachements', function () {
         for (var i = 0; i< attachments.length; i++) {
             var currentRow = attachmentRows[i+1];
             var cells = currentRow.cells;
+            var attachment = attachments[i];
 
             expect(cells[0].innerHTML).toContain(attachments[i].name);
             expect(cells[1].innerHTML).toContain($filter('number')(attachments[i].size / 1024 / 1024, 2) + " MB" );
             expect( $(cells[2]).find('a.delete-attachment').hasClass('ng-hide')).toBe(!uploadEnabled);
+            expect( $(cells[2]).find('a.copy-attachment-link').hasClass('ng-hide')).toBe(false);
+            expect( $(cells[2]).find('a.copy-attachment-md-link').hasClass('ng-hide')).toBe(
+                !(attachment.type.startsWith('image/') && uploadEnabled));
 
         }
     }

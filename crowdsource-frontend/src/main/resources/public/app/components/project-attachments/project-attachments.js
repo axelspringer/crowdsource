@@ -7,7 +7,7 @@ angular.module('crowdsource')
             restrict: 'E',
             scope: {
                 project: '=',
-                uploadEnabled: '@'
+                uploadEnabled: '='
             },
             templateUrl: 'app/components/project-attachments/project-attachments.html',
 
