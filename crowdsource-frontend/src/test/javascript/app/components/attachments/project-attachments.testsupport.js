@@ -24,6 +24,10 @@ function ProjectAttachments(element) {
         return element.find('.upload-messages__error');
     };
 
+    this.deletionNotification_Error = function () {
+        return element.find('.delete-messages__error');
+    };
+
     this.fileInfo = function () {
         return element.find('.file-info');
     };
@@ -39,5 +43,15 @@ function ProjectAttachments(element) {
     this.attachmentsTableRows = function () {
         return element.find('.attachments__list').find('tr');
     };
+
+    this.attachmentsTableCell_Filename = function (row) {
+        return this.attachmentsTableRows()[row].cells[0];
+    };
+    this.attachmentsTableCell_Filesize = function (row) {
+        return this.attachmentsTableRows()[row].cells[1];
+    };
+    this.attachmentsTableCell_Actions = function (row) {
+        return $(this.attachmentsTableRows()[row].cells[2]);
+    }
 
 };

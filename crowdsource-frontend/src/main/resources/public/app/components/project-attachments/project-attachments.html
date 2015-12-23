@@ -31,7 +31,7 @@
         <span class="upload-messages__success" ng-show="uploads.lastUploadSuccessful">Upload erfolgreich</span>
 
         <!-- Remote Error Message output -->
-        <div ng-if="generalErrors" class="upload-messages__error" ng-messages="generalErrors">
+        <div ng-if="generalErrors && !uploads.lastUploadSuccessful && uploads.currentErrorContext==='upload' " class="upload-messages__error" ng-messages="generalErrors">
             <span ng-message="remote_unknown_error">
                 Upload aus unbekannten Gründen leider fehlgeschlagen.
             </span>
@@ -64,6 +64,23 @@
 
 <div ng-if="project.attachments.length" class="attachments">
     <h4>Anhänge</h4>
+
+    <form name="delete_attachments_form">
+
+        <div class="delete-messages">
+            <!-- Remote Error Message output -->
+            <div ng-if="generalErrors && !uploads.lastDeletionSuccessful && uploads.currentErrorContext==='deletion'" class="delete-messages__error" ng-messages="generalErrors">
+                <span ng-message="remote_unknown_error">
+                    Löschen fehlgeschlagen. Bitte versuche es erneut.
+                </span>
+                <span ng-message="remote_master_data_change_not_allowed">
+                    Dateianhänge können nur Außerhalb einer Finanzierungsrunde, und wenn das Projekt nicht voll finanziert ist, verändert werden.
+                </span>
+                <span ng-message="remote_unknown">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</span>
+            </div>
+        </div>
+    </form>
+
     <table class="attachments__list">
         <thead>
         <tr>
@@ -79,8 +96,11 @@
             <td>
                 <ul class="button-group">
                     <li>
-                        <a href="" class="tiny ultra-tiny ultra-tiny--alert button delete-attachment" ng-show="uploadEnabled" ng-click="">
-                            Löschen
+                        <a href="" class="tiny ultra-tiny ultra-tiny--alert button delete-attachment"
+                           ng-show="uploadEnabled"
+                           ng-disabled="uploads.deletionsInProgress.indexOf(item.id) > -1"
+                           ng-click="deleteAttachment(item)">
+                            {{ uploads.deletionsInProgress.indexOf(item.id) > -1 ? 'Löschen ...' : 'Löschen'  }}
                         </a>
                         <a href="" class="tiny ultra-tiny button secondary copy-attachment-link" ngclipboard data-clipboard-text="{{ absoluteFileUrl(item) }}">
                             Link Kopieren

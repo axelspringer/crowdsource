@@ -151,7 +151,7 @@ public class ProjectController {
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.DELETE)
-    public void deleteProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference, Principal principal) {
+    public void deleteProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference, Principal principal) throws InterruptedException {
 
         projectService.deleteProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference), userByPrincipal(principal));
     }

@@ -16,18 +16,21 @@ angular.module('crowdsource')
 
                 vm.uploads = {
                     currentAttachment: undefined,
-                    lastUploadSuccessful: undefined
+                    lastUploadSuccessful: undefined,
+                    lastDeletionSuccessful: undefined,
+                    deletionsInProgress: [],
+                    currentErrorContext: 'upload'
                 };
 
-                $scope.$watch("project", function(project){
-                    if(project == undefined){
+                $scope.$watch("project", function (project) {
+                    if (project == undefined) {
                         return;
                     }
                     // Resolve project when deferred by parent scope in order to refresh this form correctly
                     vm.project = project;
                 });
 
-                vm.uploadAttachment = function(file) {
+                vm.uploadAttachment = function (file) {
                     file.upload = Upload.upload({
                         url: '/projects/' + vm.project.id + '/attachments',
                         data: {file: file, id: vm.project.id},
@@ -42,8 +45,9 @@ angular.module('crowdsource')
                             vm.reloadProject();
                         }, 0);
                     }, function (response) {
-                        if (response.status > 0){
-                            vm.lastUploadSuccessful = false;
+                        if (response.status > 0) {
+                            vm.uploads.currentErrorContext = 'upload';
+                            vm.uploads.lastUploadSuccessful = false;
                             RemoteFormValidation.applyServerErrorResponse(vm, vm.attachments_form, response);
                             vm.errorMsg = response.data;
                         }
@@ -53,12 +57,30 @@ angular.module('crowdsource')
                     });
                 };
 
+                vm.deleteAttachment = function (attachment) {
+                    if (vm.uploads.deletionsInProgress.indexOf(attachment.id) > -1) {
+                        return; // alreadyInProgress
+                    }
+                    vm.uploads.deletionsInProgress.push(attachment.id);
+                    Project.deleteProjectAttachment(vm.project.id, attachment.id).then(function () {
+                        removeFromDeletionInProgress(attachment.id);
+                        vm.uploads.lastDeletionSuccessful = true;
+                        vm.clearErrors();
+                        vm.reloadProject();
+                    }, function (response) {
+                        removeFromDeletionInProgress(attachment.id);
+                        vm.uploads.currentErrorContext = 'deletion';
+                        vm.uploads.lastDeletionSuccessful = false;
+                        RemoteFormValidation.applyServerErrorResponse(vm, vm.delete_attachments_form, response);
+                    });
+                };
+
                 vm.clearErrors = function () {
                     RemoteFormValidation.clearRemoteErrors(vm);
                 };
 
                 vm.reloadProject = function () {
-                    Project.get(vm.project.id).then(function (resolvedProject){
+                    Project.get(vm.project.id).then(function (resolvedProject) {
                         angular.copy(resolvedProject, vm.project);
                     })
                 };
@@ -72,6 +94,13 @@ angular.module('crowdsource')
                     var res = "![" + attachment.name + "](" + vm.absoluteFileUrl(attachment) + ")";
                     return res;
                 };
+
+                function removeFromDeletionInProgress(id){
+                    var index = vm.uploads.deletionsInProgress.indexOf(id);
+                    if(index > -1){
+                        vm.uploads.deletionsInProgress.splice(index, 1);
+                    }
+                }
 
             }
         };

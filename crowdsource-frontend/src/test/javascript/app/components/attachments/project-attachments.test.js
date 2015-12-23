@@ -154,6 +154,27 @@ describe('project attachements', function () {
         thenExpectMarkdownImageSnippet(project.attachments[0], expLocation);
     });
 
+    it("should invoke delete request when delete button of existing attachment is clicked", function () {
+        givenUploadIsEnabled(true); // Otherwise delete button not enabled
+        var project = givenAProjectWithAttachmentsWasInjected();
+
+        scope.$digest();
+
+        var expectedProjectWithAttachments = whenDeleteButtonOfAttachmentIsClickedAndTxSuccessful(project);
+
+        thenAttachmentDisappearedFromTable(expectedProjectWithAttachments, true);
+    });
+
+    it("should show an error message when deletion fails", function () {
+        givenUploadIsEnabled(true); // Otherwise delete button not enabled
+        var project = givenAProjectWithAttachmentsWasInjected();
+
+        scope.$digest();
+        whenDeleteButtonOfAttachmentIsClickedAndTxFails(project);
+
+        thenErrorMessageInDeleteMessagesContainerIshDisplayed();
+    });
+
     // GIVEN
     function givenUploadIsEnabled(enabled) {
         attachmentsDirectiveCompiled.isolateScope().uploadEnabled = enabled;
@@ -233,6 +254,34 @@ describe('project attachements', function () {
 
     }
 
+    function whenDeleteButtonOfAttachmentIsClickedAndTxSuccessful(project) {
+        var attachment2Del = project.attachments[0];
+        var deleteButton = projectAttachments.attachmentsTableCell_Actions(1).find('a.delete-attachment');
+        var responseProject = angular.copy(project);
+        responseProject.attachments = [project.attachments[1]];
+
+
+        $httpBackend.expectDELETE('/projects/' + project.id + '/attachments/' + attachment2Del.id).respond(204);
+        $httpBackend.expectGET('/project/' + project.id).respond(200, responseProject);
+        deleteButton.click();
+        $httpBackend.flush();
+
+        return responseProject;
+    }
+
+    function whenDeleteButtonOfAttachmentIsClickedAndTxFails(project) {
+        var attachment2Del = project.attachments[0];
+        var deleteButton = projectAttachments.attachmentsTableCell_Actions(1).find('a.delete-attachment');
+        var errorResponse = {
+            errorCode: "master_data_change_not_allowed"
+        };
+
+        $httpBackend.expectDELETE('/projects/' + project.id + '/attachments/' + attachment2Del.id).respond(400, errorResponse);
+        deleteButton.click();
+        $httpBackend.flush();
+
+    }
+
     function whenRemoveFileBtnNextToUploadBtnIsClicked() {
         projectAttachments.removeFileUploadButton().click();
         scope.$digest();
@@ -240,10 +289,10 @@ describe('project attachements', function () {
 
     // THEN
     function thenUploadSuccessNotificationIsVisible() {
-
         expect(projectAttachments.uploadNotification_Success().hasClass('ng-hide')).toBe(false);
         expect(projectAttachments.uploadNotification_Success().text()).toBe("Upload erfolgreich");
         expect(projectAttachments.uploadNotification_Error()).not.toExist();
+        expect(projectAttachments.deletionNotification_Error()).not.toExist();
     }
 
     function thenFileSelectorIsVisible(visible) {
@@ -254,6 +303,7 @@ describe('project attachements', function () {
         expect(projectAttachments.uploadNotification_Success().hasClass('ng-hide')).toBe(true);
         expect(projectAttachments.uploadNotification_Error()).toExist();
         expect(projectAttachments.uploadNotification_Error().text()).toContain("Upload aus unbekannten Gründen leider fehlgeschlagen.");
+        expect(projectAttachments.deletionNotification_Error()).not.toExist();
     }
 
     function thenFileNameAndSizeAreDisplayed(file) {
@@ -262,9 +312,9 @@ describe('project attachements', function () {
     }
 
     function thenFileAttachmentsListContainerExists(existing) {
-        if(existing){
+        if (existing) {
             expect(projectAttachments.attachmentsContainer()).toExist();
-        }else {
+        } else {
             expect(projectAttachments.attachmentsContainer()).not.toExist();
         }
 
@@ -276,16 +326,15 @@ describe('project attachements', function () {
 
         expect(attachmentRows.length).toBe(1 + attachments.length); // +1 -> table head
 
-        for (var i = 0; i< attachments.length; i++) {
-            var currentRow = attachmentRows[i+1];
-            var cells = currentRow.cells;
+        for (var i = 0; i < attachments.length; i++) {
             var attachment = attachments[i];
 
-            expect(cells[0].innerHTML).toContain(attachments[i].name);
-            expect(cells[1].innerHTML).toContain($filter('number')(attachments[i].size / 1024 / 1024, 2) + " MB" );
-            expect( $(cells[2]).find('a.delete-attachment').hasClass('ng-hide')).toBe(!uploadEnabled);
-            expect( $(cells[2]).find('a.copy-attachment-link').hasClass('ng-hide')).toBe(false);
-            expect( $(cells[2]).find('a.copy-attachment-md-link').hasClass('ng-hide')).toBe(
+            expect(projectAttachments.attachmentsTableCell_Filename(i + 1).innerHTML).toContain(attachments[i].name);
+            expect(projectAttachments.attachmentsTableCell_Filesize(i + 1).innerHTML).toContain($filter('number')(attachments[i].size / 1024 / 1024, 2) + " MB");
+
+            expect(projectAttachments.attachmentsTableCell_Actions(i + 1).find('a.delete-attachment').hasClass('ng-hide')).toBe(!uploadEnabled);
+            expect(projectAttachments.attachmentsTableCell_Actions(i + 1).find('a.copy-attachment-link').hasClass('ng-hide')).toBe(false);
+            expect(projectAttachments.attachmentsTableCell_Actions(i + 1).find('a.copy-attachment-md-link').hasClass('ng-hide')).toBe(
                 !(attachment.type.indexOf('image/') > -1 && uploadEnabled));
 
         }
@@ -299,6 +348,20 @@ describe('project attachements', function () {
     function thenExpectMarkdownImageSnippet(attachment, expectedLocation) {
         expect(attachmentsDirectiveCompiled.isolateScope().markdownImageInclude(attachment))
             .toBe("![" + attachment.name + "](" + expectedLocation + attachment.linkToFile + ")");
+    }
+
+    function thenAttachmentDisappearedFromTable(project, uploadEnabled) {
+        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadEnabled);
+    }
+
+    function thenErrorMessageInDeleteMessagesContainerIshDisplayed() {
+        expect(projectAttachments.deletionNotification_Error()).toExist();
+        expect(projectAttachments.deletionNotification_Error().text()).toContain(
+            "Dateianhänge können nur Außerhalb einer Finanzierungsrunde, und wenn das Projekt nicht voll finanziert ist, verändert werden."
+        );
+
+        expect(projectAttachments.uploadNotification_Error()).not.toExist();
+        expect(projectAttachments.uploadNotification_Success().hasClass('ng-hide')).toBe(true);
     }
 
 });

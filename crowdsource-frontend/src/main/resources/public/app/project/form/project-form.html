@@ -7,6 +7,7 @@
 
         <div class="general-error alert-box alert" ng-messages="projectForm.generalErrors" ng-if="projectForm.generalErrors">
             <span ng-message="remote_unknown">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</span>
+            <span ng-message="remote_master_data_change_not_allowed">Projekte können nur außerhalb einer Finanzierungsrunde editiert werden und wenn sie noch nicht zu 100% finanziert sind.</span>
         </div>
 
         <div class="form-controls-title">

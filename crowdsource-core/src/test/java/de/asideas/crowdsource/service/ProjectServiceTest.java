@@ -98,7 +98,7 @@ public class ProjectServiceTest {
     @Before
     public void init() {
         ReflectionTestUtils.setField(projectService, "thisInstance", thisInstance);
-        reset(projectRepository, pledgeRepository, userRepository, financingRoundRepository, thisInstance);
+        reset(projectRepository, pledgeRepository, userRepository, financingRoundRepository, thisInstance, projectAttachmentRepository);
         when(pledgeRepository.findByProjectAndFinancingRound(any(ProjectEntity.class), any(FinancingRoundEntity.class))).thenReturn(new ArrayList<>());
         when(userRepository.findAllAdminUsers()).thenReturn(Arrays.asList(admin(ADMIN1_EMAIL), admin(ADMIN2_EMAIL)));
         when(projectRepository.save(any(ProjectEntity.class))).thenAnswer(invocation -> invocation.getArguments()[0]);
@@ -642,7 +642,7 @@ public class ProjectServiceTest {
     }
 
     private ProjectEntity givenAProjectEntityWithAttachments(String... attachmentFileReferences) {
-        return givenAProjectEntityWithCreatorAndAttachments(user("a_user@asideas.de"));
+        return givenAProjectEntityWithCreatorAndAttachments(user("a_user@asideas.de"), attachmentFileReferences);
     }
 
 
