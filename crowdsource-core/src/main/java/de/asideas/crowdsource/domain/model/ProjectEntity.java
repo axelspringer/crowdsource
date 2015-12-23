@@ -214,7 +214,8 @@ public class ProjectEntity {
             case PROPOSED:
             case DEFERRED:
                 return true;
-            default: break;
+            default:
+                break;
         }
         if (this.financingRound == null) {
             return true;
@@ -225,11 +226,11 @@ public class ProjectEntity {
         return true;
     }
 
-    public void addAttachmentAllowed(UserEntity attachmentCreator) throws NotAuthorizedException, InvalidRequestException{
+    public void addAttachmentAllowed(UserEntity attachmentCreator) throws NotAuthorizedException, InvalidRequestException {
         modificationsAllowedByUserAndState(attachmentCreator);
     }
 
-    public void deleteAttachmentAllowed(UserEntity attachmentCreator) throws NotAuthorizedException, InvalidRequestException{
+    public void deleteAttachmentAllowed(UserEntity attachmentCreator) throws NotAuthorizedException, InvalidRequestException {
         modificationsAllowedByUserAndState(attachmentCreator);
     }
 
@@ -249,12 +250,12 @@ public class ProjectEntity {
      * @return the attachment value if it exists
      * @throws ResourceNotFoundException in case the attachment couldn't be found
      */
-    public AttachmentValue findAttachmentByReference(Attachment attachment) throws ResourceNotFoundException{
+    public AttachmentValue findAttachmentByReference(Attachment attachment) throws ResourceNotFoundException {
         Assert.notNull(attachment.getId());
 
         final Optional<AttachmentValue> res = this.attachments.stream().filter(a -> a.getFileReference().equals(attachment.getId())).findFirst();
 
-        if(!res.isPresent()){
+        if (!res.isPresent()) {
             throw new ResourceNotFoundException();
         }
         return res.get();
@@ -324,7 +325,7 @@ public class ProjectEntity {
                 .sum();
     }
 
-    private void modificationsAllowedByUserAndState(UserEntity requestingUser) throws NotAuthorizedException, InvalidRequestException{
+    private void modificationsAllowedByUserAndState(UserEntity requestingUser) throws NotAuthorizedException, InvalidRequestException {
         if (!requestingUser.getRoles().contains(Roles.ROLE_ADMIN) && !requestingUser.equals(this.creator)) {
             throw new NotAuthorizedException("You are neither admin nor creator of that project");
         }

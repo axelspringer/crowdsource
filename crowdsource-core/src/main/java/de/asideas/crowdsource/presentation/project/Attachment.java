@@ -3,6 +3,8 @@ package de.asideas.crowdsource.presentation.project;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.asideas.crowdsource.domain.model.AttachmentValue;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.joda.time.DateTime;
 
 import java.io.InputStream;
@@ -19,7 +21,7 @@ public class Attachment {
     private DateTime created;
     private String linkToFile;
     @JsonIgnore
-    private InputStream payload;
+    private transient InputStream payload;
 
     private Attachment() {
     }
@@ -117,43 +119,12 @@ public class Attachment {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        Attachment that = (Attachment) o;
-
-        if (id != null ? !id.equals(that.id) : that.id != null) {
-            return false;
-        }
-        if (name != null ? !name.equals(that.name) : that.name != null) {
-            return false;
-        }
-        if (size != null ? !size.equals(that.size) : that.size != null) {
-            return false;
-        }
-        if (type != null ? !type.equals(that.type) : that.type != null) {
-            return false;
-        }
-        if (created != null ? !created.equals(that.created) : that.created != null) {
-            return false;
-        }
-        return !(linkToFile != null ? !linkToFile.equals(that.linkToFile) : that.linkToFile != null);
-
+        return EqualsBuilder.reflectionEquals(this, o, false);
     }
 
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (size != null ? size.hashCode() : 0);
-        result = 31 * result + (type != null ? type.hashCode() : 0);
-        result = 31 * result + (created != null ? created.hashCode() : 0);
-        result = 31 * result + (linkToFile != null ? linkToFile.hashCode() : 0);
-        return result;
+        return HashCodeBuilder.reflectionHashCode(this, false);
     }
 
     @Override
