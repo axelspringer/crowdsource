@@ -137,6 +137,7 @@ public class ProjectController {
         }
     }
 
+    @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.GET)
     public ResponseEntity<byte[]> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference) throws IOException {
 
