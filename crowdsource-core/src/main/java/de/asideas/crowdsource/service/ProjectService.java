@@ -134,7 +134,7 @@ public class ProjectService {
         projectEntity.addAttachmentAllowed(savingUser);
 
         AttachmentValue attachmentStored = new AttachmentValue(attachment.getName(), attachment.getType());
-        attachmentStored = projectAttachmentRepository.storeFile(attachmentStored, attachment.getPayload());
+        attachmentStored = projectAttachmentRepository.storeAttachment(attachmentStored, attachment.getPayload());
         projectEntity.addAttachment(attachmentStored);
         projectRepository.save(projectEntity);
         return Attachment.asResponseWithoutPayload(attachmentStored, projectEntity);

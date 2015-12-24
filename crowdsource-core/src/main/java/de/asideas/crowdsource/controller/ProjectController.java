@@ -154,6 +154,9 @@ public class ProjectController {
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.DELETE)
     public void deleteProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference, Principal principal) throws InterruptedException {
 
+        //TODO: Delete!!
+        Thread.sleep(2000L);
+
         projectService.deleteProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference), userByPrincipal(principal));
     }
 

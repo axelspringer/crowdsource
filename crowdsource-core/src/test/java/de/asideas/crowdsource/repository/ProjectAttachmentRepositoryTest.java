@@ -51,7 +51,7 @@ public class ProjectAttachmentRepositoryTest {
         when(gridFsOperations.store(
                 eq(binaryData), eq(attachment.getFilename()), eq(attachment.getContentType())))
                 .thenReturn(mockedFsDbFileFromAttachmentValue(expAttachment));
-        AttachmentValue res = projectAttachmentRepository.storeFile(attachment, binaryData);
+        AttachmentValue res = projectAttachmentRepository.storeAttachment(attachment, binaryData);
 
         assertThat(res, is(expAttachment));
     }

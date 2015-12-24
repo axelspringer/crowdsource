@@ -55,7 +55,6 @@ public class ProjectDetailPage {
     @Autowired
     private ProjectStatusWidget projectStatusWidget;
 
-
     public void openWithoutWaiting(String projectId) {
         webDriverProvider.provideDriver().get(urlProvider.applicationUrl() + "#/project/" + projectId);
     }
@@ -123,4 +122,5 @@ public class ProjectDetailPage {
     public WebElement getEditProjectButton(){
         return editProjectButton;
     }
+
 }

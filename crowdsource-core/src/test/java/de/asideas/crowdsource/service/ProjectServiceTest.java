@@ -470,7 +470,7 @@ public class ProjectServiceTest {
 
         ArgumentCaptor<AttachmentValue> writeAttachmentCaptor = ArgumentCaptor.forClass(AttachmentValue.class);
         when(projectRepository.findOne(projectId)).thenReturn(project);
-        when(projectAttachmentRepository.storeFile(writeAttachmentCaptor.capture(), any(InputStream.class))).thenReturn(expAttachmentValue);
+        when(projectAttachmentRepository.storeAttachment(writeAttachmentCaptor.capture(), any(InputStream.class))).thenReturn(expAttachmentValue);
         Attachment res = projectService.addProjectAttachment(projectId, attachmentSaveCmd, projectCreator);
 
         ArgumentCaptor<ProjectEntity> projectCaptor = ArgumentCaptor.forClass(ProjectEntity.class);

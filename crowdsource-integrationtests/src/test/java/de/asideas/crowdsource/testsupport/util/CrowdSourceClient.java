@@ -2,19 +2,21 @@ package de.asideas.crowdsource.testsupport.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.Comment;
 import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.presentation.project.ProjectStatusUpdate;
 import de.asideas.crowdsource.presentation.user.UserActivation;
 import de.asideas.crowdsource.presentation.user.UserRegistration;
-import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -85,6 +87,17 @@ public class CrowdSourceClient {
     public ResponseEntity<Project> createProject(Project project, AuthToken authToken) {
         HttpEntity<Project> requestEntity = createRequestEntity(project, authToken);
         return restTemplate.exchange(urlProvider.applicationUrl() + "/project", HttpMethod.POST, requestEntity, Project.class);
+    }
+
+    public Attachment uploadFileAttachmentForProject(Project project, ClassPathResource fileResource) {
+        LinkedMultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", fileResource);
+        HttpEntity<LinkedMultiValueMap<String, Object>> requestEntity = createRequestEntity(body, authorizeWithDefaultUser());
+
+        ResponseEntity<Attachment> result = restTemplate.exchange(
+                urlProvider.applicationUrl() + "/projects/" + project.getId() + "/attachments/",
+                HttpMethod.POST, requestEntity, Attachment.class);
+        return result.getBody();
     }
 
     public ResponseEntity<FinancingRound> startFinancingRound(FinancingRound financingRound, AuthToken authToken) {

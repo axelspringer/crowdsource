@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.toList;
 
 @Configuration
 @EnableMongoAuditing
-@ComponentScan(basePackages = "de.asideas.crowdsource", excludeFilters = @ComponentScan.Filter(Configuration.class))
+@ComponentScan(basePackages = "de.asideas.crowdsource.repository", excludeFilters = @ComponentScan.Filter(Configuration.class))
 @EnableMongoRepositories( basePackages = "de.asideas.crowdsource.repository" )
 public class MongoDBConfig extends AbstractMongoConfiguration {
 

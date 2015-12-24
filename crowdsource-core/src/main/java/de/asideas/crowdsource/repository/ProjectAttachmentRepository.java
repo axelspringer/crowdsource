@@ -20,7 +20,7 @@ public class ProjectAttachmentRepository {
     @Autowired
     GridFsOperations gridFsOperations;
 
-    public AttachmentValue storeFile(AttachmentValue fileMetadata, InputStream binaryData) {
+    public AttachmentValue storeAttachment(AttachmentValue fileMetadata, InputStream binaryData) {
         GridFSFile res = gridFsOperations.store(binaryData, fileMetadata.getFilename(), fileMetadata.getContentType());
         return new AttachmentValue(res.getId().toString(), res.getContentType(), res.getFilename(), res.getLength(), new DateTime(res.getUploadDate()));
     }

@@ -81,6 +81,10 @@ button, .button {
 
     &.ultra-tiny {
         margin: 0 auto;
+        padding-top: 0.535rem;
+        padding-right: 1.25rem;
+        padding-bottom: 0.5815rem;
+        padding-left: 1.25rem;
     }
     &.ultra-tiny--alert {
         background-color: rgba(255, 60, 60, 0.65);
