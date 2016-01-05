@@ -541,44 +541,21 @@ public class ProjectServiceTest {
         final String fileRef = "attachId_0";
         final ProjectEntity project = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
         final int attachmentSizeBeforeDel = project.getAttachments().size();
-        final InputStream mockedBinaryExistingProbe = mockedInputStream();
         project.setStatus(ProjectStatus.PROPOSED);
 
         when(projectRepository.findOne(project.getId())).thenReturn(project);
-        when(projectAttachmentRepository.loadAttachment(any(AttachmentValue.class))).thenReturn(mockedBinaryExistingProbe);
         projectService.deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(fileRef), admin("anAdmin"));
 
         final ArgumentCaptor<AttachmentValue> fileRepoCapture = ArgumentCaptor.forClass(AttachmentValue.class);
         final ArgumentCaptor<ProjectEntity> projectEntityRepCapture = ArgumentCaptor.forClass(ProjectEntity.class);
         verify(projectAttachmentRepository).deleteAttachment(fileRepoCapture.capture());
         verify(projectRepository).save(projectEntityRepCapture.capture());
-        verify(mockedBinaryExistingProbe).close();
 
         assertThat(fileRepoCapture.getValue().getFileReference(), is(fileRef));
         assertThat(projectEntityRepCapture.getValue().getAttachments().size(), is(attachmentSizeBeforeDel - 1));
         assertThat("Should have removed AttachmentValue from project",
                 !projectEntityRepCapture.getValue().getAttachments().contains(new AttachmentValue(fileRef, null, null, 17, null)));
 
-    }
-
-    @Test
-    public void deleteAttachment_shouldDeleteProjectAttachmentValueEvenIfNoBinaryDataExists() throws Exception {
-        final String fileRef = "attachId_0";
-        final ProjectEntity project = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
-        final int attachmentSizeBeforeDel = project.getAttachments().size();
-        project.setStatus(ProjectStatus.PROPOSED);
-
-        when(projectRepository.findOne(project.getId())).thenReturn(project);
-        when(projectAttachmentRepository.loadAttachment(any(AttachmentValue.class))).thenReturn(null);
-        projectService.deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(fileRef), admin("anAdmin"));
-
-        final ArgumentCaptor<ProjectEntity> projectEntityRepCapture = ArgumentCaptor.forClass(ProjectEntity.class);
-        verify(projectAttachmentRepository, never()).deleteAttachment(any(AttachmentValue.class));
-        verify(projectRepository).save(projectEntityRepCapture.capture());
-
-        assertThat(projectEntityRepCapture.getValue().getAttachments().size(), is(attachmentSizeBeforeDel - 1));
-        assertThat("Should have removed AttachmentValue from project",
-                !projectEntityRepCapture.getValue().getAttachments().contains(new AttachmentValue(fileRef, null, null, 17, null)));
     }
 
     @Test(expected = ResourceNotFoundException.class)

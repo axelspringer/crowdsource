@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -161,14 +160,7 @@ public class ProjectService {
 
         project.deleteAttachmentAllowed(deletingUser);
 
-        final InputStream attachmentBinary = projectAttachmentRepository.loadAttachment(attachment2Delete);
-        if(attachmentBinary != null){
-            try {
-                attachmentBinary.close();
-            } catch (IOException e) {}
-            projectAttachmentRepository.deleteAttachment(attachment2Delete);
-        }
-
+        projectAttachmentRepository.deleteAttachment(attachment2Delete);
         project.deleteAttachment(attachment2Delete);
         projectRepository.save(project);
     }
