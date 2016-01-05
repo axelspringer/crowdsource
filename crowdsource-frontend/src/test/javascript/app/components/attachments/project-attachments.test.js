@@ -1,6 +1,6 @@
 describe('project attachements', function () {
 
-    var $rootScope, $compile, projectAttachments, scope, $httpBackend, $filter, $timeout, $browser, $location;
+    var $rootScope, $compile, projectAttachments, scope, $httpBackend, $filter, $timeout, $browser, $location, bowser;
     var attachmentsDirectiveCompiled;
 
     beforeEach(function () {
@@ -12,7 +12,7 @@ describe('project attachements', function () {
             _$analyticsProvider_.developerMode(true);
         });
 
-        inject(function (_$compile_, _$rootScope_, _$httpBackend_, _$filter_, _$timeout_, _$browser_, _$location_) {
+        inject(function (_$compile_, _$rootScope_, _$httpBackend_, _$filter_, _$timeout_, _$browser_, _$location_, Bowser) {
             $rootScope = _$rootScope_;
             scope = $rootScope.$new();
             $compile = _$compile_;
@@ -21,6 +21,10 @@ describe('project attachements', function () {
             $timeout = _$timeout_;
             $browser = _$browser_;
             $location = _$location_;
+
+            bowser = Bowser;
+            // By default we do not imply the browser used to be safari
+            bowser.safari = undefined;
 
             scope['status'] = {};
             scope['project'] = {
@@ -106,7 +110,7 @@ describe('project attachements', function () {
         thenFileSelectorIsVisible(true);
     });
 
-    it("should display attachments of project", function () {
+    it("should display attachments of project and action buttons", function () {
         var uploadIsEnabled = true;
         givenUploadIsEnabled(uploadIsEnabled);
         var project = givenAProjectWithAttachmentsWasInjected();
@@ -114,7 +118,19 @@ describe('project attachements', function () {
         scope.$digest();
 
         thenFileAttachmentsListContainerExists(uploadIsEnabled);
-        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadIsEnabled);
+        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadIsEnabled, false);
+    });
+
+    it("should display attachments of project in safari browser without copy action buttons", function () {
+        var uploadIsEnabled = true;
+        givenUploadIsEnabled(uploadIsEnabled);
+        givenPageCalledWithSafari();
+        var project = givenAProjectWithAttachmentsWasInjected();
+
+        scope.$digest();
+
+        thenFileAttachmentsListContainerExists(uploadIsEnabled);
+        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadIsEnabled, true);
     });
 
     it("should display attachments of project although upload is disabled", function () {
@@ -124,7 +140,7 @@ describe('project attachements', function () {
         scope.$digest();
 
         thenFileAttachmentsListContainerExists(true);
-        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, false);
+        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, false, false);
     });
 
     it("filter 'bytesAsMegabytes' should format correctly", function () {
@@ -162,7 +178,7 @@ describe('project attachements', function () {
 
         var expectedProjectWithAttachments = whenDeleteButtonOfAttachmentIsClickedAndTxSuccessful(project);
 
-        thenAttachmentDisappearedFromTable(expectedProjectWithAttachments, true);
+        thenAttachmentDisappearedFromTable(expectedProjectWithAttachments, true, false);
     });
 
     it("should show an error message when deletion fails", function () {
@@ -320,7 +336,7 @@ describe('project attachements', function () {
 
     }
 
-    function thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadEnabled) {
+    function thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadEnabled, isSafari) {
         var attachments = project.attachments;
         var attachmentRows = projectAttachments.attachmentsTableRows();
 
@@ -333,9 +349,9 @@ describe('project attachements', function () {
             expect(projectAttachments.attachmentsTableCell_Filesize(i + 1).innerHTML).toContain($filter('number')(attachments[i].size / 1024 / 1024, 2) + " MB");
 
             expect(projectAttachments.attachmentsTableCell_Actions(i + 1).find('a.delete-attachment').hasClass('ng-hide')).toBe(!uploadEnabled);
-            expect(projectAttachments.attachmentsTableCell_Actions(i + 1).find('a.copy-attachment-link').hasClass('ng-hide')).toBe(false);
+            expect(projectAttachments.attachmentsTableCell_Actions(i + 1).find('a.copy-attachment-link').hasClass('ng-hide')).toBe(isSafari);
             expect(projectAttachments.attachmentsTableCell_Actions(i + 1).find('a.copy-attachment-md-link').hasClass('ng-hide')).toBe(
-                !(attachment.type.indexOf('image/') > -1 && uploadEnabled));
+                !(attachment.type.indexOf('image/') > -1 && uploadEnabled && !isSafari ));
 
         }
     }
@@ -350,8 +366,8 @@ describe('project attachements', function () {
             .toBe("![" + attachment.name + "](" + expectedLocation + attachment.linkToFile + ")");
     }
 
-    function thenAttachmentDisappearedFromTable(project, uploadEnabled) {
-        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadEnabled);
+    function thenAttachmentDisappearedFromTable(project, uploadEnabled, isSafari) {
+        thenFileAttachmentListShowsFilesOfProjectAndConcerningActionButtons(project, uploadEnabled, isSafari);
     }
 
     function thenErrorMessageInDeleteMessagesContainerIshDisplayed() {
@@ -362,6 +378,10 @@ describe('project attachements', function () {
 
         expect(projectAttachments.uploadNotification_Error()).not.toExist();
         expect(projectAttachments.uploadNotification_Success().hasClass('ng-hide')).toBe(true);
+    }
+
+    function givenPageCalledWithSafari() {
+        bowser.safari = true;
     }
 
 });

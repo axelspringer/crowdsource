@@ -11,8 +11,9 @@ angular.module('crowdsource')
             },
             templateUrl: 'app/components/project-attachments/project-attachments.html',
 
-            controller: function ($scope, Upload, $timeout, $location, RemoteFormValidation, Project) {
+            controller: function ($scope, Upload, $timeout, $location, RemoteFormValidation, Project, Bowser) {
                 var vm = $scope;
+                vm.bowser = Bowser;
 
                 vm.uploads = {
                     currentAttachment: undefined,
