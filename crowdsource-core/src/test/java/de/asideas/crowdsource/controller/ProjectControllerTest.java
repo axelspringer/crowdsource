@@ -43,6 +43,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -501,6 +503,31 @@ public class ProjectControllerTest {
     }
 
     @Test
+    public void addProjectAttachment_shouldCloseInputStream() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        final Attachment expectedAttachment = anExpectedAttachment(aPersistedProjectEntity());
+
+        MockMultipartFile content = new MockedInputStreamMultipartFile("file", "test_filename", "text/plain");
+        final InputStream mockedInputStream = content.getInputStream();
+        MediaType mediaType = mediaType();
+
+        when(projectService.addProjectAttachment(eq("some_id"), eq(Attachment.asCreationCommand("test_filename", "text/plain", content.getInputStream())), eq(user)))
+                .thenReturn(expectedAttachment);
+
+        MvcResult mvcRes = mockMvc.perform(fileUpload("/projects/{projectId}/attachments", "some_id")
+                .file(content)
+                .principal(authentication(user))
+                .contentType(mediaType))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Attachment res = mapper.readValue(mvcRes.getResponse().getContentAsString(), Attachment.class);
+        assertAttachmentsEqual(expectedAttachment, res);
+        verify(mockedInputStream).close();
+    }
+
+    @Test
     public void addProjectAttachment_shouldThrowBadRequestOnEmptyFile() throws Exception {
         final String email = "some@mail.com";
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
@@ -715,4 +742,35 @@ public class ProjectControllerTest {
             return new PropertyPlaceholderConfigurer();
         }
     }
+
+    static class MockedInputStreamMultipartFile extends MockMultipartFile {
+
+        private InputStream mockedInputStream = mock(InputStream.class);
+
+        public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType) {
+            super(name, originalFilename, contentType, new byte[]{0, 1, 2, 3});
+        }
+
+        public MockedInputStreamMultipartFile(String name, byte[] content) {
+            super(name, content);
+        }
+
+        public MockedInputStreamMultipartFile(String name, InputStream contentStream) throws IOException {
+            super(name, contentStream);
+        }
+
+        public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType, byte[] content) {
+            super(name, originalFilename, contentType, content);
+        }
+
+        public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType, InputStream contentStream) throws IOException {
+            super(name, originalFilename, contentType, contentStream);
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return mockedInputStream;
+        }
+    }
+
 }

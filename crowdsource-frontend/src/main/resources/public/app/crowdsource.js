@@ -136,6 +136,7 @@
             $showdownProvider.setOption("sanitize", true);
         })
 
+
         .run(function (Authentication, Route) {
 
             Authentication.init();
@@ -149,6 +150,8 @@
                 }
             });
         });
+
+    angular.module('crowdsource').value('Bowser', bowser);
 
     if (isBrowserSupported()) {
         angular.element(document).ready(function () {

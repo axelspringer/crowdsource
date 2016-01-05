@@ -105,17 +105,20 @@
                                 {{ uploads.deletionsInProgress.indexOf(item.id) > -1 ? ' ...' : ''  }}
                             </span>
                         </a>
-                        <a href="" class="tiny ultra-tiny ultra-tiny--icon button secondary copy-attachment-link"
+                        <a href=""
+                           ng-show="!bowser.safari"
+                           class="tiny ultra-tiny ultra-tiny--icon button secondary copy-attachment-link"
                            ngclipboard data-clipboard-text="{{ absoluteFileUrl(item) }}"
                            title="Link in Zwischenablage kopieren">
                             <span class="project-attachment__icon--copy ng-binding"></span>
                         </a>
                         <a href="" class="tiny ultra-tiny ultra-tiny--icon button secondary copy-attachment-md-link"
-                           ng-show="item.type.indexOf('image/') > -1 && uploadEnabled"
+                           ng-show="item.type.indexOf('image/') > -1 && uploadEnabled && !bowser.safari"
                            ngclipboard data-clipboard-text="{{ markdownImageInclude(item) }}"
                            title="Kopiert Link zur Einbindung in Markdown Text">
                             MD Link Kopieren
                         </a>
+                        <br />
                     </li>
                 </ul>
             </td>
