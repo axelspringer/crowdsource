@@ -16,6 +16,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -133,14 +134,13 @@ public class ProjectController {
 
     @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.GET)
-    public ResponseEntity<byte[]> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference) throws IOException {
-
-        final HttpHeaders headers = new HttpHeaders();
-
+    public ResponseEntity<InputStreamResource> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference) throws IOException {
         final Attachment attachment = projectService.loadProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference));
-        headers.setContentType(MediaType.valueOf(attachment.getType()));
 
-        return new ResponseEntity<>(IOUtils.toByteArray(attachment.getPayload()), headers, HttpStatus.OK);
+        return ResponseEntity.ok()
+                .contentLength(attachment.getSize())
+                .contentType(MediaType.valueOf(attachment.getType()))
+                .body(new InputStreamResource(attachment.getPayload()));
     }
 
     @Secured(Roles.ROLE_USER)
