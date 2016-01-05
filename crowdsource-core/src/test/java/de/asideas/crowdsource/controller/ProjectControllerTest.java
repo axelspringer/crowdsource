@@ -72,7 +72,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -591,6 +593,7 @@ public class ProjectControllerTest {
                 .principal(authentication(user)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(expectedAttachment.getType()))
+                .andExpect(header().longValue("Content-Length", expectedAttachment.getSize()))
                 .andExpect(content().string(expContent))
                 .andReturn();
 
