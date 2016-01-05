@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -67,7 +68,20 @@ public class ProjectTest {
     public void constructionWorks_NullSafe() throws Exception {
         Project res = new Project(projectEntity, pledges, user2);
         assertThat(res.getLastModifiedDate(), is(nullValue()));
+    }
 
+    @Test
+    public void constructionWorks_likeCountInitWithZero() throws Exception {
+        Project res = new Project(projectEntity, pledges, user2);
+        assertThat(res.getLikeCount(), is(0L));
+    }
+
+    @Test
+    public void constructionWorks_likeCountInitWithValue() throws Exception {
+        final Random random = new Random(Long.MAX_VALUE);
+        long value = random.nextLong();
+        Project res = new Project(projectEntity, pledges, user2, value);
+        assertThat(res.getLikeCount(), is(value));
     }
 
 }

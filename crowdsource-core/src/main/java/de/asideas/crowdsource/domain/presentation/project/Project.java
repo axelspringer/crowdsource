@@ -64,6 +64,9 @@ public class Project {
     @JsonView(ProjectSummaryView.class)
     private int pledgedAmountByPostRoundBudget;
 
+    @JsonView(ProjectSummaryView.class)
+    private long likeCount;
+
     public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser) {
         this.id = projectEntity.getId();
         this.status = projectEntity.getStatus();
@@ -79,6 +82,25 @@ public class Project {
         this.pledgedAmountByPostRoundBudget = projectEntity.pledgedAmountPostRound(pledges);
 
         this.creator = new ProjectCreator(projectEntity.getCreator());
+    }
+
+    public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser, long likeCount) {
+        this.id = projectEntity.getId();
+        this.status = projectEntity.getStatus();
+        this.title = projectEntity.getTitle();
+        this.shortDescription = projectEntity.getShortDescription();
+        this.description = projectEntity.getDescription();
+        this.pledgeGoal = projectEntity.getPledgeGoal();
+        this.lastModifiedDate = projectEntity.getLastModifiedDate() != null ? projectEntity.getLastModifiedDate().toDate() : null;
+
+        this.pledgedAmount = projectEntity.pledgedAmount(pledges);
+        this.backers = projectEntity.countBackers(pledges);
+        this.pledgedAmountByRequestingUser = projectEntity.pledgedAmountOfUser(pledges, requestingUser);
+        this.pledgedAmountByPostRoundBudget = projectEntity.pledgedAmountPostRound(pledges);
+
+        this.creator = new ProjectCreator(projectEntity.getCreator());
+
+        this.likeCount = likeCount;
     }
 
     public Project() {
@@ -178,6 +200,14 @@ public class Project {
 
     public void setPledgedAmountByPostRoundBudget(int pledgedAmountByPostRoundBudget) {
         this.pledgedAmountByPostRoundBudget = pledgedAmountByPostRoundBudget;
+    }
+
+    public long getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(long likeCount) {
+        this.likeCount = likeCount;
     }
 
     @Override
