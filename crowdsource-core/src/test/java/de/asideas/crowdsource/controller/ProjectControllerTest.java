@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -72,7 +73,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -741,8 +741,10 @@ public class ProjectControllerTest {
         }
 
         @Bean
-        public PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
-            return new PropertyPlaceholderConfigurer();
+        public static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
+            PropertyPlaceholderConfigurer configurer = new PropertyPlaceholderConfigurer();
+            configurer.setLocation(new ClassPathResource("application.properties"));
+            return configurer;
         }
     }
 
