@@ -96,11 +96,11 @@ describe('project list', function () {
         expect($(listItems[2]).find('.tile__heading').text()).toBe('Title 2');
         expect($(listItems[2]).hasClass("project-published")).toBeTruthy();
 
-        expect($(listItems[3]).find('.tile__heading').text()).toBe('Title 3');
-        expect($(listItems[3]).hasClass("project-fully_pledged")).toBeTruthy();
+        expect($(listItems[3]).find('.tile__heading').text()).toBe('Title 1');
+        expect($(listItems[3]).hasClass("project-published_deferred")).toBeTruthy();
 
-        expect($(listItems[4]).find('.tile__heading').text()).toBe('Title 1');
-        expect($(listItems[4]).hasClass("project-published_deferred")).toBeTruthy();
+        expect($(listItems[4]).find('.tile__heading').text()).toBe('Title 3');
+        expect($(listItems[4]).hasClass("project-fully_pledged")).toBeTruthy();
 
         expect($(listItems[5]).find('.tile__heading').text()).toBe('Title 6');
         expect($(listItems[5]).hasClass("project-deferred")).toBeTruthy();
