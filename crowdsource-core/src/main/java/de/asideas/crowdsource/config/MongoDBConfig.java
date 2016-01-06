@@ -3,6 +3,7 @@ package de.asideas.crowdsource.config;
 import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import org.slf4j.Logger;
@@ -11,13 +12,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
@@ -68,7 +69,7 @@ public class MongoDBConfig extends AbstractMongoConfiguration {
             MongoClientOptions options = MongoClientOptions.builder()
                     .writeConcern(WriteConcern.REPLICA_ACKNOWLEDGED)
                     .build();
-            return new MongoClient(serverAddresses, options);
+            return new MongoClient(serverAddresses, mongoCredentials(), options);
         }
     }
 
@@ -77,13 +78,14 @@ public class MongoDBConfig extends AbstractMongoConfiguration {
         return new GridFsTemplate(mongoDbFactory(), mappingMongoConverter());
     }
 
-    @Override
-    protected UserCredentials getUserCredentials() {
-        if (username.isEmpty() || password.isEmpty()) {
-            return null;
+    private List<MongoCredential> mongoCredentials() {
+        List<MongoCredential> res = new ArrayList<>(1);
+
+        if (!username.isEmpty() && !password.isEmpty()) {
+            res.add(MongoCredential.createCredential(username, databaseName, password.toCharArray() ));
         }
 
-        return new UserCredentials(username, password);
+        return res;
     }
 
     private ServerAddress createServerAddress(String host) {
