@@ -24,7 +24,13 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
@@ -38,6 +44,7 @@ import java.util.stream.Collectors;
 
 import static de.asideas.crowdsource.domain.shared.ProjectStatus.FULLY_PLEDGED;
 import static de.asideas.crowdsource.domain.shared.ProjectStatus.PUBLISHED;
+import static de.asideas.crowdsource.domain.shared.ProjectStatus.PUBLISHED_DEFERRED;
 
 @RestController
 public class ProjectController {
@@ -126,7 +133,7 @@ public class ProjectController {
 
         } catch (IOException e) {
             log.warn("Couldn' process file input, due to stream threw IOException; ProjectId: {}", projectId, e);
-            throw new RuntimeException("Internal error, couldn't process file stream");
+            throw new RuntimeException("Internal error, couldn't process file stream", e);
         }
     }
 
@@ -167,7 +174,7 @@ public class ProjectController {
     private boolean mayViewProjectFilter(Project project, Authentication auth) {
         // fully pledged and published are always visible
         final ProjectStatus status = project.getStatus();
-        if (status == FULLY_PLEDGED || status == PUBLISHED) {
+        if (status == FULLY_PLEDGED || status == PUBLISHED || status == PUBLISHED_DEFERRED) {
             return true;
         }
 

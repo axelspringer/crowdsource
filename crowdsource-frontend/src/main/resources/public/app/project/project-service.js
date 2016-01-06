@@ -50,6 +50,10 @@ angular.module('crowdsource')
             return projectStatusResource.patch({id: projectId}, {status: 'REJECTED'});
         };
 
+        service.publishAndDefer = function (projectId) {
+            return projectStatusResource.patch({id: projectId}, {status: 'PUBLISHED_DEFERRED'});
+        };
+
         service.defer = function (projectId) {
             return projectStatusResource.patch({id: projectId}, {status: 'DEFERRED'} );
         };
