@@ -11,6 +11,8 @@ import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.domain.presentation.project.ProjectStatusUpdate;
 import de.asideas.crowdsource.domain.presentation.user.ProjectCreator;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.repository.LikeRepository;
+import de.asideas.crowdsource.repository.ProjectRepository;
 import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.security.Roles;
 import de.asideas.crowdsource.service.ProjectService;
@@ -37,12 +39,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -50,11 +47,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,7 +58,6 @@ public class ProjectControllerTest {
 
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private ProjectService projectService;
 
@@ -455,6 +447,32 @@ public class ProjectControllerTest {
                 .andReturn();
     }
 
+    @Test
+    public void likeProject_shouldCallLikeMethodFromService() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+
+        mockMvc.perform(post("/project/{projectId}/like", "some_id")
+                .principal(authentication(user))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(projectService, only()).likeProject(eq("some_id"), any(UserEntity.class));
+    }
+
+    @Test
+    public void unlikeProject_shouldCallUnlikeMethodFromService() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+
+        mockMvc.perform(post("/project/{projectId}/unlike", "some_id")
+                .principal(authentication(user))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(projectService, only()).unlikeProject(eq("some_id"), any(UserEntity.class));
+    }
+
     private Principal authentication(UserEntity userEntity) {
         final Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         userEntity.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role)));
@@ -539,6 +557,14 @@ public class ProjectControllerTest {
         @Bean
         public UserRepository userRepository() {
             return mock(UserRepository.class);
+        }
+        @Bean
+        public ProjectRepository projectRepository() {
+            return mock(ProjectRepository.class);
+        }
+        @Bean
+        public LikeRepository likeRepository() {
+            return mock(LikeRepository.class);
         }
     }
 }

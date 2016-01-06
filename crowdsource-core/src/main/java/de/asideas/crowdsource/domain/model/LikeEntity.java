@@ -24,6 +24,15 @@ public class LikeEntity {
     @LastModifiedDate
     private DateTime lastModifiedDate;
 
+    public LikeEntity() {
+    }
+
+    public LikeEntity(LikeStatus status, ProjectEntity project, UserEntity user) {
+        this.status = status;
+        this.project = project;
+        this.user = user;
+    }
+
     public String getId() {
         return id;
     }

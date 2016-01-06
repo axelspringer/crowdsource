@@ -2,19 +2,13 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
-import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.model.PledgeEntity;
-import de.asideas.crowdsource.domain.model.ProjectEntity;
-import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.model.*;
 import de.asideas.crowdsource.domain.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.presentation.Pledge;
 import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import de.asideas.crowdsource.repository.FinancingRoundRepository;
-import de.asideas.crowdsource.repository.PledgeRepository;
-import de.asideas.crowdsource.repository.ProjectRepository;
-import de.asideas.crowdsource.repository.UserRepository;
+import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
 import org.hamcrest.core.Is;
 import org.joda.time.DateTime;
@@ -28,23 +22,17 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
 
+import static de.asideas.crowdsource.domain.shared.LikeStatus.LIKE;
+import static de.asideas.crowdsource.domain.shared.LikeStatus.UNLIKE;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
@@ -73,6 +61,9 @@ public class ProjectServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private LikeRepository likeRepository;
+
+    @Mock
     private UserService userService;
 
     @Mock
@@ -88,7 +79,7 @@ public class ProjectServiceTest {
     @Before
     public void init() {
         ReflectionTestUtils.setField(projectService, "thisInstance", thisInstance);
-        reset(projectRepository, pledgeRepository, userRepository, financingRoundRepository, thisInstance);
+        reset(projectRepository, pledgeRepository, userRepository, financingRoundRepository, thisInstance, likeRepository);
         when(pledgeRepository.findByProjectAndFinancingRound(any(ProjectEntity.class), any(FinancingRoundEntity.class))).thenReturn(new ArrayList<>());
         when(userRepository.findAllAdminUsers()).thenReturn(Arrays.asList(admin(ADMIN1_EMAIL), admin(ADMIN2_EMAIL)));
         when(projectRepository.save(any(ProjectEntity.class))).thenAnswer(invocation -> invocation.getArguments()[0]);
@@ -447,6 +438,62 @@ public class ProjectServiceTest {
 
         verify(projectRepository, never()).save(any(ProjectEntity.class));
         verify(userNotificationService, never()).notifyCreatorAndAdminOnProjectModification(any(ProjectEntity.class), any(UserEntity.class));
+    }
+
+    @Test
+    public void likeProject_shouldCreateLikeEntityIfNotExists() throws Exception {
+        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
+
+        projectService.likeProject("projectId", any(UserEntity.class));
+
+        final ArgumentCaptor<LikeEntity> captor = ArgumentCaptor.forClass(LikeEntity.class);
+
+        verify(likeRepository, times(1)).findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class));
+        verify(likeRepository, times(1)).save(captor.capture());
+
+        assertThat(captor.getValue().getStatus(), is(LIKE));
+    }
+
+    @Test
+    public void likeProject_shouldCreateLikeEntityIfExists() throws Exception {
+        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
+
+        projectService.likeProject("projectId", any(UserEntity.class));
+
+        final ArgumentCaptor<LikeEntity> captor = ArgumentCaptor.forClass(LikeEntity.class);
+
+        verify(likeRepository, times(1)).findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class));
+        verify(likeRepository, times(1)).save(captor.capture());
+
+        assertThat(captor.getValue().getStatus(), is(LIKE));
+    }
+
+    @Test
+    public void unlikeProject_shouldCreateLikeEntityIfNotExists() throws Exception {
+        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
+
+        projectService.unlikeProject("projectId", any(UserEntity.class));
+
+        final ArgumentCaptor<LikeEntity> captor = ArgumentCaptor.forClass(LikeEntity.class);
+
+        verify(likeRepository, times(1)).findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class));
+        verify(likeRepository, times(1)).save(captor.capture());
+
+        assertThat(captor.getValue().getStatus(), is(UNLIKE));
+    }
+
+    @Test
+    public void unlikeProject_shouldCreateLikeEntityIfExists() throws Exception {
+        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
+
+        projectService.unlikeProject("projectId", any(UserEntity.class));
+
+        final ArgumentCaptor<LikeEntity> captor = ArgumentCaptor.forClass(LikeEntity.class);
+
+        verify(likeRepository, times(1)).findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class));
+        verify(likeRepository, times(1)).save(captor.capture());
+
+        assertThat(captor.getValue().getStatus(), is(UNLIKE));
     }
 
     private void assertPledgeNotExecuted(RuntimeException actualEx, RuntimeException expEx, ProjectEntity project, UserEntity user, int userBudgetBeforePledge, ProjectStatus expStatus) {

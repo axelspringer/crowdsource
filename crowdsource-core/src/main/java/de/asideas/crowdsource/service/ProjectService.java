@@ -2,18 +2,13 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
-import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.model.PledgeEntity;
-import de.asideas.crowdsource.domain.model.ProjectEntity;
-import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.model.*;
 import de.asideas.crowdsource.domain.presentation.Pledge;
 import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
+import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import de.asideas.crowdsource.repository.FinancingRoundRepository;
-import de.asideas.crowdsource.repository.PledgeRepository;
-import de.asideas.crowdsource.repository.ProjectRepository;
-import de.asideas.crowdsource.repository.UserRepository;
+import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -23,7 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.List;
+import java.util.Optional;
 
+import static de.asideas.crowdsource.domain.shared.LikeStatus.LIKE;
+import static de.asideas.crowdsource.domain.shared.LikeStatus.UNLIKE;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -31,26 +29,28 @@ public class ProjectService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectService.class);
 
-    private ProjectRepository projectRepository;
-    private PledgeRepository pledgeRepository;
-    private UserRepository userRepository;
-    private FinancingRoundRepository financingRoundRepository;
-    private UserNotificationService userNotificationService;
-    private FinancingRoundService financingRoundService;
+    private final ProjectRepository projectRepository;
+    private final PledgeRepository pledgeRepository;
+    private final UserRepository userRepository;
+    private final FinancingRoundRepository financingRoundRepository;
+    private final UserNotificationService userNotificationService;
+    private final FinancingRoundService financingRoundService;
+    private final LikeRepository likeRepository;
 
-    private ProjectService thisInstance;
+    private final ProjectService thisInstance;
 
     @Autowired
     public ProjectService(ProjectRepository projectRepository, PledgeRepository pledgeRepository,
                           UserRepository userRepository, FinancingRoundRepository financingRoundRepository,
                           UserNotificationService userNotificationService,
-                          FinancingRoundService financingRoundService) {
+                          FinancingRoundService financingRoundService, LikeRepository likeRepository) {
         this.projectRepository = projectRepository;
         this.pledgeRepository = pledgeRepository;
         this.userRepository = userRepository;
         this.financingRoundRepository = financingRoundRepository;
         this.userNotificationService = userNotificationService;
         this.financingRoundService = financingRoundService;
+        this.likeRepository = likeRepository;
         this.thisInstance = this;
     }
 
@@ -183,4 +183,25 @@ public class ProjectService {
                 .forEach(emailAddress -> userNotificationService.notifyAdminOnProjectCreation(projectEntity, emailAddress));
     }
 
+    public void likeProject(String projectId, UserEntity user) {
+        final ProjectEntity project = projectRepository.findOne(projectId);
+        toggleStatus(project, user, LIKE);
+    }
+
+    public void unlikeProject(String projectId, UserEntity user) {
+        final ProjectEntity project = projectRepository.findOne(projectId);
+        toggleStatus(project, user, UNLIKE);
+    }
+
+    private void toggleStatus(ProjectEntity project, UserEntity user, LikeStatus status) {
+        final Optional<LikeEntity> likeEntityOptional = likeRepository.findOneByProjectAndUser(project, user);
+        if (likeEntityOptional.isPresent()) {
+            final LikeEntity likeEntity = likeEntityOptional.get();
+            likeEntity.setStatus(status);
+            likeRepository.save(likeEntity);
+        } else {
+            final LikeEntity likeEntity = new LikeEntity(status, project, user);
+            likeRepository.save(likeEntity);
+        }
+    }
 }
