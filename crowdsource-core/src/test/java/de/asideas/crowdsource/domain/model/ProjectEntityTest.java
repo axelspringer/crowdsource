@@ -695,6 +695,29 @@ public class ProjectEntityTest {
         assertThat(projectEntity.getStatus(), is(ProjectStatus.PUBLISHED));
     }
 
+    @Test
+    public void modifyStatus_settingToPublishedDeferred_notPossibleWhenAlreadyPublishedInRound() throws Exception {
+        projectEntity.setStatus(ProjectStatus.PUBLISHED);
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+
+        try {
+            projectEntity.modifyStatus(ProjectStatus.PUBLISHED_DEFERRED);
+            fail("Expected InvalidRequestException was not thrown");
+        } catch (InvalidRequestException e) {
+            MatcherAssert.assertThat(e.getMessage(), Matchers.is(InvalidRequestException.projectAlreadyInFinancingRound().getMessage()));
+        }
+    }
+
+    @Test
+    public void modifyStatus_settingToPublishedDeferred_PossibleOnActiveRound() throws Exception {
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+
+        boolean res = projectEntity.modifyStatus(ProjectStatus.PUBLISHED_DEFERRED);
+
+        assertThat(res, is(true));
+        assertThat(projectEntity.getStatus(), is(ProjectStatus.PUBLISHED_DEFERRED));
+    }
 
     @Test
     public void masterdataModificationAllowed_shouldReturnTrueHavingNoFinancingRound() throws Exception {
@@ -833,7 +856,7 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void onFinancingRoundTerminated_ProjectPublishedWhenDeferred() throws Exception {
+    public void onFinancingRoundTerminated_ProjectPublishedHavingStatusDeferred() throws Exception {
         projectEntity.setStatus(ProjectStatus.DEFERRED);
 
         projectEntity.onFinancingRoundTerminated(projectEntity.getFinancingRound());
@@ -849,6 +872,16 @@ public class ProjectEntityTest {
 
         assertThat(projectEntity.getStatus(), is(ProjectStatus.DEFERRED));
         assertThat(projectEntity.getFinancingRound().getId(), is(anActiveFinancingRound().getId()));
+    }
+
+    @Test
+    public void onFinancingRoundTerminated_ProjectPublishedHavingStatusPublishedDeferred() throws Exception{
+        projectEntity.setStatus(ProjectStatus.PUBLISHED_DEFERRED);
+
+        projectEntity.onFinancingRoundTerminated(projectEntity.getFinancingRound());
+
+        assertThat(projectEntity.getStatus(), is(ProjectStatus.PUBLISHED));
+        assertThat(projectEntity.getFinancingRound(), is(nullValue()));
     }
 
     @Test

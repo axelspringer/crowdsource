@@ -28,13 +28,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.arrayContaining;
 import static org.hamcrest.core.Is.is;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SuppressWarnings("ALL")
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -154,6 +148,25 @@ public class UserNotificationServiceTest {
         UserEntity user = aProjectCreator();
 
         userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.DEFERRED, user, "My Super Project"));
+
+        SimpleMailMessage mail = getMessageFromMailSender();
+        assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
+        assertThat(mail.getTo(), arrayContaining(user.getEmail()));
+        assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_DEFERRED));
+        assertThat(replaceLineBreaksIfWindows(mail.getText()), is(
+                "Hallo Some Creator,\n\n" +
+                        "Dein Projekt wurde leider zurückgestellt und nimmt daher nicht an der nächsten Finanzierungsrunde teil.\n" +
+                        "Das Projekt wird jedoch für die darauf folgende Finanzierungsrunde automatisch freigegeben.\n\n" +
+                        "Zu Deinem Projekt:\n\n" +
+                        "https://crowd.asideas.de#/project/proj3ctId\n\n" +
+                        "Mit freundlichen Grüßen\nDein CrowdSource Team"));
+    }
+
+    @Test
+    public void testSendUserNotificationMailForPublishedDeferred() {
+        UserEntity user = aProjectCreator();
+
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.PUBLISHED_DEFERRED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));

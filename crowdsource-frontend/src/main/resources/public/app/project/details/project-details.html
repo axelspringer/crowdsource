@@ -63,7 +63,7 @@
 
             <div ng-if="projectDetails.isDeferrable() && projectDetails.auth.currentUser.hasRole('ADMIN')">
                 <button class="pm-btn--alert defer-button" ng-click="projectDetails.defer()" ng-disabled="projectDetails.deferring"
-                        analytics-on="click" analytics-category="Projects" analytics-event="Deferred">
+                        analytics-on="click" analytics-category="Projects" analytics-event="Deferred" title="Das Projekt nimmt nicht an der nächsten Finanzierungsrunde teil und ist nicht öffetnlich sichtbar.">
                     {{ projectDetails.deferring ? 'Zurückstellen...' : 'Zurückstellen' }}
                 </button>
             </div>
