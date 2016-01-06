@@ -16,9 +16,6 @@ import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElem
 @Component
 public class ProjectAddAndModificationForm {
 
-    @Autowired
-    private WebDriverProvider webDriverProvider;
-
     @FindBy(css = ".project-form input[name='title']")
     private WebElement titleInputField;
 
@@ -43,6 +40,11 @@ public class ProjectAddAndModificationForm {
     @FindBy(css = ".project-description-preview .ng-binding")
     private WebElement descriptionPreview;
 
+    @Autowired
+    private ProjectAttachmentsWidget projectAttachmentsWidget;
+
+    @Autowired
+    private WebDriverProvider webDriverProvider;
 
     @Autowired
     private SeleniumWait wait;
@@ -61,6 +63,12 @@ public class ProjectAddAndModificationForm {
             return !titleInputField.getAttribute("value").isEmpty();
         });
     }
+
+    public ProjectAttachmentsWidget getProjectAttachmentsWidget() {
+        PageFactory.initElements(webDriverProvider.provideDriver(), projectAttachmentsWidget);
+        return projectAttachmentsWidget;
+    }
+
     public void waitForPageLoadNewProject() {
         wait.until(visibilityOfElementLocated(By.cssSelector(".project-form input[name='title']")));
     }

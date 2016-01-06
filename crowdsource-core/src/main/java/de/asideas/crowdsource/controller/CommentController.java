@@ -1,6 +1,6 @@
 package de.asideas.crowdsource.controller;
 
-import de.asideas.crowdsource.domain.presentation.Comment;
+import de.asideas.crowdsource.presentation.Comment;
 import de.asideas.crowdsource.security.Roles;
 import de.asideas.crowdsource.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;

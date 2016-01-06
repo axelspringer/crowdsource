@@ -16,6 +16,11 @@ angular.module('crowdsource')
                 method: 'PATCH'
             }
         });
+        var projectAttachmentsResource = $resource('/projects/:id/attachments/:fileId', {}, {
+            delete: {
+                method: 'DELETE'
+            }
+        });
 
         service.add = function (project) {
             return projectResource.save(project).$promise;
@@ -47,6 +52,10 @@ angular.module('crowdsource')
 
         service.defer = function (projectId) {
             return projectStatusResource.patch({id: projectId}, {status: 'DEFERRED'} );
+        };
+
+        service.deleteProjectAttachment = function (projectId, fileId) {
+            return projectAttachmentsResource.delete({id: projectId, fileId: fileId}, {}).$promise;
         };
 
         service.isCreator = function (project, user) {

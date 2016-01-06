@@ -1,6 +1,6 @@
 package de.asideas.crowdsource.testsupport.pageobjects.project;
 
-import de.asideas.crowdsource.domain.presentation.Comment;
+import de.asideas.crowdsource.presentation.Comment;
 import de.asideas.crowdsource.testsupport.selenium.SeleniumWait;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverProvider;
 import de.asideas.crowdsource.testsupport.util.UrlProvider;
@@ -54,7 +54,6 @@ public class ProjectDetailPage {
 
     @Autowired
     private ProjectStatusWidget projectStatusWidget;
-
 
     public void openWithoutWaiting(String projectId) {
         webDriverProvider.provideDriver().get(urlProvider.applicationUrl() + "#/project/" + projectId);
@@ -123,4 +122,5 @@ public class ProjectDetailPage {
     public WebElement getEditProjectButton(){
         return editProjectButton;
     }
+
 }

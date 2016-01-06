@@ -1,11 +1,15 @@
 angular.module('crowdsource')
 
-    .controller('ProjectFormController', function ($location, $routeParams, Project, RemoteFormValidation) {
+    .controller('ProjectFormController', function ($location, $routeParams, Project,
+                                                   RemoteFormValidation) {
 
         var vm = this;
+
         vm.md = {
             preview: false
         };
+
+        vm.project = {};
 
         vm.isEditMode = function () {
             return $routeParams.projectId !== undefined;

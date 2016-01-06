@@ -2,9 +2,11 @@ package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
-import de.asideas.crowdsource.domain.presentation.Pledge;
-import de.asideas.crowdsource.domain.presentation.project.Project;
+import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.security.Roles;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -18,6 +20,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,6 +40,8 @@ public class ProjectEntity {
 
     @DBRef
     private FinancingRoundEntity financingRound;
+
+    private List<AttachmentValue> attachments;
 
     private String title;
     private String shortDescription;
@@ -60,9 +65,11 @@ public class ProjectEntity {
         this.description = project.getDescription();
         this.pledgeGoal = project.getPledgeGoal();
         this.status = ProjectStatus.PROPOSED;
+        this.attachments = new ArrayList<>();
     }
 
     public ProjectEntity() {
+        this.attachments = new ArrayList<>();
     }
 
     /**
@@ -189,12 +196,7 @@ public class ProjectEntity {
     }
 
     public boolean modifyMasterdata(Project updatedProject, UserEntity requestingUser) {
-        if (!requestingUser.getRoles().contains(Roles.ROLE_ADMIN) && !requestingUser.equals(this.creator)) {
-            throw new NotAuthorizedException("You are neither admin nor creator of that project");
-        }
-        if (!masterdataModificationAllowed()) {
-            throw InvalidRequestException.masterdataChangeNotAllowed();
-        }
+        modificationsAllowedByUserAndState(requestingUser);
         if (!masterdataChanged(updatedProject)) {
             return false;
         }
@@ -212,7 +214,8 @@ public class ProjectEntity {
             case PROPOSED:
             case DEFERRED:
                 return true;
-            default: break;
+            default:
+                break;
         }
         if (this.financingRound == null) {
             return true;
@@ -221,6 +224,41 @@ public class ProjectEntity {
             return false;
         }
         return true;
+    }
+
+    public void addAttachmentAllowed(UserEntity attachmentCreator) throws NotAuthorizedException, InvalidRequestException {
+        modificationsAllowedByUserAndState(attachmentCreator);
+    }
+
+    public void deleteAttachmentAllowed(UserEntity attachmentCreator) throws NotAuthorizedException, InvalidRequestException {
+        modificationsAllowedByUserAndState(attachmentCreator);
+    }
+
+    public void addAttachment(AttachmentValue attachment) {
+        this.attachments.add(attachment);
+    }
+
+    public void deleteAttachment(AttachmentValue attachment2Delete) {
+        attachments.remove(attachment2Delete);
+    }
+
+    /**
+     * Retrieve the attachment file reference entry that allows association of actual binary data.
+     * Currently fetching is only supported by file reference (<code>Attachment.id</code>).
+     *
+     * @param attachment the query object
+     * @return the attachment value if it exists
+     * @throws ResourceNotFoundException in case the attachment couldn't be found
+     */
+    public AttachmentValue findAttachmentByReference(Attachment attachment) throws ResourceNotFoundException {
+        Assert.notNull(attachment.getId());
+
+        final Optional<AttachmentValue> res = this.attachments.stream().filter(a -> a.getFileReference().equals(attachment.getId())).findFirst();
+
+        if (!res.isPresent()) {
+            throw new ResourceNotFoundException();
+        }
+        return res.get();
     }
 
     boolean masterdataChanged(Project updatedProject) {
@@ -287,6 +325,16 @@ public class ProjectEntity {
                 .sum();
     }
 
+    private void modificationsAllowedByUserAndState(UserEntity requestingUser) throws NotAuthorizedException, InvalidRequestException {
+        if (!requestingUser.getRoles().contains(Roles.ROLE_ADMIN) && !requestingUser.equals(this.creator)) {
+            throw new NotAuthorizedException("You are neither admin nor creator of that project");
+        }
+        if (!masterdataModificationAllowed()) {
+            throw InvalidRequestException.masterdataChangeNotAllowed();
+        }
+    }
+
+
     public String getId() {
         return this.id;
     }
@@ -327,6 +375,10 @@ public class ProjectEntity {
         return this.lastModifiedDate;
     }
 
+    public List<AttachmentValue> getAttachments() {
+        return attachments;
+    }
+
     public void setId(String id) {
         this.id = id;
     }
@@ -365,6 +417,10 @@ public class ProjectEntity {
 
     public void setLastModifiedDate(DateTime lastModifiedDate) {
         this.lastModifiedDate = lastModifiedDate;
+    }
+
+    public void setAttachments(List<AttachmentValue> attachments) {
+        this.attachments = attachments;
     }
 
     @Override

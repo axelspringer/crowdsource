@@ -6,7 +6,7 @@ import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.repository.FinancingRoundRepository;
 import de.asideas.crowdsource.service.FinancingRoundService;
 import org.joda.time.DateTime;

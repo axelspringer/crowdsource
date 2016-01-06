@@ -1,6 +1,6 @@
 package de.asideas.crowdsource.domain.model;
 
-import de.asideas.crowdsource.domain.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
