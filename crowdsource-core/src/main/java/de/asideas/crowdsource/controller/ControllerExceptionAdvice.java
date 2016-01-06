@@ -1,7 +1,7 @@
 package de.asideas.crowdsource.controller;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
-import de.asideas.crowdsource.domain.presentation.ErrorResponse;
+import de.asideas.crowdsource.presentation.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;

@@ -1,7 +1,7 @@
 package de.asideas.crowdsource.controller.usercontroller;
 
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.user.UserActivation;
+import de.asideas.crowdsource.presentation.user.UserActivation;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;

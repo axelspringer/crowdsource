@@ -4,24 +4,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
+import de.asideas.crowdsource.domain.model.AttachmentValue;
+import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.ErrorResponse;
-import de.asideas.crowdsource.domain.presentation.Pledge;
-import de.asideas.crowdsource.domain.presentation.project.Project;
-import de.asideas.crowdsource.domain.presentation.project.ProjectStatusUpdate;
-import de.asideas.crowdsource.domain.presentation.user.ProjectCreator;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.ErrorResponse;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
+import de.asideas.crowdsource.presentation.project.Project;
+import de.asideas.crowdsource.presentation.project.ProjectStatusUpdate;
+import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.security.Roles;
 import de.asideas.crowdsource.service.ProjectService;
 import de.asideas.crowdsource.service.UserService;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,13 +42,18 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -55,12 +66,21 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextConfiguration(classes = ProjectControllerTest.Config.class)
+@SuppressWarnings("Duplicates")
 public class ProjectControllerTest {
 
     @Autowired
@@ -68,6 +88,9 @@ public class ProjectControllerTest {
 
     @Autowired
     private ProjectService projectService;
+
+    @Autowired
+    private ProjectController projectController;
 
     @Resource
     private WebApplicationContext webApplicationContext;
@@ -80,6 +103,8 @@ public class ProjectControllerTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         reset(projectService, userRepository);
         mapper.registerModule(new JodaModule());
+
+        givenControllerSupportsMediaTypes(Arrays.asList(MediaType.TEXT_PLAIN));
     }
 
     @Test
@@ -152,7 +177,7 @@ public class ProjectControllerTest {
                 .thenReturn(toCreatedProject(project("title", "descr", "shortDescr", 44, ProjectStatus.PROPOSED), creator));
 
         mockMvc.perform(get("/project/{projectId}", projectId)
-                        .principal(authentication(userEntity))
+                .principal(authentication(userEntity))
         ).andExpect(status().isForbidden());
     }
 
@@ -397,7 +422,7 @@ public class ProjectControllerTest {
         mockMvc.perform(patch("/project/{projectId}/status", "some_id")
                 .principal(authentication(user))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"status\": \"UNKNOWN_STATUS\"}") )
+                .content("{\"status\": \"UNKNOWN_STATUS\"}"))
                 .andExpect(status().isBadRequest())
                 .andReturn();
     }
@@ -453,6 +478,164 @@ public class ProjectControllerTest {
                 .content(""))
                 .andExpect(status().isBadRequest())
                 .andReturn();
+
+    }
+
+    @Test
+    public void addProjectAttachment_shouldDelegateToProjectService() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        final Attachment expectedAttachment = anExpectedAttachment(aPersistedProjectEntity());
+
+        MockMultipartFile content = mockedMultipart("somecontent", "test_filename", "text/plain");
+        MediaType mediaType = mediaType();
+
+        when(projectService.addProjectAttachment(eq("some_id"), eq(Attachment.asCreationCommand("test_filename", "text/plain", content.getInputStream())), eq(user)))
+                .thenReturn(expectedAttachment);
+
+        MvcResult mvcRes = mockMvc.perform(fileUpload("/projects/{projectId}/attachments", "some_id")
+                .file(content)
+                .principal(authentication(user))
+                .contentType(mediaType))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Attachment res = mapper.readValue(mvcRes.getResponse().getContentAsString(), Attachment.class);
+        assertAttachmentsEqual(expectedAttachment, res);
+    }
+
+    @Test
+    public void addProjectAttachment_shouldCloseInputStream() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        final Attachment expectedAttachment = anExpectedAttachment(aPersistedProjectEntity());
+
+        MockMultipartFile content = new MockedInputStreamMultipartFile("file", "test_filename", "text/plain");
+        final InputStream mockedInputStream = content.getInputStream();
+        MediaType mediaType = mediaType();
+
+        when(projectService.addProjectAttachment(eq("some_id"), eq(Attachment.asCreationCommand("test_filename", "text/plain", content.getInputStream())), eq(user)))
+                .thenReturn(expectedAttachment);
+
+        MvcResult mvcRes = mockMvc.perform(fileUpload("/projects/{projectId}/attachments", "some_id")
+                .file(content)
+                .principal(authentication(user))
+                .contentType(mediaType))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Attachment res = mapper.readValue(mvcRes.getResponse().getContentAsString(), Attachment.class);
+        assertAttachmentsEqual(expectedAttachment, res);
+        verify(mockedInputStream).close();
+    }
+
+    @Test
+    public void addProjectAttachment_shouldThrowBadRequestOnEmptyFile() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+
+        MockMultipartFile content = mockedMultipart("", "test_filename", "text/plain");
+        MediaType mediaType = mediaType();
+
+        mockMvc.perform(fileUpload("/projects/{projectId}/attachments", "some_id")
+                .file(content)
+                .principal(authentication(user))
+                .contentType(mediaType))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+    }
+
+    @Test
+    public void addProjectAttachment_shouldThrowBadRequestOnUnsupportedMediaType() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        givenControllerSupportsMediaTypes(Collections.singletonList(MediaType.parseMediaType(("application/pdf"))));
+
+        MockMultipartFile content = mockedMultipart("someContent", "test_filename", "application/json");
+        MediaType mediaType = mediaType();
+
+        mockMvc.perform(fileUpload("/projects/{projectId}/attachments", "some_id")
+                .file(content)
+                .contentType(mediaType)
+                .principal(authentication(user)))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+    }
+
+    @Test
+    public void addProjectAttachment_shouldAcceptSpecificMediaTypeOnGeneralDefinition() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        givenControllerSupportsMediaTypes(Collections.singletonList(MediaType.parseMediaType(("image/*"))));
+
+        MockMultipartFile content = mockedMultipart("someContent", "test_filename", "image/jpeg");
+        MediaType mediaType = mediaType();
+
+        mockMvc.perform(fileUpload("/projects/{projectId}/attachments", "some_id")
+                .file(content)
+                .contentType(mediaType)
+                .principal(authentication(user)))
+                .andExpect(status().isOk())
+                .andReturn();
+    }
+
+    @Test
+    public void serveProjectAttachment_ReturnsResponseWithCorrectMediaType() throws Exception {
+        final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
+        final String expContent = "someContent";
+        final ProjectEntity project = aPersistedProjectEntity();
+        final Attachment expectedAttachment = anExpectedAttachmentWithPayload(project, Optional.of(expContent));
+
+        when(projectService.loadProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(expectedAttachment.getId())))
+                .thenReturn(expectedAttachment);
+
+        mockMvc.perform(get("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
+                .principal(authentication(user)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(expectedAttachment.getType()))
+                .andExpect(header().longValue("Content-Length", expectedAttachment.getSize()))
+                .andExpect(content().string(expContent))
+                .andReturn();
+
+    }
+
+    @Test
+    public void deleteAttachment_callsProjectServiceAndReturnsNoContent() throws Exception {
+        final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
+        final String expContent = "someContent";
+        final ProjectEntity project = aPersistedProjectEntity();
+        final Attachment expectedAttachment = anExpectedAttachmentWithPayload(project, Optional.of(expContent));
+
+        mockMvc.perform(delete("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
+                .principal(authentication(user)))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        verify(projectService).deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(expectedAttachment.getId()), user);
+    }
+
+    private void givenControllerSupportsMediaTypes(List<MediaType> mediaTypes) {
+        ReflectionTestUtils.setField(projectController, "attachmentTypesAllowed", mediaTypes);
+    }
+
+    private void assertAttachmentsEqual(Attachment expected, Attachment actual) {
+        assertThat(actual.getName(), is(expected.getName()));
+        assertThat(actual.getType(), is(expected.getType()));
+        assertThat(actual.getId(), is(expected.getId()));
+        assertThat(actual.getCreated().getMillis(), is(expected.getCreated().getMillis()));
+        assertThat(actual.getLinkToFile(), is(expected.getLinkToFile()));
+        assertThat(actual.getSize(), is(expected.getSize()));
+    }
+
+    private MediaType mediaType() {
+        HashMap<String, String> contentTypeParams = new HashMap<>();
+        contentTypeParams.put("boundary", "34643214412434354");
+        return new MediaType("multipart", "form-data", contentTypeParams);
+    }
+
+    private MockMultipartFile mockedMultipart(String content, String filename, String contentType) {
+        MockMultipartFile multipartFile = new MockMultipartFile("file", filename, contentType, content.getBytes());
+        return multipartFile;
     }
 
     private Principal authentication(UserEntity userEntity) {
@@ -514,6 +697,21 @@ public class ProjectControllerTest {
         return expProject;
     }
 
+    private ProjectEntity aPersistedProjectEntity() {
+        final ProjectEntity res = new ProjectEntity();
+        res.setId("aProjectId");
+        return res;
+    }
+
+    private Attachment anExpectedAttachment(ProjectEntity parentProject) {
+        return anExpectedAttachmentWithPayload(parentProject, Optional.empty());
+    }
+
+    private Attachment anExpectedAttachmentWithPayload(ProjectEntity parentProject, Optional<String> payload) {
+        return Attachment.asResponse(new AttachmentValue("a_fileRef", "text/plain", "a_filename", 17, DateTime.now()), parentProject,
+                payload.isPresent() ? new ByteArrayInputStream(payload.get().getBytes()) : null);
+    }
+
     @Configuration
     @EnableWebMvc
     static class Config {
@@ -536,9 +734,46 @@ public class ProjectControllerTest {
         public UserService userService(UserRepository userRepository) {
             return new UserService(userRepository, null);
         }
+
         @Bean
         public UserRepository userRepository() {
             return mock(UserRepository.class);
         }
+
+        @Bean
+        public PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
+            return new PropertyPlaceholderConfigurer();
+        }
     }
+
+    static class MockedInputStreamMultipartFile extends MockMultipartFile {
+
+        private InputStream mockedInputStream = mock(InputStream.class);
+
+        public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType) {
+            super(name, originalFilename, contentType, new byte[]{0, 1, 2, 3});
+        }
+
+        public MockedInputStreamMultipartFile(String name, byte[] content) {
+            super(name, content);
+        }
+
+        public MockedInputStreamMultipartFile(String name, InputStream contentStream) throws IOException {
+            super(name, contentStream);
+        }
+
+        public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType, byte[] content) {
+            super(name, originalFilename, contentType, content);
+        }
+
+        public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType, InputStream contentStream) throws IOException {
+            super(name, originalFilename, contentType, contentStream);
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return mockedInputStream;
+        }
+    }
+
 }

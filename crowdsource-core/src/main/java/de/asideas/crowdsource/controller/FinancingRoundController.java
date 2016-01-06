@@ -1,8 +1,8 @@
 package de.asideas.crowdsource.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import de.asideas.crowdsource.domain.presentation.FinancingRound;
-import de.asideas.crowdsource.domain.presentation.project.PublicFinancingRoundInformationView;
+import de.asideas.crowdsource.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.project.PublicFinancingRoundInformationView;
 import de.asideas.crowdsource.security.Roles;
 import de.asideas.crowdsource.service.FinancingRoundService;
 import org.springframework.beans.factory.annotation.Autowired;

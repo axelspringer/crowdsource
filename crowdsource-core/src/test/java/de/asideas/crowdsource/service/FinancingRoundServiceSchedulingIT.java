@@ -2,7 +2,7 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.config.SchedulerConfig;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.service.financinground.FinancingRoundPostProcessor;
 import de.asideas.crowdsource.repository.FinancingRoundRepository;
 import de.asideas.crowdsource.repository.PledgeRepository;

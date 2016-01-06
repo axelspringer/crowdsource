@@ -20,7 +20,8 @@
     /**
      * global application configuration
      */
-    angular.module('crowdsource', ['ngRoute', 'ngResource', 'ngMessages', 'dibari.angular-ellipsis', 'ngScrollTo', 'angulartics', 'angulartics.piwik', 'ngSanitize', 'ng-showdown'])
+    angular.module('crowdsource', ['ngRoute', 'ngResource', 'ngMessages', 'dibari.angular-ellipsis', 'ngScrollTo',
+                    'angulartics', 'angulartics.piwik', 'ngSanitize', 'ng-showdown', 'ngFileUpload', 'ngclipboard'])
         .config(function ($routeProvider, $locationProvider, $httpProvider, $analyticsProvider, $showdownProvider) {
             $routeProvider
                 .when('/projects', {
@@ -135,6 +136,7 @@
             $showdownProvider.setOption("sanitize", true);
         })
 
+
         .run(function (Authentication, Route) {
 
             Authentication.init();
@@ -149,6 +151,8 @@
             });
         });
 
+    angular.module('crowdsource').value('Bowser', bowser);
+
     if (isBrowserSupported()) {
         angular.element(document).ready(function () {
             angular.bootstrap(document, ['crowdsource']);
@@ -157,7 +161,7 @@
     } else {
         $(document).ready(function () {
             $('.browser-fallback').show();
-        })
+        });
     }
 
 })();

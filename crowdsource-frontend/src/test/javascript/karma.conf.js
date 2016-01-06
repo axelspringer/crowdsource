@@ -21,6 +21,10 @@ module.exports = function (config) {
             'bower_components/angulartics/src/angulartics-piwik.js',
             'bower_components/showdown/dist/showdown.min.js',
             'bower_components/ng-showdown/dist/ng-showdown.min.js',
+            'bower_components/ng-file-upload/ng-file-upload-shim.min.js',
+            'bower_components/ng-file-upload/ng-file-upload.min.js',
+            'bower_components/clipboard/dist/clipboard.min.js',
+            'bower_components/ngclipboard/dist/ngclipboard.js',
 
 
             // actually, this file would have been picked up by the wildcard pattern app/**/*.js
@@ -29,11 +33,12 @@ module.exports = function (config) {
             'src/test/javascript/testsupport/mocked-libraries.testsupport.js',
             'src/main/resources/public/app/crowdsource.js',
             'src/main/resources/public/app/**/*.js',
+
             'src/test/javascript/**/*.js',
 
             // Selective test execution -> comment line above uncomment lines below
             //'src/test/javascript/testsupport/**/*.js',
-            //'src/test/javascript/app/financing-rounds/*.js',
+            //'src/test/javascript/app/components/attachments/*.js',
 
             'src/main/resources/public/app/**/*.html'
         ],

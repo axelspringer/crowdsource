@@ -5,7 +5,7 @@ import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.domain.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.service.financinground.FinancingRoundPostProcessor;
 import de.asideas.crowdsource.repository.FinancingRoundRepository;
 import de.asideas.crowdsource.repository.PledgeRepository;

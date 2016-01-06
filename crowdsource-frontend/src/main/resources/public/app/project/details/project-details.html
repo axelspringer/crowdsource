@@ -59,7 +59,7 @@
         </div>
 
         <div class="pm-l-cell-outer -cell-2nd" ng-if="projectDetails.auth.currentUser.hasRole('ADMIN') && (projectDetails.isRejectable() || projectDetails.isPublishable() || project.isDeferrable()) ">
-            <p class="pm-divider">Admin</p>
+            <div class="pm-divider">Admin</div>
 
             <div ng-if="projectDetails.isDeferrable() && projectDetails.auth.currentUser.hasRole('ADMIN')">
                 <button class="pm-btn--alert defer-button" ng-click="projectDetails.defer()" ng-disabled="projectDetails.deferring"
@@ -86,6 +86,10 @@
     <p class="project-short-description">{{ projectDetails.project.shortDescription}}</p>
 
     <div class="project-description" markdown-to-html="projectDetails.project.description"></div>
+
+    <div class="project-attachments">
+        <project-attachments project="projectDetails.project" upload-enabled="false" />
+    </div>
 
     <project-pledging-form id="project-pledging-form" project="projectDetails.project"></project-pledging-form>
 

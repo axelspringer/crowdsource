@@ -1,7 +1,7 @@
 package de.asideas.crowdsource.util.validation.financinground;
 
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.repository.FinancingRoundRepository;
 import de.asideas.crowdsource.testutil.ValidatorTestUtil;
 import org.joda.time.DateTime;

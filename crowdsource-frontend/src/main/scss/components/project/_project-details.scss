@@ -361,12 +361,12 @@ $pd-icon-dimension: 24px;
 .pm-divider {
     @include divider--with-text((word-width: 60px));
     margin-top: rem-calc(-8px);
-    margin-bottom: rem-calc(16px);
+    //margin-bottom: rem-calc(16px);
     font-weight: 600;
 
     // @media > smartphone
     @media #{$medium-up} {
-        margin-bottom: rem-calc(42px);
+        //margin-bottom: rem-calc(42px);
     }
 }
 

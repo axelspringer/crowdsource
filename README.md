@@ -122,6 +122,7 @@ Tracking includes virtual page views (all the angular anchor links) and the foll
  * | GoToStartNewProjectFromNavbar  | Projects        
  * | GoToStartNewProjectFromTeaser  | Projects        
  * | GoToFinancing  | Projects        
+ * | AttachmentUploaded  | Projects        
  * | NewFinancingRoundStarted   | FinancingRound 
  * | FinancingRoundAborted  | FinancingRound  
  * | SignIn | UserActions     
