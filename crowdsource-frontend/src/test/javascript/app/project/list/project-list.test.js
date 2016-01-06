@@ -73,7 +73,7 @@ describe('project list', function () {
 
         $httpBackend.expectGET('/projects').respond(200, [
             project('Title 0', 'Short Description 0', 100, 10, 1, 'PUBLISHED', moment(now).subtract(2, 'days')),
-            project('Title 1', 'Short Description 1', 100, 10, 1, 'PUBLISHED', moment(now).subtract(1, 'days')),
+            project('Title 1', 'Short Description 1', 100, 10, 1, 'PUBLISHED_DEFERRED', moment(now).subtract(1, 'days')),
             project('Title 2', 'Short Description 2', 100, 10, 1, 'PUBLISHED', moment(now).subtract(4, 'days')),
             project('Title 3', 'Short Description 3', 100, 20, 2, 'FULLY_PLEDGED', moment(now).subtract(1, 'days')),
             project('Title 4', 'Short Description 4', 100, 20, 2, 'REJECTED', moment(now).subtract(1, 'days')),
@@ -89,17 +89,18 @@ describe('project list', function () {
         expect($(listItems[0]).find('.tile__heading').text()).toBe('Title 5');
         expect($(listItems[0]).hasClass("project-proposed")).toBeTruthy();
 
-        expect($(listItems[1]).find('.tile__heading').text()).toBe('Title 1');
-        expect($(listItems[1]).hasClass("project-published")).toBeTruthy();
 
-        expect($(listItems[2]).find('.tile__heading').text()).toBe('Title 0');
+        expect($(listItems[1]).find('.tile__heading').text()).toBe('Title 0');
         expect($(listItems[2]).hasClass("project-published")).toBeTruthy();
 
-        expect($(listItems[3]).find('.tile__heading').text()).toBe('Title 2');
-        expect($(listItems[3]).hasClass("project-published")).toBeTruthy();
+        expect($(listItems[2]).find('.tile__heading').text()).toBe('Title 2');
+        expect($(listItems[2]).hasClass("project-published")).toBeTruthy();
 
-        expect($(listItems[4]).find('.tile__heading').text()).toBe('Title 3');
-        expect($(listItems[4]).hasClass("project-fully_pledged")).toBeTruthy();
+        expect($(listItems[3]).find('.tile__heading').text()).toBe('Title 3');
+        expect($(listItems[3]).hasClass("project-fully_pledged")).toBeTruthy();
+
+        expect($(listItems[4]).find('.tile__heading').text()).toBe('Title 1');
+        expect($(listItems[4]).hasClass("project-published_deferred")).toBeTruthy();
 
         expect($(listItems[5]).find('.tile__heading').text()).toBe('Title 6');
         expect($(listItems[5]).hasClass("project-deferred")).toBeTruthy();
