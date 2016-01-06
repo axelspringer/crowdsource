@@ -3,8 +3,6 @@ package de.asideas.crowdsource.service;
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.*;
-import de.asideas.crowdsource.domain.presentation.Pledge;
-import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.domain.model.AttachmentValue;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
@@ -55,11 +53,13 @@ public class ProjectService {
     private final ProjectService thisInstance;
 
     @Autowired
-    public ProjectService(ProjectRepository projectRepository, PledgeRepository pledgeRepository,
-                          UserRepository userRepository, FinancingRoundRepository financingRoundRepository,
+    public ProjectService(ProjectRepository projectRepository,
+                          PledgeRepository pledgeRepository,
+                          UserRepository userRepository,
+                          FinancingRoundRepository financingRoundRepository,
                           UserNotificationService userNotificationService,
-                          FinancingRoundService financingRoundService, LikeRepository likeRepository) {
                           FinancingRoundService financingRoundService,
+                          LikeRepository likeRepository,
                           ProjectAttachmentRepository projectAttachmentRepository) {
 
         this.projectRepository = projectRepository;
