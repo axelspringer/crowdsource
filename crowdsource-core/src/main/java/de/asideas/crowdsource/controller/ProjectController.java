@@ -15,6 +15,7 @@ import de.asideas.crowdsource.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.InvalidMediaTypeException;
@@ -38,7 +39,6 @@ import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,11 +56,8 @@ public class ProjectController {
     @Autowired
     private UserService userService;
 
-    private List<MediaType> attachmentTypesAllowed = Arrays.asList(
-            MediaType.parseMediaType("image/*"),
-            MediaType.parseMediaType("application/pdf"),
-            MediaType.parseMediaType("text/plain")
-    );
+    @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowedmediatypes}')}")
+    private List<MediaType> attachmentTypesAllowed;
 
     @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
     @RequestMapping(value = "/projects", method = RequestMethod.GET)
