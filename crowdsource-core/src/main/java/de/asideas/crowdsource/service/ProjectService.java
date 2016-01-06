@@ -5,9 +5,22 @@ import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.*;
 import de.asideas.crowdsource.domain.presentation.Pledge;
 import de.asideas.crowdsource.domain.presentation.project.Project;
+import de.asideas.crowdsource.domain.model.AttachmentValue;
+import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
+import de.asideas.crowdsource.domain.model.PledgeEntity;
+import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
+import de.asideas.crowdsource.presentation.project.Project;
+import de.asideas.crowdsource.repository.FinancingRoundRepository;
+import de.asideas.crowdsource.repository.PledgeRepository;
+import de.asideas.crowdsource.repository.ProjectAttachmentRepository;
+import de.asideas.crowdsource.repository.ProjectRepository;
+import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
 import org.joda.time.DateTime;
@@ -17,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,6 +43,7 @@ public class ProjectService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectService.class);
 
+    private final ProjectAttachmentRepository projectAttachmentRepository;
     private final ProjectRepository projectRepository;
     private final PledgeRepository pledgeRepository;
     private final UserRepository userRepository;
@@ -44,14 +59,19 @@ public class ProjectService {
                           UserRepository userRepository, FinancingRoundRepository financingRoundRepository,
                           UserNotificationService userNotificationService,
                           FinancingRoundService financingRoundService, LikeRepository likeRepository) {
+                          FinancingRoundService financingRoundService,
+                          ProjectAttachmentRepository projectAttachmentRepository) {
+
         this.projectRepository = projectRepository;
         this.pledgeRepository = pledgeRepository;
         this.userRepository = userRepository;
         this.financingRoundRepository = financingRoundRepository;
         this.userNotificationService = userNotificationService;
         this.financingRoundService = financingRoundService;
+        this.projectAttachmentRepository = projectAttachmentRepository;
         this.likeRepository = likeRepository;
         this.thisInstance = this;
+
     }
 
     public Project getProject(String projectId, UserEntity requestingUser) {
@@ -110,13 +130,61 @@ public class ProjectService {
                 financingRound.getTerminationPostProcessingDone() &&
                 userEntity.getRoles().contains(Roles.ROLE_ADMIN)) {
 
-            if (!financingRound.idenitityEquals(projectEntity.getFinancingRound()) ) {
+            if (!financingRound.idenitityEquals(projectEntity.getFinancingRound())) {
                 throw InvalidRequestException.projectTookNotPartInLastFinancingRond();
             }
             thisInstance.pledgeProjectUsingPostRoundBudget(projectEntity, userEntity, pledge);
         } else {
             thisInstance.pledgeProjectInFinancingRound(projectEntity, userEntity, pledge);
         }
+    }
+
+    public Attachment addProjectAttachment(String projectId, Attachment attachment, UserEntity savingUser) {
+        ProjectEntity projectEntity = loadProjectEntity(projectId);
+
+        projectEntity.addAttachmentAllowed(savingUser);
+
+        AttachmentValue attachmentStored = new AttachmentValue(attachment.getName(), attachment.getType());
+        attachmentStored = projectAttachmentRepository.storeAttachment(attachmentStored, attachment.getPayload());
+        projectEntity.addAttachment(attachmentStored);
+        projectRepository.save(projectEntity);
+        return Attachment.asResponseWithoutPayload(attachmentStored, projectEntity);
+    }
+
+    public Attachment loadProjectAttachment(String projectId, Attachment attachmentRequest) {
+        final ProjectEntity project = loadProjectEntity(projectId);
+
+        final AttachmentValue attachment2Serve = project.findAttachmentByReference(attachmentRequest);
+        final InputStream payload = projectAttachmentRepository.loadAttachment(attachment2Serve);
+
+        if (payload == null) {
+            LOG.error("A project's attachment file entry's actual binary data couldn't be found: " +
+                    "projectId:{}; fileAttachmentMissing: {}", projectId, attachment2Serve);
+            throw new ResourceNotFoundException();
+        }
+
+        return Attachment.asResponse(attachment2Serve, project, payload);
+    }
+
+    public void deleteProjectAttachment(String projectId, Attachment attachmentRequest, UserEntity deletingUser) {
+        final ProjectEntity project = loadProjectEntity(projectId);
+        final AttachmentValue attachment2Delete = project.findAttachmentByReference(attachmentRequest);
+
+        project.deleteAttachmentAllowed(deletingUser);
+
+        projectAttachmentRepository.deleteAttachment(attachment2Delete);
+        project.deleteAttachment(attachment2Delete);
+        projectRepository.save(project);
+    }
+
+    public void likeProject(String projectId, UserEntity user) {
+        final ProjectEntity project = projectRepository.findOne(projectId);
+        toggleStatus(project, user, LIKE);
+    }
+
+    public void unlikeProject(String projectId, UserEntity user) {
+        final ProjectEntity project = projectRepository.findOne(projectId);
+        toggleStatus(project, user, UNLIKE);
     }
 
     void pledgeProjectInFinancingRound(ProjectEntity projectEntity, UserEntity userEntity, Pledge pledge) {
@@ -181,16 +249,6 @@ public class ProjectService {
         userRepository.findAllAdminUsers().stream()
                 .map(UserEntity::getEmail)
                 .forEach(emailAddress -> userNotificationService.notifyAdminOnProjectCreation(projectEntity, emailAddress));
-    }
-
-    public void likeProject(String projectId, UserEntity user) {
-        final ProjectEntity project = projectRepository.findOne(projectId);
-        toggleStatus(project, user, LIKE);
-    }
-
-    public void unlikeProject(String projectId, UserEntity user) {
-        final ProjectEntity project = projectRepository.findOne(projectId);
-        toggleStatus(project, user, UNLIKE);
     }
 
     private void toggleStatus(ProjectEntity project, UserEntity user, LikeStatus status) {

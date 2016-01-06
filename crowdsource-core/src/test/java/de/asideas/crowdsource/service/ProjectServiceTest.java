@@ -1,13 +1,28 @@
 package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
+import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
+import de.asideas.crowdsource.domain.model.AttachmentValue;
+import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
+import de.asideas.crowdsource.domain.model.PledgeEntity;
+import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.model.*;
 import de.asideas.crowdsource.domain.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.presentation.Pledge;
 import de.asideas.crowdsource.domain.presentation.project.Project;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
+import de.asideas.crowdsource.presentation.project.Project;
+import de.asideas.crowdsource.repository.FinancingRoundRepository;
+import de.asideas.crowdsource.repository.PledgeRepository;
+import de.asideas.crowdsource.repository.ProjectAttachmentRepository;
+import de.asideas.crowdsource.repository.ProjectRepository;
+import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
 import org.hamcrest.core.Is;
@@ -22,6 +37,11 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
 import java.util.*;
 
 import static de.asideas.crowdsource.domain.shared.LikeStatus.LIKE;
@@ -33,10 +53,16 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 @RunWith(MockitoJUnitRunner.class)
+@SuppressWarnings("Duplicates")
 public class ProjectServiceTest {
 
     private static final String USER_EMAIL = "user@some.host";
@@ -75,11 +101,14 @@ public class ProjectServiceTest {
     @Mock
     private ProjectService thisInstance;
 
+    @Mock
+    private ProjectAttachmentRepository projectAttachmentRepository;
+
 
     @Before
     public void init() {
         ReflectionTestUtils.setField(projectService, "thisInstance", thisInstance);
-        reset(projectRepository, pledgeRepository, userRepository, financingRoundRepository, thisInstance, likeRepository);
+        reset(projectRepository, pledgeRepository, userRepository, financingRoundRepository, thisInstance, likeRepository, projectAttachmentRepository);
         when(pledgeRepository.findByProjectAndFinancingRound(any(ProjectEntity.class), any(FinancingRoundEntity.class))).thenReturn(new ArrayList<>());
         when(userRepository.findAllAdminUsers()).thenReturn(Arrays.asList(admin(ADMIN1_EMAIL), admin(ADMIN2_EMAIL)));
         when(projectRepository.save(any(ProjectEntity.class))).thenAnswer(invocation -> invocation.getArguments()[0]);
@@ -419,7 +448,7 @@ public class ProjectServiceTest {
     public void modifyProjectMasterdata_doesNotNotifyAndSaveOnNoModification() throws Exception {
         final String projectId = "test_ID";
         final UserEntity user = user(USER_EMAIL);
-        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.FULLY_PLEDGED);
+        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.PROPOSED);
         final ProjectEntity project = new ProjectEntity(user, projectCmd, null);
 
         when(projectRepository.findOne(projectId)).thenReturn(project);
@@ -434,11 +463,175 @@ public class ProjectServiceTest {
         final String projectId = "test_ID";
         when(projectRepository.findOne(projectId)).thenReturn(null);
 
-        projectService.modifyProjectMasterdata(projectId, project(null, null, null, 17, null), user("blub") );
+        projectService.modifyProjectMasterdata(projectId, project(null, null, null, 17, null), user("blub"));
 
         verify(projectRepository, never()).save(any(ProjectEntity.class));
         verify(userNotificationService, never()).notifyCreatorAndAdminOnProjectModification(any(ProjectEntity.class), any(UserEntity.class));
     }
+
+    @Test
+    public void addAttachment_ShouldStoreAttachmentAndProject() throws Exception {
+        final String projectId = "test_ID";
+        final UserEntity projectCreator = user(USER_EMAIL);
+        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.PROPOSED);
+        final ProjectEntity project = new ProjectEntity(projectCreator, projectCmd, null);
+        final Attachment attachmentSaveCmd = aStoringRequestAttachment();
+        final AttachmentValue expAttachmentValue = aPersitedAttachment("fileRef");
+
+        ArgumentCaptor<AttachmentValue> writeAttachmentCaptor = ArgumentCaptor.forClass(AttachmentValue.class);
+        when(projectRepository.findOne(projectId)).thenReturn(project);
+        when(projectAttachmentRepository.storeAttachment(writeAttachmentCaptor.capture(), any(InputStream.class))).thenReturn(expAttachmentValue);
+        Attachment res = projectService.addProjectAttachment(projectId, attachmentSaveCmd, projectCreator);
+
+        ArgumentCaptor<ProjectEntity> projectCaptor = ArgumentCaptor.forClass(ProjectEntity.class);
+        assertThat(writeAttachmentCaptor.getValue().getContentType(), is(attachmentSaveCmd.getType()));
+        assertThat(writeAttachmentCaptor.getValue().getFilename(), is(attachmentSaveCmd.getName()));
+        verify(projectRepository).save(projectCaptor.capture());
+        assertThat("Project should contain new attachment", projectCaptor.getValue().getAttachments().contains(expAttachmentValue));
+        assertPresentationAttachmentConformsPersited(res, expAttachmentValue);
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void addAttachment_ThrowsResourceNotFoundExOnNotExistingProject() throws Exception {
+        final String projectId = "test_ID";
+        when(projectRepository.findOne(projectId)).thenReturn(null);
+
+        projectService.addProjectAttachment(projectId, aStoringRequestAttachment(), user("blub"));
+    }
+
+    @Test
+    public void addAttachment_shouldThrowExceptionWhenChangesNotAllowedDueToProjectStatus() throws Exception {
+        final String projectId = "test_ID";
+        final UserEntity projectCreator = user(USER_EMAIL);
+        final Project projectCmd = project("title", "descr", "descrShort", 17, ProjectStatus.PROPOSED);
+        final ProjectEntity project = new ProjectEntity(projectCreator, projectCmd, null);
+        project.setStatus(ProjectStatus.FULLY_PLEDGED);
+        when(projectRepository.findOne(projectId)).thenReturn(project);
+
+        try {
+            projectService.addProjectAttachment(projectId, aStoringRequestAttachment(), projectCreator);
+            fail("InvalidRequestException expected!");
+        } catch (InvalidRequestException e) {
+            assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
+        }
+    }
+
+
+    @Test
+    public void loadProjectAttachment_shouldCallProjectAttachmentRepository() throws Exception {
+        final String fileRef = "attachId_0";
+        final ProjectEntity projectEntity = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
+        final InputStream expInputStream = mockedInputStream();
+        final ArgumentCaptor<AttachmentValue> repoReqCapture = ArgumentCaptor.forClass(AttachmentValue.class);
+
+        when(projectAttachmentRepository.loadAttachment(repoReqCapture.capture())).thenReturn(expInputStream);
+        final Attachment res = projectService.loadProjectAttachment(projectEntity.getId(),  Attachment.asLookupByIdCommand(fileRef));
+
+        assertThat(repoReqCapture.getValue().getFileReference(), is(fileRef));
+        assertThat("Expected specific input stream in result", res.getPayload() == expInputStream);
+        assertPresentationAttachmentConformsPersited(res, projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand(fileRef)));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void loadProjectAttachment_shouldThrowResourceNotFoundExceptionOnNullPayload() throws Exception {
+        final String fileRef = "attachId_0";
+        final ProjectEntity projectEntity = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
+
+        when(projectAttachmentRepository.loadAttachment(any(AttachmentValue.class))).thenReturn(null);
+        projectService.loadProjectAttachment(projectEntity.getId(),  Attachment.asLookupByIdCommand(fileRef));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void loadProjectAttachment_shouldThrowResourceNotFoundExceptionOnProjectNotExisting() throws Exception {
+        projectService.loadProjectAttachment("notExistingProjectId",  Attachment.asLookupByIdCommand("aFileRef"));
+    }
+
+    @Test
+    public void deleteAttachment_shouldCallProjectAttachmentRepositoryAndPersistProject() throws Exception {
+        final String fileRef = "attachId_0";
+        final ProjectEntity project = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
+        final int attachmentSizeBeforeDel = project.getAttachments().size();
+        project.setStatus(ProjectStatus.PROPOSED);
+
+        when(projectRepository.findOne(project.getId())).thenReturn(project);
+        projectService.deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(fileRef), admin("anAdmin"));
+
+        final ArgumentCaptor<AttachmentValue> fileRepoCapture = ArgumentCaptor.forClass(AttachmentValue.class);
+        final ArgumentCaptor<ProjectEntity> projectEntityRepCapture = ArgumentCaptor.forClass(ProjectEntity.class);
+        verify(projectAttachmentRepository).deleteAttachment(fileRepoCapture.capture());
+        verify(projectRepository).save(projectEntityRepCapture.capture());
+
+        assertThat(fileRepoCapture.getValue().getFileReference(), is(fileRef));
+        assertThat(projectEntityRepCapture.getValue().getAttachments().size(), is(attachmentSizeBeforeDel - 1));
+        assertThat("Should have removed AttachmentValue from project",
+                !projectEntityRepCapture.getValue().getAttachments().contains(new AttachmentValue(fileRef, null, null, 17, null)));
+
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void deleteAttachment_shouldThrowResourceNotFoundExceptionOnNotExistingProject() throws Exception {
+        final String fileRef = "attachId_0";
+        final ProjectEntity project = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
+        project.setStatus(ProjectStatus.PROPOSED);
+
+        when(projectRepository.findOne(project.getId())).thenReturn(null);
+        projectService.deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(fileRef), admin("anAdmin"));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void deleteAttachment_shouldThrowResourceNotFoundOnNotExistingAttachmentValue() throws Exception {
+        final String fileRef = "attachId_0";
+        final UserEntity projectCreator = user(USER_EMAIL);
+        final ProjectEntity project = projectEntity("projectId", ProjectStatus.PROPOSED, projectCreator);
+
+        projectService.deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(fileRef), admin("anAdmin"));
+
+    }
+
+    @Test(expected = NotAuthorizedException.class)
+    public void deleteAttachment_shouldThrowNotAllowedExceptionOnDeletionByNonAdminAndNonCreator() throws Exception {
+        final String fileRef = "attachId_0";
+        final ProjectEntity project = givenAProjectEntityWithAttachments(fileRef, "anotherFileRef");
+        project.setStatus(ProjectStatus.PROPOSED);
+
+        when(projectRepository.findOne(project.getId())).thenReturn(project);
+        when(projectAttachmentRepository.loadAttachment(any(AttachmentValue.class))).thenReturn(null);
+        projectService.deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(fileRef), user("aUser"));
+    }
+
+    @Test
+    public void deleteAttachment_shouldThrowExceptionWhenChangesNotAllowedDueToProjectStatus() throws Exception {
+        final String fileRef = "attachId_0";
+        final ProjectEntity project = givenAProjectEntityWithCreatorAndAttachments(user("aCreator@asideas.de"), fileRef, "anotherFileRef");
+        project.setStatus(ProjectStatus.PUBLISHED);
+        project.setFinancingRound(prepareActiveFinanzingRound(project));
+
+        when(projectRepository.findOne(project.getId())).thenReturn(project);
+        when(projectAttachmentRepository.loadAttachment(any(AttachmentValue.class))).thenReturn(null);
+
+        try {
+            projectService.deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(fileRef), project.getCreator());
+            fail("InvalidRequestException expected!");
+        } catch (InvalidRequestException e) {
+            assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
+        }
+    }
+
+
+    private ProjectEntity givenAProjectEntityWithCreatorAndAttachments(UserEntity creator, String... attachmentFileReferences) {
+        final ProjectEntity projectEntity = projectEntity("test_id", ProjectStatus.PROPOSED, creator);
+        if(attachmentFileReferences != null){
+            Arrays.asList(attachmentFileReferences).stream().forEach( r ->
+                projectEntity.addAttachment(aPersitedAttachment(r))
+            );
+        }
+        return projectEntity;
+    }
+
+    private ProjectEntity givenAProjectEntityWithAttachments(String... attachmentFileReferences) {
+        return givenAProjectEntityWithCreatorAndAttachments(user("a_user@asideas.de"), attachmentFileReferences);
+    }
+
 
     @Test
     public void likeProject_shouldCreateLikeEntityIfNotExists() throws Exception {
@@ -505,6 +698,14 @@ public class ProjectServiceTest {
         verify(projectRepository, never()).save(any(ProjectEntity.class));
     }
 
+    private void assertPresentationAttachmentConformsPersited(Attachment presentationAttachment, AttachmentValue persisted) throws Exception {
+        assertThat(presentationAttachment.getCreated(), is(persisted.getCreated()));
+        assertThat(presentationAttachment.getId(), is(persisted.getFileReference()));
+        assertThat(presentationAttachment.getName(), is(persisted.getFilename()));
+        assertThat(presentationAttachment.getSize(), is(persisted.getSize()));
+        assertThat(presentationAttachment.getType(), is(persisted.getContentType()));
+    }
+
     private void pledgedAssertionProject(ProjectEntity project, UserEntity user, int amount) {
 
         when(pledgeRepository.findByProjectAndFinancingRound(eq(project), any()))
@@ -529,10 +730,10 @@ public class ProjectServiceTest {
         return projectEntity;
     }
 
-    private ProjectEntity projectEntity(String id, ProjectStatus status, UserEntity user) {
+    private ProjectEntity projectEntity(String id, ProjectStatus status, UserEntity creator) {
         final ProjectEntity project = new ProjectEntity();
         project.setId(id);
-        project.setCreator(user);
+        project.setCreator(creator);
         project.setStatus(status);
         when(projectRepository.findOne(id)).thenReturn(project);
         return project;
@@ -565,7 +766,7 @@ public class ProjectServiceTest {
     private FinancingRoundEntity prepareActiveFinanzingRound(ProjectEntity project) {
         FinancingRoundEntity res = aFinancingRound(new DateTime().plusDays(1));
         res.setId(UUID.randomUUID().toString());
-        if(project != null ){
+        if (project != null) {
             project.setFinancingRound(res);
         }
 
@@ -577,7 +778,7 @@ public class ProjectServiceTest {
     private FinancingRoundEntity prepareInactiveFinancingRound(ProjectEntity project) {
         FinancingRoundEntity res = aFinancingRound(new DateTime().minusDays(1));
         res.setId("test_roundId");
-        if(project != null) {
+        if (project != null) {
             project.setFinancingRound(res);
         }
 
@@ -593,5 +794,17 @@ public class ProjectServiceTest {
         FinancingRoundEntity res = FinancingRoundEntity.newFinancingRound(creationCmd, 7);
         res.setStartDate(new DateTime().minusDays(2));
         return res;
+    }
+
+    private AttachmentValue aPersitedAttachment(String fileRef) {
+        return new AttachmentValue(fileRef, "text/plain", "a_filename", 17, DateTime.now());
+    }
+
+    private Attachment aStoringRequestAttachment() {
+        return Attachment.asCreationCommand("test_filename", "text/plain", mockedInputStream());
+    }
+
+    private InputStream mockedInputStream() {
+        return mock(InputStream.class);
     }
 }

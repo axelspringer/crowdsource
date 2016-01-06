@@ -2,16 +2,19 @@ package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
-import de.asideas.crowdsource.domain.presentation.FinancingRound;
-import de.asideas.crowdsource.domain.presentation.Pledge;
-import de.asideas.crowdsource.domain.presentation.project.Project;
+import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.FinancingRound;
+import de.asideas.crowdsource.presentation.Pledge;
+import de.asideas.crowdsource.presentation.project.Attachment;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.security.Roles;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
+import org.springframework.http.MediaType;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,9 +35,9 @@ public class ProjectEntityTest {
     int postRoundPledgedAmount = 0;
 
     private ProjectEntity projectEntity;
-    private UserEntity user1;
-    private UserEntity user2;
-    private UserEntity user3;
+    private UserEntity aUser;
+    private UserEntity adminUser;
+    private UserEntity projectCreator;
 
     @Before
     public void setUp() {
@@ -42,18 +45,18 @@ public class ProjectEntityTest {
         UserEntity creator = new UserEntity();
         creator.setId("id");
 
-        user1 = new UserEntity("user1@xyz.com");
-        user1.setId("test_id1");
-        user1.setBudget(100);
-        user2 = new UserEntity("user2@xyz.com");
-        user2.setId("test_id2");
-        user2.setBudget(200);
-        user2.setRoles(Arrays.asList(Roles.ROLE_USER, Roles.ROLE_ADMIN));
-        user3 = new UserEntity("user3@xyz.com");
-        user3.setId("test_id3");
+        aUser = new UserEntity("aUser@xyz.com");
+        aUser.setId("test_id1");
+        aUser.setBudget(100);
+        adminUser = new UserEntity("adminUser@xyz.com");
+        adminUser.setId("test_id2");
+        adminUser.setBudget(200);
+        adminUser.setRoles(Arrays.asList(Roles.ROLE_USER, Roles.ROLE_ADMIN));
+        projectCreator = new UserEntity("projectCreator@xyz.com");
+        projectCreator.setId("test_id3");
 
         Project project = new Project();
-        projectEntity = new ProjectEntity(user3, project, anActiveFinancingRound());
+        projectEntity = new ProjectEntity(projectCreator, project, anActiveFinancingRound());
         projectEntity.setPledgeGoal(PLEDGE_GOAL);
     }
 
@@ -67,12 +70,12 @@ public class ProjectEntityTest {
         final List<PledgeEntity> pledgesDoneBeforw = bunchOfPledgesDone();
         final Pledge pledge = new Pledge(40);
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        int userBudgetBefore = user1.getBudget();
+        int userBudgetBefore = aUser.getBudget();
 
-        final PledgeEntity pledgeRes = projectEntity.pledge(pledge, user1, pledgesDoneBeforw);
+        final PledgeEntity pledgeRes = projectEntity.pledge(pledge, aUser, pledgesDoneBeforw);
 
-        assertThat(pledgeRes, is(new PledgeEntity(projectEntity, user1, pledge, projectEntity.getFinancingRound())));
-        assertThat(user1.getBudget(), is(userBudgetBefore - pledge.getAmount()));
+        assertThat(pledgeRes, is(new PledgeEntity(projectEntity, aUser, pledge, projectEntity.getFinancingRound())));
+        assertThat(aUser.getBudget(), is(userBudgetBefore - pledge.getAmount()));
         assertThat(projectEntity.pledgeGoalAchieved(), is(true));
     }
 
@@ -81,205 +84,205 @@ public class ProjectEntityTest {
         final List<PledgeEntity> pledgesDoneBeforw = bunchOfPledgesDone();
         final Pledge pledge = new Pledge(-10);
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        int userBudgetBefore = user1.getBudget();
+        int userBudgetBefore = aUser.getBudget();
 
-        final PledgeEntity pledgeRes = projectEntity.pledge(pledge, user1, pledgesDoneBeforw);
+        final PledgeEntity pledgeRes = projectEntity.pledge(pledge, aUser, pledgesDoneBeforw);
 
-        assertThat(pledgeRes, is(new PledgeEntity(projectEntity, user1, pledge, projectEntity.getFinancingRound())));
-        assertThat(user1.getBudget(), is(userBudgetBefore + Math.abs(pledge.getAmount())));
+        assertThat(pledgeRes, is(new PledgeEntity(projectEntity, aUser, pledge, projectEntity.getFinancingRound())));
+        assertThat(aUser.getBudget(), is(userBudgetBefore + Math.abs(pledge.getAmount())));
     }
 
     @Test
     public void pledge_reversePledgeThrowsInvalidRequestExWhenExceedingPledgeAmountAlreadyMade() throws Exception {
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         final Pledge pledge = new Pledge(-5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(4));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(4));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.reversePledgeExceeded(), user1, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.reversePledgeExceeded(), aUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
     public void pledge_reversePledgeThrowsInvalidRequestExWhenAlreadyFullyPledged() throws Exception {
         projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         final Pledge pledge = new Pledge(-5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(4));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(4));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.projectAlreadyFullyPledged(), user1, budgetBeforePledge, ProjectStatus.FULLY_PLEDGED);
+        assertPledgeNotExecuted(res, InvalidRequestException.projectAlreadyFullyPledged(), aUser, budgetBeforePledge, ProjectStatus.FULLY_PLEDGED);
     }
 
     @Test
     public void pledge_throwsInvalidRequestExOnPledgeGoalIsExceeded() {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         final Pledge pledge = new Pledge(5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.pledgeGoalExceeded(), user1, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.pledgeGoalExceeded(), aUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
     public void pledge_throwsInvalidRequestExOnZeroPledge() {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         final Pledge pledge = new Pledge(0);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.zeroPledgeNotValid(), user1, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.zeroPledgeNotValid(), aUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
     public void pledge_throwsInvalidRequestExOnProjectThatIsAlreadyFullyPledged() {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         final Pledge pledge = new Pledge(5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(projectEntity.getPledgeGoal()));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(projectEntity.getPledgeGoal()));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.projectAlreadyFullyPledged(), user1, budgetBeforePledge, ProjectStatus.FULLY_PLEDGED);
+        assertPledgeNotExecuted(res, InvalidRequestException.projectAlreadyFullyPledged(), aUser, budgetBeforePledge, ProjectStatus.FULLY_PLEDGED);
     }
 
     @Test
     public void pledge_throwsInvalidRequestExOnProjectIsDeferred() {
         projectEntity.setStatus(ProjectStatus.DEFERRED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         final Pledge pledge = new Pledge(5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(0));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(0));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.projectNotPublished(), user1, budgetBeforePledge, ProjectStatus.DEFERRED);
+        assertPledgeNotExecuted(res, InvalidRequestException.projectNotPublished(), aUser, budgetBeforePledge, ProjectStatus.DEFERRED);
     }
 
     @Test
     public void pledge_throwsInvalidRequestExOnProjectIsNotPublished() {
         projectEntity.setStatus(ProjectStatus.PROPOSED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         final Pledge pledge = new Pledge(5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.projectNotPublished(), user1, budgetBeforePledge, ProjectStatus.PROPOSED);
+        assertPledgeNotExecuted(res, InvalidRequestException.projectNotPublished(), aUser, budgetBeforePledge, ProjectStatus.PROPOSED);
     }
 
     @Test
     public void pledge_throwsInvalidRequestExOnUserBudgetIsExceeded() {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        final int budgetBeforePledge = user1.getBudget();
-        final Pledge pledge = new Pledge(user1.getBudget() + 10);
+        final int budgetBeforePledge = aUser.getBudget();
+        final Pledge pledge = new Pledge(aUser.getBudget() + 10);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.userBudgetExceeded(), user1, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.userBudgetExceeded(), aUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
     public void pledge_throwsInvalidRequestExOnNoFinancingRound() {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         final Pledge pledge = new Pledge(4);
         projectEntity.setFinancingRound(null);
 
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.noFinancingRoundCurrentlyActive(), user1, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.noFinancingRoundCurrentlyActive(), aUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
     public void pledge_throwsInvalidRequestExOnInactiveFinancingRound() {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         final Pledge pledge = new Pledge(4);
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledge(pledge, user1, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
+            projectEntity.pledge(pledge, aUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.noFinancingRoundCurrentlyActive(), user1, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.noFinancingRoundCurrentlyActive(), aUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
 
     @Test
-    public void pledgeUsingPostroundBudget(){
+    public void pledgeUsingPostroundBudget() {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         final List<PledgeEntity> pledgesDoneBefore = bunchOfWithPostRoundPledgesDone();
         final Pledge pledge = new Pledge(projectEntity.getPledgeGoal() - projectEntity.pledgedAmount(pledgesDoneBefore));
-        int userBudgetBefore = user2.getBudget();
+        int userBudgetBefore = adminUser.getBudget();
 
-        final PledgeEntity pledgeRes = projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesDoneBefore, 400);
+        final PledgeEntity pledgeRes = projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesDoneBefore, 400);
 
-        assertThat(pledgeRes, is(new PledgeEntity(projectEntity, user2, pledge, projectEntity.getFinancingRound())));
-        assertThat(user2.getBudget(), is(userBudgetBefore));
+        assertThat(pledgeRes, is(new PledgeEntity(projectEntity, adminUser, pledge, projectEntity.getFinancingRound())));
+        assertThat(adminUser.getBudget(), is(userBudgetBefore));
         assertThat(projectEntity.pledgeGoalAchieved(), is(true));
     }
 
     @Test
-    public void pledgeUsingPostroundBudget_reverse(){
+    public void pledgeUsingPostroundBudget_reverse() {
         final FinancingRoundEntity round = aTerminatedFinancingRound();
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         projectEntity.setFinancingRound(round);
@@ -288,14 +291,14 @@ public class ProjectEntityTest {
         final List<PledgeEntity> pledgesDone = new ArrayList<>(pledgesInRound);
         pledgesDone.addAll(postRoundPledges);
         final Pledge pledge = new Pledge(-10);
-        int userBudgetBefore = user2.getBudget();
+        int userBudgetBefore = adminUser.getBudget();
 
-        final PledgeEntity pledgeRes = projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesDone,
+        final PledgeEntity pledgeRes = projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesDone,
                 round.postRoundPledgableBudgetRemaining(postRoundPledges));
 
 
-        assertThat(pledgeRes, is(new PledgeEntity(projectEntity, user2, pledge, projectEntity.getFinancingRound())));
-        assertThat(user2.getBudget(), is(userBudgetBefore));
+        assertThat(pledgeRes, is(new PledgeEntity(projectEntity, adminUser, pledge, projectEntity.getFinancingRound())));
+        assertThat(adminUser.getBudget(), is(userBudgetBefore));
         assertThat(projectEntity.pledgeGoalAchieved(), is(false));
 
         postRoundPledges.add(pledgeRes);
@@ -312,55 +315,55 @@ public class ProjectEntityTest {
         final List<PledgeEntity> postRoundPledges = bunchOfPostRoundPledges();
         final List<PledgeEntity> pledgesDone = new ArrayList<>(pledgesInRound);
         pledgesDone.addAll(postRoundPledges);
-        final Pledge pledge = new Pledge( -postRoundPledgedAmount - 1);
-        int userBudgetBefore = user2.getBudget();
+        final Pledge pledge = new Pledge(-postRoundPledgedAmount - 1);
+        int userBudgetBefore = adminUser.getBudget();
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesDone,
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesDone,
                     round.postRoundPledgableBudgetRemaining(postRoundPledges));
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.reversePledgeExceeded(), user2, userBudgetBefore, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.reversePledgeExceeded(), adminUser, userBudgetBefore, ProjectStatus.PUBLISHED);
     }
 
     @Test
     public void pledgeUsingPostroundBudget_reversePledgeThrowsInvalidRequestExWhenAlreadyFullyPledged() throws Exception {
         projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
-        final int budgetBeforePledge = user1.getBudget();
+        final int budgetBeforePledge = aUser.getBudget();
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         final Pledge pledge = new Pledge(-5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(10), Integer.MAX_VALUE);
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(10), Integer.MAX_VALUE);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.projectAlreadyFullyPledged(), user1, budgetBeforePledge, ProjectStatus.FULLY_PLEDGED);
+        assertPledgeNotExecuted(res, InvalidRequestException.projectAlreadyFullyPledged(), aUser, budgetBeforePledge, ProjectStatus.FULLY_PLEDGED);
     }
 
     @Test
     public void pledgeUsingPostroundBudget_throwsInvalidRequestExOnProjectThatIsAlreadyFullyPledged() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
-        final int budgetBeforePledge = user2.getBudget();
+        final int budgetBeforePledge = adminUser.getBudget();
         final Pledge pledge = new Pledge(5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(projectEntity.getPledgeGoal()), Integer.MAX_VALUE);
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(projectEntity.getPledgeGoal()), Integer.MAX_VALUE);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.projectAlreadyFullyPledged(), user2, budgetBeforePledge, ProjectStatus.FULLY_PLEDGED);
+        assertPledgeNotExecuted(res, InvalidRequestException.projectAlreadyFullyPledged(), adminUser, budgetBeforePledge, ProjectStatus.FULLY_PLEDGED);
     }
 
     @Test
@@ -369,18 +372,18 @@ public class ProjectEntityTest {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         projectEntity.setFinancingRound(round);
         final List<PledgeEntity> pledgesDone = bunchOfWithPostRoundPledgesDone();
-        final int budgetBeforePledge = user2.getBudget();
+        final int budgetBeforePledge = adminUser.getBudget();
         final Pledge pledge = new Pledge(projectEntity.getPledgeGoal() + 1);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesDone, Integer.MAX_VALUE);
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesDone, Integer.MAX_VALUE);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.pledgeGoalExceeded(), user2, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.pledgeGoalExceeded(), adminUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
@@ -388,18 +391,18 @@ public class ProjectEntityTest {
         final FinancingRoundEntity round = aTerminatedFinancingRound();
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         projectEntity.setFinancingRound(round);
-        final int budgetBeforePledge = user2.getBudget();
+        final int budgetBeforePledge = adminUser.getBudget();
         final Pledge pledge = new Pledge(0);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.zeroPledgeNotValid(), user2, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.zeroPledgeNotValid(), adminUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
@@ -407,18 +410,18 @@ public class ProjectEntityTest {
         final FinancingRoundEntity round = aTerminatedFinancingRound();
         projectEntity.setStatus(ProjectStatus.DEFERRED);
         projectEntity.setFinancingRound(round);
-        final int budgetBeforePledge = user2.getBudget();
+        final int budgetBeforePledge = adminUser.getBudget();
         final Pledge pledge = new Pledge(5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(0), 0);
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(0), 0);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.projectNotPublished(), user2, budgetBeforePledge, ProjectStatus.DEFERRED);
+        assertPledgeNotExecuted(res, InvalidRequestException.projectNotPublished(), adminUser, budgetBeforePledge, ProjectStatus.DEFERRED);
     }
 
     @Test
@@ -426,18 +429,18 @@ public class ProjectEntityTest {
         final FinancingRoundEntity round = aTerminatedFinancingRound();
         projectEntity.setFinancingRound(round);
         projectEntity.setStatus(ProjectStatus.PROPOSED);
-        final int budgetBeforePledge = user2.getBudget();
+        final int budgetBeforePledge = adminUser.getBudget();
         final Pledge pledge = new Pledge(5);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(1), 0);
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(1), 0);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.projectNotPublished(), user2, budgetBeforePledge, ProjectStatus.PROPOSED);
+        assertPledgeNotExecuted(res, InvalidRequestException.projectNotPublished(), adminUser, budgetBeforePledge, ProjectStatus.PROPOSED);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -446,7 +449,7 @@ public class ProjectEntityTest {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         final Pledge pledge = new Pledge(4);
 
-        projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
+        projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -456,7 +459,7 @@ public class ProjectEntityTest {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         final Pledge pledge = new Pledge(4);
 
-        projectEntity.pledgeUsingPostRoundBudget(pledge, user1, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
+        projectEntity.pledgeUsingPostRoundBudget(pledge, aUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -466,7 +469,7 @@ public class ProjectEntityTest {
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         final Pledge pledge = new Pledge(4);
 
-        projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
+        projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
     }
 
 
@@ -475,18 +478,18 @@ public class ProjectEntityTest {
         final FinancingRoundEntity round = aTerminatedFinancingRound();
         projectEntity.setFinancingRound(round);
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        final int budgetBeforePledge = user2.getBudget();
+        final int budgetBeforePledge = adminUser.getBudget();
         final Pledge pledge = new Pledge(10);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), 5);
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), 5);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.postRoundBudgetExceeded(), user2, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.postRoundBudgetExceeded(), adminUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
@@ -495,18 +498,18 @@ public class ProjectEntityTest {
         round.setTerminationPostProcessingDone(false);
         projectEntity.setFinancingRound(round);
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
-        final int budgetBeforePledge = user2.getBudget();
+        final int budgetBeforePledge = adminUser.getBudget();
         final Pledge pledge = new Pledge(10);
 
         InvalidRequestException res = null;
         try {
-            projectEntity.pledgeUsingPostRoundBudget(pledge, user2, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
+            projectEntity.pledgeUsingPostRoundBudget(pledge, adminUser, pledgesAlreadyDone(projectEntity.getPledgeGoal() - 4), Integer.MAX_VALUE);
             fail("InvalidRequestException expected!");
         } catch (InvalidRequestException e) {
             res = e;
         }
 
-        assertPledgeNotExecuted(res, InvalidRequestException.financingRoundNotPostProcessedYet(), user2, budgetBeforePledge, ProjectStatus.PUBLISHED);
+        assertPledgeNotExecuted(res, InvalidRequestException.financingRoundNotPostProcessedYet(), adminUser, budgetBeforePledge, ProjectStatus.PUBLISHED);
     }
 
     @Test
@@ -545,7 +548,7 @@ public class ProjectEntityTest {
     @Test
     public void pledgedAmountOfUser() throws Exception {
         final FinancingRoundEntity activeFinancingRound = new FinancingRoundEntity();
-        assertThat(projectEntity.pledgedAmountOfUser(bunchOfPledgesDone(), user1), is(30));
+        assertThat(projectEntity.pledgedAmountOfUser(bunchOfPledgesDone(), aUser), is(30));
     }
 
     @Test
@@ -556,7 +559,7 @@ public class ProjectEntityTest {
 
     @Test
     public void pledgedAmountOfUser_ReturnsZeroOnEmptyPledges() throws Exception {
-        assertThat(projectEntity.pledgedAmountOfUser(new ArrayList<>(), user1), is(0));
+        assertThat(projectEntity.pledgedAmountOfUser(new ArrayList<>(), aUser), is(0));
     }
 
     @Test
@@ -700,7 +703,7 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void masterdataModificationAllowed_shouldReturnTrueHavingNotActiveFinancingRound() throws Exception{
+    public void masterdataModificationAllowed_shouldReturnTrueHavingNotActiveFinancingRound() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         assertThat(projectEntity.masterdataModificationAllowed(), is(true));
 
@@ -714,32 +717,32 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void masterdataModificationAllowed_shouldReturnFalseHavingStatusFullyPledged() throws Exception{
+    public void masterdataModificationAllowed_shouldReturnFalseHavingStatusFullyPledged() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
         projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
         assertThat(projectEntity.masterdataModificationAllowed(), is(false));
     }
 
     @Test
-    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusProposed() throws Exception{
+    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusProposed() throws Exception {
         projectEntity.setFinancingRound(anActiveFinancingRound());
         projectEntity.setStatus(ProjectStatus.PROPOSED);
         assertThat(projectEntity.masterdataModificationAllowed(), is(true));
     }
 
     @Test
-    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusDeferred() throws Exception{
+    public void masterdataModificationAllowed_shouldReturnTrueHavingStatusDeferred() throws Exception {
         projectEntity.setFinancingRound(anActiveFinancingRound());
         projectEntity.setStatus(ProjectStatus.DEFERRED);
         assertThat(projectEntity.masterdataModificationAllowed(), is(true));
     }
 
     @Test
-    public void masterdataChanged_returnsTrueIfOneFieldChanges() throws Exception{
+    public void masterdataChanged_returnsTrueIfOneFieldChanges() throws Exception {
         Project modifiedProject;
         // Given
         prepareMasterData(projectEntity);
-        modifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        modifiedProject = new Project(projectEntity, Collections.emptyList(), aUser);
         // When
         modifiedProject.setTitle(projectEntity.getTitle() + "_CHANGED");
         // Then
@@ -747,7 +750,7 @@ public class ProjectEntityTest {
 
         // Given
         prepareMasterData(projectEntity);
-        modifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        modifiedProject = new Project(projectEntity, Collections.emptyList(), aUser);
         // When
         modifiedProject.setDescription(null);
         // Then
@@ -755,7 +758,7 @@ public class ProjectEntityTest {
 
         // Given
         prepareMasterData(projectEntity);
-        modifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        modifiedProject = new Project(projectEntity, Collections.emptyList(), aUser);
         // When
         modifiedProject.setShortDescription(projectEntity.getShortDescription() + "_CHANGED");
         // Then
@@ -763,7 +766,7 @@ public class ProjectEntityTest {
 
         // Given
         prepareMasterData(projectEntity);
-        modifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        modifiedProject = new Project(projectEntity, Collections.emptyList(), aUser);
         // When
         modifiedProject.setPledgeGoal(projectEntity.getPledgeGoal() + 25);
         // Then
@@ -772,9 +775,9 @@ public class ProjectEntityTest {
     }
 
     @Test
-    public void masterdataChanged_returnsFalseOnNoChange()throws Exception{
+    public void masterdataChanged_returnsFalseOnNoChange() throws Exception {
         prepareMasterData(projectEntity);
-        Project unmodifiedProject = new Project(projectEntity, Collections.emptyList(), user1);
+        Project unmodifiedProject = new Project(projectEntity, Collections.emptyList(), aUser);
 
         assertThat(projectEntity.masterdataChanged(unmodifiedProject), is(false));
     }
@@ -782,46 +785,47 @@ public class ProjectEntityTest {
     @Test
     public void modifyMasterData_returnsTrueWhenSuccessfullyModifiedByOwner() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
-        Project modCmd = new Project(projectEntity, Collections.emptyList(), user1);
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), aUser);
         modCmd.setDescription("CHANGED_DESCRIPTION");
 
-        assertThat(projectEntity.modifyMasterdata(modCmd, user3), is(true));
+        assertThat(projectEntity.modifyMasterdata(modCmd, projectCreator), is(true));
     }
+
     @Test
     public void modifyMasterData_returnsTrueWhenSuccessfullyModifiedByAdmin() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
-        Project modCmd = new Project(projectEntity, Collections.emptyList(), user2);
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), adminUser);
         modCmd.setDescription("CHANGED_DESCRIPTION");
 
-        assertThat(projectEntity.modifyMasterdata(modCmd, user2), is(true));
+        assertThat(projectEntity.modifyMasterdata(modCmd, adminUser), is(true));
     }
 
     @Test
     public void modifyMasterData_returnsFalseWhenNothingChanged() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
-        Project modCmd = new Project(projectEntity, Collections.emptyList(), user1);
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), aUser);
 
-        assertThat(projectEntity.modifyMasterdata(modCmd, user3), is(false));
+        assertThat(projectEntity.modifyMasterdata(modCmd, projectCreator), is(false));
     }
 
     @Test(expected = NotAuthorizedException.class)
     public void modifyMasterData_throwsNotAuthorizedExceptionOnIllegalUser() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
-        Project modCmd = new Project(projectEntity, Collections.emptyList(), user1);
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), aUser);
 
-        assertThat(projectEntity.modifyMasterdata(modCmd, user1), is(false));
+        assertThat(projectEntity.modifyMasterdata(modCmd, aUser), is(false));
     }
 
     @Test
     public void modifyMasterData_throwsInvalidReqExWhenChangeNotAllowed() throws Exception {
         projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
-        Project modCmd = new Project(projectEntity, Collections.emptyList(), user1);
+        Project modCmd = new Project(projectEntity, Collections.emptyList(), aUser);
         modCmd.setDescription("CHANGED_DESCR");
 
-        try{
-            projectEntity.modifyMasterdata(modCmd, user3);
+        try {
+            projectEntity.modifyMasterdata(modCmd, projectCreator);
             fail("Exception expected to be thrown");
-        }catch(InvalidRequestException e){
+        } catch (InvalidRequestException e) {
             assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
         }
         assertThat(projectEntity.getDescription(), not(equalTo(modCmd.getDescription())));
@@ -869,6 +873,99 @@ public class ProjectEntityTest {
         assertThat(projectEntity.pledgedAmountPostRound(Collections.emptyList()), is(0));
     }
 
+    @Test
+    public void addAttachmentAllowed_DoNothingIfAllowed() {
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        projectEntity.addAttachmentAllowed(projectCreator);
+    }
+
+    @Test(expected = NotAuthorizedException.class)
+    public void addAttachmentAllowed_ThrowsNotAuthorizeddExceptionWhenUserForbidden() {
+        projectEntity.setStatus(ProjectStatus.PUBLISHED);
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+
+        projectEntity.addAttachmentAllowed(aUser);
+    }
+
+    @Test
+    public void addAttachmentAllowed_ThrowInvalidRequestExceptionWhenMasterdataChangesForbidden() {
+        try {
+            projectEntity.setStatus(ProjectStatus.PUBLISHED);
+            projectEntity.setFinancingRound(anActiveFinancingRound());
+            projectEntity.addAttachmentAllowed(adminUser);
+            fail("Exception expected to be thrown");
+        } catch (InvalidRequestException e) {
+            assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
+        }
+    }
+
+    @Test
+    public void findAttachmentByReference_ShouldReturnExistingAttachment() {
+        final String existingFileRef = "an_Existing_File_Ref";
+        final AttachmentValue expAttachmentValue = anAttachmentValue(existingFileRef);
+
+        projectEntity.setAttachments(Arrays.asList(
+                anAttachmentValue("non_Matching_File_Ref"),
+                expAttachmentValue,
+                anAttachmentValue("another_non_Matching_File_Ref")));
+
+        assertThat(projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand(existingFileRef)), is(expAttachmentValue));
+
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void findAttachmentByReference_ShouldThrowIllegalArgExceptionOnIncompleteRequestObject() {
+        projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand(null));
+    }
+
+    @Test(expected = ResourceNotFoundException.class)
+    public void findAttachmentByReference_ShouldThrowResourceNotFoundExceptionOnNonExistingAttachment() {
+        projectEntity.setAttachments(Arrays.asList(
+                anAttachmentValue("non_Matching_File_Ref"),
+                anAttachmentValue("another_non_Matching_File_Ref")));
+
+        projectEntity.findAttachmentByReference(Attachment.asLookupByIdCommand("realyNotMatching!"));
+    }
+
+    @Test
+    public void deleteAttachmentAllowed_DoNothingIfAllowed() {
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        projectEntity.deleteAttachmentAllowed(projectCreator);
+    }
+
+    @Test(expected = NotAuthorizedException.class)
+    public void deleteAttachmentAllowed_ThrowsNotAuthorizeddExceptionWhenUserForbidden() {
+        projectEntity.setStatus(ProjectStatus.PUBLISHED);
+        projectEntity.setFinancingRound(anActiveFinancingRound());
+
+        projectEntity.deleteAttachmentAllowed(aUser);
+    }
+
+    @Test
+    public void deleteAttachmentAllowed_ThrowInvalidRequestExceptionWhenMasterdataChangesForbidden() {
+        try {
+            projectEntity.setStatus(ProjectStatus.PUBLISHED);
+            projectEntity.setFinancingRound(anActiveFinancingRound());
+            projectEntity.deleteAttachmentAllowed(adminUser);
+            fail("Exception expected to be thrown");
+        } catch (InvalidRequestException e) {
+            assertThat(e.getMessage(), is(InvalidRequestException.masterdataChangeNotAllowed().getMessage()));
+        }
+    }
+
+    @Test
+    public void deleteAttachment_ShouldDeleteByFileReferenceOnly() throws Exception {
+        final String fileRef2Del = "file_ref_1";
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        projectEntity.addAttachment(anAttachmentValue("file_ref_0"));
+        projectEntity.addAttachment(anAttachmentValue(fileRef2Del));
+
+        projectEntity.deleteAttachment(new AttachmentValue(fileRef2Del, null, "", 17L, DateTime.now()));
+
+        assertThat(projectEntity.getAttachments().size(), is(1));
+        assertThat(projectEntity.getAttachments().get(0).getFileReference(), is(not(fileRef2Del)));
+    }
+
     private FinancingRoundEntity aTerminatedFinancingRound() {
         FinancingRoundEntity res = aFinancingRound(new DateTime().minusDays(1));
         assertThat(res.active(), is(false));
@@ -888,10 +985,10 @@ public class ProjectEntityTest {
     }
 
     private List<PledgeEntity> pledgesAlreadyDone(int pledgeAmount) {
-        if(pledgeAmount == projectEntity.getPledgeGoal()){
+        if (pledgeAmount == projectEntity.getPledgeGoal()) {
             projectEntity.setStatus(ProjectStatus.FULLY_PLEDGED);
         }
-        return Collections.singletonList(new PledgeEntity(projectEntity, user1, new Pledge(pledgeAmount), projectEntity.getFinancingRound()));
+        return Collections.singletonList(new PledgeEntity(projectEntity, aUser, new Pledge(pledgeAmount), projectEntity.getFinancingRound()));
     }
 
     private void assertPledgeNotExecuted(RuntimeException actualEx, RuntimeException expEx, UserEntity user, int userBudgetBeforePledge, ProjectStatus expStatus) {
@@ -911,19 +1008,19 @@ public class ProjectEntityTest {
 
     private List<PledgeEntity> bunchOfPledgesDone() {
         List<PledgeEntity> res = new ArrayList<>();
-        res.add(new PledgeEntity(projectEntity, user1, new Pledge(10), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user2, new Pledge(60), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user3, new Pledge(180), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user1, new Pledge(20), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user2, new Pledge(70), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user1, new Pledge(10), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user1, new Pledge(-10), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user3, new Pledge(-180), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, aUser, new Pledge(10), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, adminUser, new Pledge(60), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, new Pledge(180), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, aUser, new Pledge(20), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, adminUser, new Pledge(70), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, aUser, new Pledge(10), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, aUser, new Pledge(-10), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, new Pledge(-180), projectEntity.getFinancingRound()));
 
-        res.add(new PledgeEntity(projectEntity, user3, new Pledge(-10), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user3, new Pledge(110), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user3, new Pledge(+10), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, user3, new Pledge(-110), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, new Pledge(-10), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, new Pledge(110), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, new Pledge(+10), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, new Pledge(-110), projectEntity.getFinancingRound()));
         return res;
     }
 
@@ -937,7 +1034,7 @@ public class ProjectEntityTest {
         List<PledgeEntity> res = new ArrayList<>();
         PledgeEntity pledge;
         for (int i = 1; i < COUNT_POST_ROUND_PLEDGES + 1; i++) {
-            pledge = new PledgeEntity(projectEntity, user2, new Pledge(i), projectEntity.getFinancingRound());
+            pledge = new PledgeEntity(projectEntity, adminUser, new Pledge(i), projectEntity.getFinancingRound());
             pledge.setCreatedDate(projectEntity.getFinancingRound().getEndDate().plusHours(2 * i));
             postRoundPledgedAmount += i;
             res.add(pledge);
@@ -951,5 +1048,10 @@ public class ProjectEntityTest {
         projectEntity.setShortDescription("test_shortDescription");
         projectEntity.setPledgeGoal(17);
         return projectEntity;
+    }
+
+    private AttachmentValue anAttachmentValue(String fileReference) {
+        return new AttachmentValue(fileReference, MediaType.TEXT_PLAIN_VALUE, "fileName_" + fileReference, 617, DateTime.now()
+        );
     }
 }

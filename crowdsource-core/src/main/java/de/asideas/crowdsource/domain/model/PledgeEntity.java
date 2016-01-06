@@ -1,6 +1,6 @@
 package de.asideas.crowdsource.domain.model;
 
-import de.asideas.crowdsource.domain.presentation.Pledge;
+import de.asideas.crowdsource.presentation.Pledge;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;

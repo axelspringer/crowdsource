@@ -1,6 +1,6 @@
 package de.asideas.crowdsource.domain.model;
 
-import de.asideas.crowdsource.domain.presentation.Pledge;
+import de.asideas.crowdsource.presentation.Pledge;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
