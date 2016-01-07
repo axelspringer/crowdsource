@@ -17,6 +17,7 @@ import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class MongoDBConfig extends AbstractMongoConfiguration {
                 .map(this::createServerAddress)
                 .collect(toList());
 
-        LOG.debug("connecting to DB hosts: {}...", serverAddresses);
+        LOG.info("Connecting to DB hosts: {}...", serverAddresses);
 
         if (serverAddresses.size() == 1) {
             // create a mongo client that connects to a single database,
@@ -66,7 +67,7 @@ public class MongoDBConfig extends AbstractMongoConfiguration {
         } else {
             // create a mongo client that connects to a replicaset
             MongoClientOptions options = MongoClientOptions.builder()
-                    .writeConcern(WriteConcern.W2)
+                    .writeConcern(WriteConcern.ACKNOWLEDGED)
                     .build();
             return new MongoClient(serverAddresses, mongoCredentials(), options);
         }
@@ -88,6 +89,10 @@ public class MongoDBConfig extends AbstractMongoConfiguration {
     }
 
     private ServerAddress createServerAddress(String host) {
-        return new ServerAddress(host, port);
+        try {
+            return new ServerAddress(host, port);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
