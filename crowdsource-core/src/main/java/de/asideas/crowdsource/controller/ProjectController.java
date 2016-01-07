@@ -44,6 +44,7 @@ import java.util.stream.Collectors;
 
 import static de.asideas.crowdsource.domain.shared.ProjectStatus.FULLY_PLEDGED;
 import static de.asideas.crowdsource.domain.shared.ProjectStatus.PUBLISHED;
+import static de.asideas.crowdsource.domain.shared.ProjectStatus.PUBLISHED_DEFERRED;
 
 @RestController
 public class ProjectController {
@@ -142,8 +143,8 @@ public class ProjectController {
             return projectService.addProjectAttachment(projectId, attachment, userByPrincipal(principal));
 
         } catch (IOException e) {
-            log.warn("Couldn' process file input, due stream threw IOException; ProjectId: " + projectId, e);
-            throw new RuntimeException("Internal error, couldn't process file stream");
+            log.warn("Couldn' process file input, due to stream threw IOException; ProjectId: {}", projectId, e);
+            throw new RuntimeException("Internal error, couldn't process file stream", e);
         }
     }
 
@@ -184,7 +185,7 @@ public class ProjectController {
     private boolean mayViewProjectFilter(Project project, Authentication auth) {
         // fully pledged and published are always visible
         final ProjectStatus status = project.getStatus();
-        if (status == FULLY_PLEDGED || status == PUBLISHED) {
+        if (status == FULLY_PLEDGED || status == PUBLISHED || status == PUBLISHED_DEFERRED) {
             return true;
         }
 
