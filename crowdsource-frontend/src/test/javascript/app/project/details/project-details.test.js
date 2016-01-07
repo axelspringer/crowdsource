@@ -441,7 +441,7 @@ describe('project details', function () {
         thenPublishedDeferButtonIsVsible(true);
     });
 
-    it("should display the publish-defer-button when a project is deferred", function () {
+    it("should display the publish-defer-button when a project is deferred and user is admin", function () {
 
         prepareProjectMock('DEFERRED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
@@ -456,10 +456,25 @@ describe('project details', function () {
         thenPublishedDeferButtonIsVsible(true);
     });
 
-    it("should not display the publish-defer-button when a project is fully pledged", function () {
+    it("should not display the publish-defer-button when a project is fully pledged and the user is admin", function () {
 
         prepareProjectMock('FULLY_PLEDGED');
         $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER', 'ROLE_ADMIN']});
+        $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
+
+        spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
+        spyOn(FinancingRound, 'currentFinancingRound').and.returnValue({active: false});
+
+        $scope.$digest();
+        $httpBackend.flush();
+
+        thenPublishedDeferButtonIsVsible(false);
+    });
+
+    it("should not display the publish-defer-button when the user is no admin", function () {
+
+        prepareProjectMock('FULLY_PLEDGED');
+        $httpBackend.expectGET('/user/current').respond(200, {budget: 55, roles: ['ROLE_USER']});
         $httpBackend.expectGET('/project/xyz/comments').respond(200, []);
 
         spyOn(AuthenticationToken, 'hasTokenSet').and.returnValue(true);
@@ -847,7 +862,6 @@ describe('project details', function () {
 
         expect($location.path()).toBe('/error/unknown');
     });
-
 
 
     function thenPublishButtonIsVisible(visible) {

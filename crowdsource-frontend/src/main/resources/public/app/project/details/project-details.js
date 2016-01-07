@@ -136,24 +136,11 @@ angular.module('crowdsource')
         };
 
         vm.editButtonVisibleForUser = function () {
-            return vm.auth.currentUser.hasRole("ADMIN") || Project.isCreator(vm.project, vm.auth.currentUser);
+            return Project.userEligibleToEdit(vm.project, vm.auth.currentUser);
         };
 
         vm.editButtonEnabled = function () {
-            var financingRoundActive = (FinancingRound.currentFinancingRound() == undefined
-                    || FinancingRound.currentFinancingRound().active);
-            switch (vm.project.status) {
-                case 'FULLY_PLEDGED':
-                    return false;
-                case 'PROPOSED':
-                case 'DEFERRED':
-                case 'PUBLISHED_DEFERRED':
-                    return true;
-                case 'PUBLISHED':
-                    return !financingRoundActive;
-                default:
-                    return false;
-            }
+            return Project.isEditable(vm.project);
         };
 
         function handleResponse(promise) {
