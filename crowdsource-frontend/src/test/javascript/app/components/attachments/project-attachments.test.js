@@ -234,7 +234,7 @@ describe('project attachements', function () {
         var res = {
             name: "filename.JPG",
             size: 802880,
-            type: "image/jpeg",
+            type: "text/plain",
             webkitRelativePath: ""
         };
         attachmentsDirectiveCompiled.isolateScope().uploads.currentAttachment = res;
