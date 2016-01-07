@@ -222,7 +222,8 @@ $intro-box-break: "only screen and (max-width: 740px)";
     @include project-status((content: 'Leider abgelehnt :(', bg-tile: rgba(255, 60, 60, 0.25)));
 }
 
-.project-deferred {
+.project-deferred,
+.project-published_deferred {
     @include project-status((content: 'Zurückgestellt', bg-status: #8ED61E, bg-tile: rgba(160, 240, 36, 0.20)));
 }
 

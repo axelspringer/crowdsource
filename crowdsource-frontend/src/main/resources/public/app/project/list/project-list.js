@@ -18,6 +18,7 @@ angular.module('crowdsource')
             var projectScores = {
                 'PROPOSED': score++,
                 'PUBLISHED': score++,
+                'PUBLISHED_DEFERRED': score++,
                 'FULLY_PLEDGED': score++,
                 'DEFERRED': score++,
                 'REJECTED': score++

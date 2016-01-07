@@ -10,6 +10,8 @@ public enum ProjectStatus {
     REJECTED,
     // deferred by admin
     DEFERRED,
+    // by admin
+    PUBLISHED_DEFERRED,
     // fully pledged / all money that is needed
     FULLY_PLEDGED
 }

@@ -220,17 +220,20 @@ public class ProjectControllerTest {
         final UserEntity creator = userEntity("creator@mail.com", Roles.ROLE_USER);
 
         final String projectId = "existingProjectId";
-        final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", 44, ProjectStatus.PUBLISHED), creator);
-        final Project unexpProjcet = toCreatedProject(project("title", "descr", "shortDescr", 44, ProjectStatus.PROPOSED), creator);
-        when(projectService.getProjects(user)).thenReturn(Arrays.asList(expProjcet, unexpProjcet));
+        final Project expProjcet_0 = toCreatedProject(project("title0", "descr", "shortDescr", 44, ProjectStatus.PUBLISHED), creator);
+        final Project unexpProjcet = toCreatedProject(project("title1", "descr", "shortDescr", 44, ProjectStatus.PROPOSED), creator);
+        final Project expProjcet_1 = toCreatedProject(project("title2", "descr", "shortDescr", 44, ProjectStatus.PUBLISHED_DEFERRED), creator);
+        when(projectService.getProjects(user)).thenReturn(Arrays.asList(expProjcet_0, unexpProjcet, expProjcet_1));
 
         MvcResult mvcResult = mockMvc.perform(get("/projects", projectId)
                 .principal(authentication(user)))
                 .andExpect(status().isOk())
                 .andReturn();
 
-        toProjectSummaryViewRepresentation(expProjcet);
-        assertThat(mapper.readValue(mvcResult.getResponse().getContentAsString(), Project[].class)[0], is(equalTo(expProjcet)));
+        toProjectSummaryViewRepresentation(expProjcet_0);
+        toProjectSummaryViewRepresentation(expProjcet_1);
+        assertThat(mapper.readValue(mvcResult.getResponse().getContentAsString(), Project[].class)[0], is(equalTo(expProjcet_0)));
+        assertThat(mapper.readValue(mvcResult.getResponse().getContentAsString(), Project[].class)[1], is(equalTo(expProjcet_1)));
     }
 
     @Test

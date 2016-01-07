@@ -39,6 +39,7 @@
                                 analytics-on="click" analytics-category="Projects" analytics-event="GoToFinancing">
                             <span ng-if="projectDetails.project.status == 'FULLY_PLEDGED'">Zu 100% finanziert!</span>
                             <span ng-if="projectDetails.project.status == 'DEFERRED'">Zurückgestellt</span>
+                            <span ng-if="projectDetails.project.status == 'PUBLISHED_DEFERRED'">Zurückgestellt</span>
                             <span ng-if="projectDetails.project.status == 'REJECTED'">Abgelehnt</span>
                             <span ng-if="projectDetails.project.status == 'PROPOSED'">Vorgeschlagen</span>
                             <span ng-if="projectDetails.project.status == 'PUBLISHED'">Zur Finanzierung</span>
@@ -63,8 +64,17 @@
 
             <div ng-if="projectDetails.isDeferrable() && projectDetails.auth.currentUser.hasRole('ADMIN')">
                 <button class="pm-btn--alert defer-button" ng-click="projectDetails.defer()" ng-disabled="projectDetails.deferring"
-                        analytics-on="click" analytics-category="Projects" analytics-event="Deferred">
+                        analytics-on="click" analytics-category="Projects" analytics-event="Deferred"
+                        title="Das Projekt nimmt nicht an der nächsten Finanzierungsrunde teil und ist nicht öffetnlich sichtbar.">
                     {{ projectDetails.deferring ? 'Zurückstellen...' : 'Zurückstellen' }}
+                </button>
+            </div>
+            <div ng-if="projectDetails.isPublishDeferrable() && projectDetails.auth.currentUser.hasRole('ADMIN')">
+                <button class="pm-btn--success publish-defer-button"
+                        ng-click="projectDetails.publishAndDefer()" ng-disabled="projectDetails.publishingAndDeferring"
+                        analytics-on="click" analytics-category="Projects" analytics-event="PublishedDeferred"
+                        title="Das Projekt nimmt nicht an der aktuellen oder nächsten Finanzierungsrunde teil und ist öffetnlich sichtbar">
+                    {{ projectDetails.publishingAndDeferring ? 'Veröffentlichen und zurückstellen ...' : 'Veröffentlichen und zurückstellen' }}
                 </button>
             </div>
             <div ng-if="projectDetails.isRejectable() && projectDetails.auth.currentUser.hasRole('ADMIN')">

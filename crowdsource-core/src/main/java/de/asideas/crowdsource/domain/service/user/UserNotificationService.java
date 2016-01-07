@@ -17,11 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("Duplicates")
@@ -128,6 +124,7 @@ public class UserNotificationService {
                 break;
 
             case DEFERRED:
+            case PUBLISHED_DEFERRED:
                 final String deferringMessage = projectDeferredEmailTemplate.getValue(context, String.class);
                 sendMail(project.getCreator().getEmail(), SUBJECT_PROJECT_DEFERRED, deferringMessage);
                 break;
