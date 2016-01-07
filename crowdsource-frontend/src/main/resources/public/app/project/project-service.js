@@ -22,6 +22,18 @@ angular.module('crowdsource')
             }
         });
 
+        var projectLikeResource = $resource('/projects/:id/like', {}, {
+            post: {
+                method: 'POST'
+            }
+        });
+
+        var projectUnlikeResource = $resource('/projects/:id/unlike', {}, {
+            post: {
+                method: 'POST'
+            }
+        });
+
         service.add = function (project) {
             return projectResource.save(project).$promise;
         };
@@ -61,6 +73,14 @@ angular.module('crowdsource')
         service.isCreator = function (project, user) {
             return project.creator != undefined &&
                 project.creator.email === user.email;
+        };
+
+        service.like = function (projectId) {
+            return projectLikeResource.post({id: projectId}, {}).$promise;
+        };
+
+        service.unlike = function (projectId) {
+            return projectUnlikeResource.post({id: projectId}, {}).$promise;
         };
 
         return service;

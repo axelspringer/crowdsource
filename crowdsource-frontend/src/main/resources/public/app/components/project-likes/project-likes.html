@@ -1,0 +1,13 @@
+<div class="project_likes project_likes_list" ng-if="view === 'list'">
+    <span class="project_likes_list_status" ng-click="toggleLike()">
+        {{project.likeStatus === 'LIKE' ? 'Unlike' : 'Like'}}
+    </span>
+    <span class="project_likes_list_count">{{showLikeCount()}}</span>
+</div>
+
+<div class="project_likes project_likes_detail" ng-if="view === 'detail'">
+    <span class="project_likes_detail_status" ng-click="toggleLike()">
+        {{project.likeStatus === 'LIKE' ? 'Unlike' : 'Like'}}
+    </span>
+    <span class="project_likes_detail_count">This project is {{project.likeCount}} times liked!</span>
+</div>
