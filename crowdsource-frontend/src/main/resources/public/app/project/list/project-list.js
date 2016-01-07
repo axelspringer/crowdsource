@@ -19,8 +19,8 @@ angular.module('crowdsource')
                 'PROPOSED': score++,
                 'PUBLISHED': score++,
                 'PUBLISHED_DEFERRED': score++,
-                'FULLY_PLEDGED': score++,
                 'DEFERRED': score++,
+                'FULLY_PLEDGED': score++,
                 'REJECTED': score++
             };
 
