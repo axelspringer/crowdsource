@@ -238,7 +238,9 @@ public class ProjectService {
 
     private Project project(ProjectEntity projectEntity, UserEntity requestingUser) {
         List<PledgeEntity> pledges = pledgeRepository.findByProjectAndFinancingRound(projectEntity, projectEntity.getFinancingRound());
-        return new Project(projectEntity, pledges, requestingUser);
+        final Optional<LikeEntity> likeEntity = likeRepository.findOneByProjectAndUser(projectEntity, requestingUser);
+        final long likeCount = likeRepository.countByProjectAndStatus(projectEntity, LIKE);
+        return new Project(projectEntity, pledges, requestingUser, likeCount, likeEntity.map(LikeEntity::getStatus).orElse(UNLIKE));
     }
 
     private FinancingRoundEntity currentFinancingRound() {

@@ -13,8 +13,8 @@ public class LikeEntity {
 
     @Id
     private String id;
-    // default status == UNLIKE
-    private LikeStatus status = LikeStatus.UNLIKE;
+    // default status == LIKE
+    private LikeStatus status = LikeStatus.LIKE;
     @DBRef
     private ProjectEntity project;
     @DBRef

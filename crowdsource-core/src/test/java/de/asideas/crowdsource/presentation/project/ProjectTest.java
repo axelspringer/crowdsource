@@ -5,6 +5,7 @@ import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import org.joda.time.DateTime;
@@ -84,7 +85,7 @@ public class ProjectTest {
     public void constructionWorks_likeCountInitWithValue() throws Exception {
         final Random random = new Random(Long.MAX_VALUE);
         long value = random.nextLong();
-        Project res = new Project(projectEntity, pledges, user2, value);
+        Project res = new Project(projectEntity, pledges, user2, value, LikeStatus.LIKE);
         assertThat(res.getLikeCount(), is(value));
     }
 

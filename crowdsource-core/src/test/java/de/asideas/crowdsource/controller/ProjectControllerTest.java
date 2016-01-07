@@ -52,27 +52,13 @@ import java.security.Principal;
 import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
@@ -208,6 +194,21 @@ public class ProjectControllerTest {
                 .andReturn();
 
         assertThat(mapper.readValue(mvcResult.getResponse().getContentAsString(), Project.class), is(equalTo(expProjcet)));
+    }
+
+    @Test
+    public void getProject_shouldReturnProjectLikeCountAndUserLikeStatus() throws Exception {
+        final UserEntity creator = userEntity("creator@mail.com", Roles.ROLE_USER);
+        final String projectId = "existingProjectId";
+        final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", 44, ProjectStatus.PUBLISHED), creator);
+
+        when(projectService.getProject(eq(projectId), eq(null))).thenReturn(expProjcet);
+
+        mockMvc.perform(get("/project/{projectId}", projectId)
+                .principal(anonymousAuthentication()))
+                .andExpect(jsonPath("$.likeStatus", nullValue()))
+                .andExpect(jsonPath("$.likeCount", is(0)))
+                .andExpect(status().isOk());
     }
 
     @Test

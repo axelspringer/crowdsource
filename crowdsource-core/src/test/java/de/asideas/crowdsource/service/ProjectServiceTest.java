@@ -90,8 +90,9 @@ public class ProjectServiceTest {
         when(pledgeRepository.findByProjectAndFinancingRound(any(ProjectEntity.class), any(FinancingRoundEntity.class))).thenReturn(new ArrayList<>());
         when(userRepository.findAllAdminUsers()).thenReturn(Arrays.asList(admin(ADMIN1_EMAIL), admin(ADMIN2_EMAIL)));
         when(projectRepository.save(any(ProjectEntity.class))).thenAnswer(invocation -> invocation.getArguments()[0]);
+        when(likeRepository.countByProjectAndStatus(any(ProjectEntity.class), eq(LIKE))).thenReturn(0L);
+        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
     }
-
 
     @Test
     public void addProject() throws Exception {
@@ -102,7 +103,7 @@ public class ProjectServiceTest {
         prepareActiveFinanzingRound(null);
 
         Project res = projectService.addProject(project, user(USER_EMAIL));
-        assertThat(res, is(new Project(projectEntity.getValue(), new ArrayList<>(), null)));
+        assertThat(res, is(new Project(projectEntity.getValue(), new ArrayList<>(), null, 0, LIKE)));
         verify(userNotificationService, atLeastOnce()).notifyAdminOnProjectCreation(eq(projectEntity.getValue()), anyString());
     }
 
@@ -115,7 +116,7 @@ public class ProjectServiceTest {
         when(projectRepository.save(projectEntity.capture())).thenAnswer(a -> a.getArgumentAt(0, ProjectEntity.class));
 
         Project res = projectService.addProject(project, user(USER_EMAIL));
-        assertThat(res, is(new Project(projectEntity.getValue(), new ArrayList<>(), null)));
+        assertThat(res, is(new Project(projectEntity.getValue(), new ArrayList<>(), null, 0, LIKE)));
         verify(userNotificationService, atLeastOnce()).notifyAdminOnProjectCreation(eq(projectEntity.getValue()), anyString());
     }
 
@@ -595,6 +596,17 @@ public class ProjectServiceTest {
         }
     }
 
+    @Test
+    public void getProject_shouldReturnDefaultLikeCountAndLikeStatus() throws Exception {
+        final UserEntity projectCreator = user(USER_EMAIL);
+        final ProjectEntity projectEntity = projectEntity("projectId", ProjectStatus.PROPOSED, projectCreator);
+        when(projectRepository.findOne(anyString())).thenReturn(projectEntity);
+        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
+        final Project project = projectService.getProject("projectId", projectCreator);
+
+        assertThat(project, hasProperty("likeCount", equalTo(0L)));
+        assertThat(project, hasProperty("likeStatusOfRequestUser", equalTo(UNLIKE)));
+    }
 
     private ProjectEntity givenAProjectEntityWithCreatorAndAttachments(UserEntity creator, String... attachmentFileReferences) {
         final ProjectEntity projectEntity = projectEntity("test_id", ProjectStatus.PROPOSED, creator);

@@ -1,9 +1,11 @@
 package de.asideas.crowdsource.presentation.project;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -68,6 +70,10 @@ public class Project {
     @JsonView(ProjectSummaryView.class)
     private long likeCount;
 
+    @JsonProperty("likeStatus")
+    @JsonView(ProjectSummaryView.class)
+    private LikeStatus likeStatusOfRequestUser;
+
     private List<Attachment> attachments;
     
     public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser) {
@@ -89,9 +95,10 @@ public class Project {
         this.attachments = projectEntity.getAttachments().stream().map(a -> Attachment.asResponseWithoutPayload(a, projectEntity)).collect(Collectors.toList());
     }
 
-    public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser, long likeCount) {
+    public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser, long likeCount, LikeStatus likeStatusOfRequestUser) {
         this(projectEntity, pledges, requestingUser);
         this.likeCount = likeCount;
+        this.likeStatusOfRequestUser = likeStatusOfRequestUser;
     }
 
     public Project() {
@@ -207,6 +214,14 @@ public class Project {
 
     public void setAttachments(List<Attachment> attachments) {
         this.attachments = attachments;
+    }
+
+    public LikeStatus getLikeStatusOfRequestUser() {
+        return likeStatusOfRequestUser;
+    }
+
+    public void setLikeStatusOfRequestUser(LikeStatus likeStatusOfRequestUser) {
+        this.likeStatusOfRequestUser = likeStatusOfRequestUser;
     }
 
     @Override
