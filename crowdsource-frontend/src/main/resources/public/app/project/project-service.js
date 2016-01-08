@@ -1,6 +1,6 @@
 angular.module('crowdsource')
 
-    .factory('Project', function ($resource) {
+    .factory('Project', function ($resource, FinancingRound) {
 
         var service = {};
 
@@ -62,6 +62,10 @@ angular.module('crowdsource')
             return projectStatusResource.patch({id: projectId}, {status: 'REJECTED'});
         };
 
+        service.publishAndDefer = function (projectId) {
+            return projectStatusResource.patch({id: projectId}, {status: 'PUBLISHED_DEFERRED'});
+        };
+
         service.defer = function (projectId) {
             return projectStatusResource.patch({id: projectId}, {status: 'DEFERRED'} );
         };
@@ -81,6 +85,27 @@ angular.module('crowdsource')
 
         service.unlike = function (projectId) {
             return projectUnlikeResource.post({id: projectId}, {}).$promise;
+        };
+
+        service.userEligibleToEdit = function (project, user) {
+            return user.hasRole("ADMIN") || service.isCreator(project, user);
+        };
+
+        service.isEditable = function (project) {
+            var financingRoundActive = (FinancingRound.currentFinancingRound() == undefined
+            || FinancingRound.currentFinancingRound().active);
+            switch (project.status) {
+                case 'FULLY_PLEDGED':
+                    return false;
+                case 'PROPOSED':
+                case 'DEFERRED':
+                case 'PUBLISHED_DEFERRED':
+                    return true;
+                case 'PUBLISHED':
+                    return !financingRoundActive;
+                default:
+                    return false;
+            }
         };
 
         return service;

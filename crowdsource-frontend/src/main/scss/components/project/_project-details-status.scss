@@ -146,7 +146,8 @@
 
 }
 
-.project-details--deferred {
+.project-details--deferred,
+.project-details--published_deferred{
     .to-pledging-form-button {
         color: #FFFFFF;
         background-color: #8ED61E;

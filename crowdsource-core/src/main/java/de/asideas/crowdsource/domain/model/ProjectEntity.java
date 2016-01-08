@@ -191,6 +191,12 @@ public class ProjectEntity {
             }
         }
 
+        if (ProjectStatus.PUBLISHED_DEFERRED == newStatus) {
+            if (this.financingRound != null && this.financingRound.active() && this.status == ProjectStatus.PUBLISHED) {
+                throw InvalidRequestException.projectAlreadyInFinancingRound();
+            }
+        }
+
         setStatus(newStatus);
         return true;
     }
@@ -282,7 +288,7 @@ public class ProjectEntity {
             return false;
         }
 
-        if (this.status == ProjectStatus.DEFERRED) {
+        if (this.status == ProjectStatus.DEFERRED || this.status == ProjectStatus.PUBLISHED_DEFERRED) {
             modifyStatus(ProjectStatus.PUBLISHED);
             setFinancingRound(null);
             return true;
