@@ -643,7 +643,7 @@ public class ProjectControllerTest {
         final String email = "some@mail.com";
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
 
-        mockMvc.perform(post("/projects/{projectId}/like", "some_id")
+        mockMvc.perform(post("/projects/{projectId}/likes", "some_id")
                 .principal(authentication(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
@@ -656,7 +656,7 @@ public class ProjectControllerTest {
         final String email = "some@mail.com";
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
 
-        mockMvc.perform(post("/projects/{projectId}/unlike", "some_id")
+        mockMvc.perform(delete("/projects/{projectId}/likes", "some_id")
                 .principal(authentication(user))
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());

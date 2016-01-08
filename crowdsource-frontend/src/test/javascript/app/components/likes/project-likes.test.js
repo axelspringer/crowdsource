@@ -277,22 +277,22 @@ describe('project likes', function () {
     }
 
     function givenLikeClickedOnListPage() {
-        $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/like').respond(200);
+        $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/likes').respond(200);
         likesDirectiveCompiled.find('.project_likes_list_status').click();
     }
 
     function givenLikeClickedOnDetailPage() {
-        $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/like').respond(200);
+        $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/likes').respond(200);
         likesDirectiveCompiled.find('.project_likes_detail_status').click();
     }
 
     function givenUnlikeClickedOnListPage() {
-        $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/unlike').respond(200);
+        $httpBackend.expectDELETE('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/likes').respond(200);
         likesDirectiveCompiled.find('.project_likes_list_status').click();
     }
 
     function givenUnlikeClickedOnDetailPage() {
-        $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/unlike').respond(200);
+        $httpBackend.expectDELETE('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/likes').respond(200);
         likesDirectiveCompiled.find('.project_likes_detail_status').click();
     }
 });

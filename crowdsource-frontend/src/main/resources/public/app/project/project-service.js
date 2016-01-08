@@ -22,15 +22,12 @@ angular.module('crowdsource')
             }
         });
 
-        var projectLikeResource = $resource('/projects/:id/like', {}, {
+        var projectLikeResource = $resource('/projects/:id/likes', {}, {
             post: {
                 method: 'POST'
-            }
-        });
-
-        var projectUnlikeResource = $resource('/projects/:id/unlike', {}, {
-            post: {
-                method: 'POST'
+            },
+            delete: {
+                method: 'DELETE'
             }
         });
 
@@ -84,7 +81,7 @@ angular.module('crowdsource')
         };
 
         service.unlike = function (projectId) {
-            return projectUnlikeResource.post({id: projectId}, {}).$promise;
+            return projectLikeResource.delete({id: projectId}, {}).$promise;
         };
 
         service.userEligibleToEdit = function (project, user) {
