@@ -5,12 +5,28 @@
     padding: 0.1rem 0.45rem;
     background-color: rgba(255,255,255,1);
     border-radius: 0.1875rem;
+    cursor: pointer;
 
     .project_likes_list_status, &.liked:hover .project_likes_list_status {
         color: gainsboro;
     }
 
     &.liked .project_likes_list_status, &:hover .project_likes_list_status {
-        color: #000;
+        color: #D44B95;
+    }
+}
+
+.likes__box {
+    display: inline-block;
+    background-color: rgba(255,255,255,1);
+    border-radius: 0.1875rem;
+    cursor: pointer;
+
+    .project_likes_detail_status, &.liked:hover .project_likes_detail_status {
+        color: gainsboro;
+    }
+
+    &.liked .project_likes_detail_status, &:hover .project_likes_detail_status {
+        color: #D44B95;
     }
 }

@@ -25,11 +25,10 @@ describe('project likes', function () {
             };
         });
 
-        givenCompiledDirective();
     });
 
     it("should show like counts with zero when not data provided on list page", function () {
-
+        givenCompiledDirectiveForListView();
         givenView("list");
         scope.$digest();
 
@@ -39,18 +38,20 @@ describe('project likes', function () {
     });
 
     it("should show like counts with zero when not data provided on detail page", function () {
-
+        givenCompiledDirectiveForDetailView();
         givenView("detail");
         scope.$digest();
 
         expect(likesDirectiveCompiled.find('.project_likes').hasClass('project_likes_detail')).toBe(true);
         expect(likesDirectiveCompiled.find('.project_likes_detail_count')).toExist();
         expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
-        expect(likesDirectiveCompiled.find('.project_likes_detail_count').text()).toBe('This project is 0 times liked!');
-        expect(likesDirectiveCompiled.find('.project_likes_detail_status').text().trim()).toBe('Like');
+        expect(likesDirectiveCompiled.find('.project_likes_detail_count').text()).toBe('0');
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(false);
+
     });
 
     it("should show like counts", function () {
+        givenCompiledDirectiveForListView();
         givenView("list");
         givenLikeCount(100);
         scope.$digest();
@@ -59,22 +60,24 @@ describe('project likes', function () {
     });
 
     it("should show like status of user when no data provided on list page", function () {
+        givenCompiledDirectiveForListView();
         givenView("list");
         scope.$digest();
 
         expect(likesDirectiveCompiled.find('.project_likes_list_status')).toExist();
     });
 
-    //todo
-    //it("should show like status of when no data provided on detail page", function () {
-    //    givenView("detail");
-    //    scope.$digest();
-    //
-    //    expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
-    //    expect(likesDirectiveCompiled.find('.project_likes_detail_status').text().trim()).toBe('Like');
-    //});
+    it("should show like status of when no data provided on detail page", function () {
+        givenCompiledDirectiveForDetailView();
+        givenView("detail");
+        scope.$digest();
+
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(false);
+    });
 
     it("should show status of user after liked project on list page", function () {
+        givenCompiledDirectiveForListView();
         givenView("list");
         givenLikeStatus("LIKE");
         scope.$digest();
@@ -83,9 +86,18 @@ describe('project likes', function () {
         expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(true);
     });
 
-    // todo like status test on detail page
+    it("should show status of user after liked project on detail page", function () {
+        givenCompiledDirectiveForDetailView();
+        givenView("detail");
+        givenLikeStatus("LIKE");
+        scope.$digest();
+
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(true);
+    });
 
     it("should show status of user after unliked project on list page", function () {
+        givenCompiledDirectiveForListView();
         givenView("list");
 
         givenLikeStatus("LIKE");
@@ -98,10 +110,22 @@ describe('project likes', function () {
         expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(false);
     });
 
-    // todo unlike status test on detail page
+    it("should show status of user after unliked project on detail page", function () {
+        givenCompiledDirectiveForDetailView();
+        givenView("detail");
 
+        givenLikeStatus("LIKE");
+        scope.$digest();
+
+        givenLikeStatus("UNLIKE");
+        scope.$digest();
+
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(false);
+    });
 
     it("should be able to execute like by user on list page", function () {
+        givenCompiledDirectiveForListView();
         givenView("list");
         scope.$digest();
 
@@ -110,7 +134,7 @@ describe('project likes', function () {
         expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(false);
         expect(likesDirectiveCompiled.find('.project_likes_list_count').text()).toBe('0');
 
-        givenLikeClicked();
+        givenLikeClickedOnListPage();
         scope.$digest();
 
         // before server responded
@@ -130,11 +154,40 @@ describe('project likes', function () {
         expect(likesDirectiveCompiled.find('.project_likes_list_count').text()).toBe('100');
     });
 
+    it("should be able to execute like by user on detail page", function () {
+        givenCompiledDirectiveForDetailView();
+        givenView("detail");
+        scope.$digest();
 
+        // before click
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(false);
+        expect(likesDirectiveCompiled.find('.project_likes_detail_count').text()).toBe('0');
+
+        givenLikeClickedOnDetailPage();
+        scope.$digest();
+
+        // before server responded
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(true);
+        expect(likesDirectiveCompiled.find('.project_likes_detail_count').text()).toBe('1');
+
+        var responseProject = angular.copy(likesDirectiveCompiled.isolateScope().project);
+        // honors response from server
+        responseProject.likeCount = 100;
+        $httpBackend.expectGET('/project/' + likesDirectiveCompiled.isolateScope().project.id).respond(200, responseProject);
+        $httpBackend.flush();
+
+        //after server responded
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(true);
+        expect(likesDirectiveCompiled.find('.project_likes_detail_count').text()).toBe('100');
+    });
 
     it("should be able to execute unlike by user on list page", function () {
         var initCount = 5;
 
+        givenCompiledDirectiveForListView();
         givenView("list");
         givenLikeCount(initCount);
         givenLikeStatus('LIKE');
@@ -146,7 +199,7 @@ describe('project likes', function () {
         expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(true);
         expect(likesDirectiveCompiled.find('.project_likes_list_count').text()).toBe("" + initCount);
 
-        givenUnlikeClicked();
+        givenUnlikeClickedOnListPage();
         scope.$digest();
 
         // before server responded
@@ -166,8 +219,48 @@ describe('project likes', function () {
         expect(likesDirectiveCompiled.find('.project_likes_list_count').text()).toBe('100');
     });
 
-    function givenCompiledDirective() {
+    it("should be able to execute unlike by user on detail page", function () {
+        var initCount = 5;
+
+        givenCompiledDirectiveForDetailView();
+        givenView("detail");
+        givenLikeCount(initCount);
+        givenLikeStatus('LIKE');
+
+        scope.$digest();
+
+        // before click
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(true);
+        expect(likesDirectiveCompiled.find('.project_likes_detail_count').text()).toBe("" + initCount);
+
+        givenUnlikeClickedOnDetailPage();
+        scope.$digest();
+
+        // before server responded
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(false);
+        expect(likesDirectiveCompiled.find('.project_likes_detail_count').text()).toBe('4');
+
+        var responseProject = angular.copy(likesDirectiveCompiled.isolateScope().project);
+        // honors response from server
+        responseProject.likeCount = 100;
+        $httpBackend.expectGET('/project/' + likesDirectiveCompiled.isolateScope().project.id).respond(200, responseProject);
+        $httpBackend.flush();
+
+        //after server responded
+        expect(likesDirectiveCompiled.find('.project_likes_detail_status')).toExist();
+        expect(likesDirectiveCompiled.find('.project_likes').hasClass('liked')).toBe(false);
+        expect(likesDirectiveCompiled.find('.project_likes_detail_count').text()).toBe('100');
+    });
+
+    function givenCompiledDirectiveForListView() {
         likesDirectiveCompiled = $compile('<project-likes project="project", view="list"></project-likes>')(scope);
+        scope.$digest();
+    };
+
+    function givenCompiledDirectiveForDetailView() {
+        likesDirectiveCompiled = $compile('<project-likes project="project", view="detail"></project-likes>')(scope);
         scope.$digest();
     };
 
@@ -183,13 +276,23 @@ describe('project likes', function () {
         likesDirectiveCompiled.isolateScope().project.likeStatus = status;
     }
 
-    function givenLikeClicked() {
+    function givenLikeClickedOnListPage() {
         $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/like').respond(200);
         likesDirectiveCompiled.find('.project_likes_list_status').click();
     }
 
-    function givenUnlikeClicked() {
+    function givenLikeClickedOnDetailPage() {
+        $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/like').respond(200);
+        likesDirectiveCompiled.find('.project_likes_detail_status').click();
+    }
+
+    function givenUnlikeClickedOnListPage() {
         $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/unlike').respond(200);
         likesDirectiveCompiled.find('.project_likes_list_status').click();
+    }
+
+    function givenUnlikeClickedOnDetailPage() {
+        $httpBackend.expectPOST('/projects/' + likesDirectiveCompiled.isolateScope().project.id + '/unlike').respond(200);
+        likesDirectiveCompiled.find('.project_likes_detail_status').click();
     }
 });
