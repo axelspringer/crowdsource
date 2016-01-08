@@ -5,6 +5,7 @@ import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import org.joda.time.DateTime;
@@ -13,6 +14,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.core.Is.is;
@@ -71,6 +73,20 @@ public class ProjectTest {
     public void constructionWorks_NullSafe() throws Exception {
         Project res = new Project(projectEntity, pledges, user2);
         assertThat(res.getLastModifiedDate(), is(nullValue()));
+    }
+
+    @Test
+    public void constructionWorks_likeCountInitWithZero() throws Exception {
+        Project res = new Project(projectEntity, pledges, user2);
+        assertThat(res.getLikeCount(), is(0L));
+    }
+
+    @Test
+    public void constructionWorks_likeCountInitWithValue() throws Exception {
+        final Random random = new Random(Long.MAX_VALUE);
+        long value = random.nextLong();
+        Project res = new Project(projectEntity, pledges, user2, value, LikeStatus.LIKE);
+        assertThat(res.getLikeCount(), is(value));
     }
 
 }

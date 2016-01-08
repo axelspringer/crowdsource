@@ -117,7 +117,7 @@ describe('project list', function () {
         $scope.$digest();
         $httpBackend.flush();
 
-        var tile = projectList.find('.project__tile');
+        var tile = projectList.find('.project__tile_clicktarget');
         tile.click();
 
         expect($location.path()).toBe('/project/projectId');

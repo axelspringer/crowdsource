@@ -14,6 +14,8 @@ import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.presentation.project.ProjectStatusUpdate;
 import de.asideas.crowdsource.presentation.user.ProjectCreator;
+import de.asideas.crowdsource.repository.LikeRepository;
+import de.asideas.crowdsource.repository.ProjectRepository;
 import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.security.Roles;
 import de.asideas.crowdsource.service.ProjectService;
@@ -47,35 +49,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.fileUpload;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
@@ -85,7 +68,6 @@ public class ProjectControllerTest {
 
     @Autowired
     private UserRepository userRepository;
-
     @Autowired
     private ProjectService projectService;
 
@@ -212,6 +194,21 @@ public class ProjectControllerTest {
                 .andReturn();
 
         assertThat(mapper.readValue(mvcResult.getResponse().getContentAsString(), Project.class), is(equalTo(expProjcet)));
+    }
+
+    @Test
+    public void getProject_shouldReturnProjectLikeCountAndUserLikeStatus() throws Exception {
+        final UserEntity creator = userEntity("creator@mail.com", Roles.ROLE_USER);
+        final String projectId = "existingProjectId";
+        final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", 44, ProjectStatus.PUBLISHED), creator);
+
+        when(projectService.getProject(eq(projectId), eq(null))).thenReturn(expProjcet);
+
+        mockMvc.perform(get("/project/{projectId}", projectId)
+                .principal(anonymousAuthentication()))
+                .andExpect(jsonPath("$.likeStatus", nullValue()))
+                .andExpect(jsonPath("$.likeCount", is(0)))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -641,6 +638,32 @@ public class ProjectControllerTest {
         return multipartFile;
     }
 
+    @Test
+    public void likeProject_shouldCallLikeMethodFromService() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+
+        mockMvc.perform(post("/projects/{projectId}/likes", "some_id")
+                .principal(authentication(user))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(projectService, only()).likeProject(eq("some_id"), any(UserEntity.class));
+    }
+
+    @Test
+    public void unlikeProject_shouldCallUnlikeMethodFromService() throws Exception {
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+
+        mockMvc.perform(delete("/projects/{projectId}/likes", "some_id")
+                .principal(authentication(user))
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        verify(projectService, only()).unlikeProject(eq("some_id"), any(UserEntity.class));
+    }
+
     private Principal authentication(UserEntity userEntity) {
         final Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         userEntity.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role)));
@@ -748,6 +771,14 @@ public class ProjectControllerTest {
             PropertyPlaceholderConfigurer configurer = new PropertyPlaceholderConfigurer();
             configurer.setLocation(new ClassPathResource("application.properties"));
             return configurer;
+        }
+        @Bean
+        public ProjectRepository projectRepository() {
+            return mock(ProjectRepository.class);
+        }
+        @Bean
+        public LikeRepository likeRepository() {
+            return mock(LikeRepository.class);
         }
     }
 

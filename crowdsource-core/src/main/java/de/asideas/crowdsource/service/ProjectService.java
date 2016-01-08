@@ -2,12 +2,14 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
+import de.asideas.crowdsource.domain.model.*;
 import de.asideas.crowdsource.domain.model.AttachmentValue;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
+import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.project.Attachment;
@@ -17,6 +19,7 @@ import de.asideas.crowdsource.repository.PledgeRepository;
 import de.asideas.crowdsource.repository.ProjectAttachmentRepository;
 import de.asideas.crowdsource.repository.ProjectRepository;
 import de.asideas.crowdsource.repository.UserRepository;
+import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -27,7 +30,10 @@ import org.springframework.util.Assert;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
+import static de.asideas.crowdsource.domain.shared.LikeStatus.LIKE;
+import static de.asideas.crowdsource.domain.shared.LikeStatus.UNLIKE;
 import static java.util.stream.Collectors.toList;
 
 @Service
@@ -35,20 +41,25 @@ public class ProjectService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectService.class);
 
-    private ProjectRepository projectRepository;
-    private PledgeRepository pledgeRepository;
-    private UserRepository userRepository;
-    private FinancingRoundRepository financingRoundRepository;
-    private UserNotificationService userNotificationService;
-    private FinancingRoundService financingRoundService;
-    private ProjectAttachmentRepository projectAttachmentRepository;
-    private ProjectService thisInstance;
+    private final ProjectAttachmentRepository projectAttachmentRepository;
+    private final ProjectRepository projectRepository;
+    private final PledgeRepository pledgeRepository;
+    private final UserRepository userRepository;
+    private final FinancingRoundRepository financingRoundRepository;
+    private final UserNotificationService userNotificationService;
+    private final FinancingRoundService financingRoundService;
+    private final LikeRepository likeRepository;
+
+    private final ProjectService thisInstance;
 
     @Autowired
-    public ProjectService(ProjectRepository projectRepository, PledgeRepository pledgeRepository,
-                          UserRepository userRepository, FinancingRoundRepository financingRoundRepository,
+    public ProjectService(ProjectRepository projectRepository,
+                          PledgeRepository pledgeRepository,
+                          UserRepository userRepository,
+                          FinancingRoundRepository financingRoundRepository,
                           UserNotificationService userNotificationService,
                           FinancingRoundService financingRoundService,
+                          LikeRepository likeRepository,
                           ProjectAttachmentRepository projectAttachmentRepository) {
 
         this.projectRepository = projectRepository;
@@ -58,6 +69,7 @@ public class ProjectService {
         this.userNotificationService = userNotificationService;
         this.financingRoundService = financingRoundService;
         this.projectAttachmentRepository = projectAttachmentRepository;
+        this.likeRepository = likeRepository;
         this.thisInstance = this;
 
     }
@@ -165,6 +177,16 @@ public class ProjectService {
         projectRepository.save(project);
     }
 
+    public void likeProject(String projectId, UserEntity user) {
+        final ProjectEntity project = projectRepository.findOne(projectId);
+        toggleStatus(project, user, LIKE);
+    }
+
+    public void unlikeProject(String projectId, UserEntity user) {
+        final ProjectEntity project = projectRepository.findOne(projectId);
+        toggleStatus(project, user, UNLIKE);
+    }
+
     void pledgeProjectInFinancingRound(ProjectEntity projectEntity, UserEntity userEntity, Pledge pledge) {
         List<PledgeEntity> pledgesSoFar = pledgeRepository.findByProjectAndFinancingRound(
                 projectEntity, projectEntity.getFinancingRound());
@@ -216,7 +238,9 @@ public class ProjectService {
 
     private Project project(ProjectEntity projectEntity, UserEntity requestingUser) {
         List<PledgeEntity> pledges = pledgeRepository.findByProjectAndFinancingRound(projectEntity, projectEntity.getFinancingRound());
-        return new Project(projectEntity, pledges, requestingUser);
+        final Optional<LikeEntity> likeEntity = likeRepository.findOneByProjectAndUser(projectEntity, requestingUser);
+        final long likeCount = likeRepository.countByProjectAndStatus(projectEntity, LIKE);
+        return new Project(projectEntity, pledges, requestingUser, likeCount, likeEntity.map(LikeEntity::getStatus).orElse(UNLIKE));
     }
 
     private FinancingRoundEntity currentFinancingRound() {
@@ -229,4 +253,15 @@ public class ProjectService {
                 .forEach(emailAddress -> userNotificationService.notifyAdminOnProjectCreation(projectEntity, emailAddress));
     }
 
+    private void toggleStatus(ProjectEntity project, UserEntity user, LikeStatus status) {
+        final Optional<LikeEntity> likeEntityOptional = likeRepository.findOneByProjectAndUser(project, user);
+        if (likeEntityOptional.isPresent()) {
+            final LikeEntity likeEntity = likeEntityOptional.get();
+            likeEntity.setStatus(status);
+            likeRepository.save(likeEntity);
+        } else {
+            final LikeEntity likeEntity = new LikeEntity(status, project, user);
+            likeRepository.save(likeEntity);
+        }
+    }
 }

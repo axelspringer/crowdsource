@@ -8,8 +8,8 @@ import de.asideas.crowdsource.testsupport.pageobjects.NavigationBar;
 import de.asideas.crowdsource.testsupport.pageobjects.project.AddProjectConfirmationView;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectAddAndModificationForm;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectDetailPage;
+import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectListPage;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectStatusWidget;
-import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectsPage;
 import de.asideas.crowdsource.testsupport.selenium.ElementUtils;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverProvider;
 import de.asideas.crowdsource.testsupport.util.CrowdSourceClient;
@@ -47,7 +47,7 @@ public class ProjectAddSteps {
     private AddProjectConfirmationView addProjectConfirmationView;
 
     @Autowired
-    private ProjectsPage projectsPage;
+    private ProjectListPage projectListPage;
 
     @Autowired
     private CrowdSourceClient crowdSourceClient;
@@ -109,11 +109,11 @@ public class ProjectAddSteps {
 
     @Then("^the project overview page shows the new project$")
     public void the_project_overview_page_shows_the_new_project() throws Throwable {
-        PageFactory.initElements(webDriver, projectsPage);
-        projectsPage.waitForPageLoad();
+        PageFactory.initElements(webDriver, projectListPage);
+        projectListPage.waitForPageLoad();
 
 
-        assertTrue(projectsPage.containsProject(randomProjectTitlePrefix, randomProjectShortDescriptionPrefix));
+        assertTrue(projectListPage.containsProject(randomProjectTitlePrefix, randomProjectShortDescriptionPrefix));
     }
 
     @Then("^the project details page shows the new project$")
@@ -171,7 +171,7 @@ public class ProjectAddSteps {
 
     @And("^the project is marked \"([^\"]*)\"$")
     public void the_project_is_marked(String state) throws Throwable {
-        final WebElement projectElement = projectsPage.findProject(randomProjectTitlePrefix, randomProjectShortDescriptionPrefix);
+        final WebElement projectElement = projectListPage.findProjectWebElement(randomProjectTitlePrefix, randomProjectShortDescriptionPrefix);
         assertNotNull(projectElement);
         assertTrue(ElementUtils.hasClass(projectElement, "project-" + state));
     }

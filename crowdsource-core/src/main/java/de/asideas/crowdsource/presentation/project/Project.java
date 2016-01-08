@@ -1,9 +1,11 @@
 package de.asideas.crowdsource.presentation.project;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -65,8 +67,15 @@ public class Project {
     @JsonView(ProjectSummaryView.class)
     private int pledgedAmountByPostRoundBudget;
 
-    private List<Attachment> attachments;
+    @JsonView(ProjectSummaryView.class)
+    private long likeCount;
 
+    @JsonProperty("likeStatus")
+    @JsonView(ProjectSummaryView.class)
+    private LikeStatus likeStatusOfRequestUser;
+
+    private List<Attachment> attachments;
+    
     public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser) {
         this.id = projectEntity.getId();
         this.status = projectEntity.getStatus();
@@ -84,6 +93,12 @@ public class Project {
         this.creator = new ProjectCreator(projectEntity.getCreator());
 
         this.attachments = projectEntity.getAttachments().stream().map(a -> Attachment.asResponseWithoutPayload(a, projectEntity)).collect(Collectors.toList());
+    }
+
+    public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser, long likeCount, LikeStatus likeStatusOfRequestUser) {
+        this(projectEntity, pledges, requestingUser);
+        this.likeCount = likeCount;
+        this.likeStatusOfRequestUser = likeStatusOfRequestUser;
     }
 
     public Project() {
@@ -189,8 +204,24 @@ public class Project {
         this.pledgedAmountByPostRoundBudget = pledgedAmountByPostRoundBudget;
     }
 
+    public long getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(long likeCount) {
+        this.likeCount = likeCount;
+    }
+
     public void setAttachments(List<Attachment> attachments) {
         this.attachments = attachments;
+    }
+
+    public LikeStatus getLikeStatusOfRequestUser() {
+        return likeStatusOfRequestUser;
+    }
+
+    public void setLikeStatusOfRequestUser(LikeStatus likeStatusOfRequestUser) {
+        this.likeStatusOfRequestUser = likeStatusOfRequestUser;
     }
 
     @Override

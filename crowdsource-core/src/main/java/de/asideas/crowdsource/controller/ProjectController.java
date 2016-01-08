@@ -114,6 +114,20 @@ public class ProjectController {
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
+    @RequestMapping(value = "/projects/{projectId}/likes", method = RequestMethod.POST)
+    public void likeProject(@PathVariable("projectId") String projectId, Principal principal) {
+        projectService.likeProject(projectId, userByPrincipal(principal));
+    }
+
+    @Secured(Roles.ROLE_USER)
+    @ResponseStatus(HttpStatus.OK)
+    @RequestMapping(value = "/projects/{projectId}/likes", method = RequestMethod.DELETE)
+    public void unlikeProject(@PathVariable("projectId") String projectId, Principal principal) {
+        projectService.unlikeProject(projectId, userByPrincipal(principal));
+    }
+
+    @Secured(Roles.ROLE_USER)
+    @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/projects/{projectId}/attachments", method = RequestMethod.POST)
     public Attachment addProjectAttachment(@PathVariable("projectId") String projectId, @RequestParam("file") MultipartFile file, Principal principal) {
         if (file.isEmpty()) {
