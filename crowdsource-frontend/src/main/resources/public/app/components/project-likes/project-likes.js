@@ -10,7 +10,7 @@ angular.module('crowdsource')
             restrict: 'E',
             scope: {
                 project: '=',
-                view: '='
+                view: '@'
             },
             templateUrl: 'app/components/project-likes/project-likes.html',
             controller: function ($scope, Project) {

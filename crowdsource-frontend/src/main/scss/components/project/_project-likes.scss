@@ -1,0 +1,16 @@
+.likes__pill {
+    display: inline-block;
+    float: right;
+    margin-left: 10px;
+    padding: 0.1rem 0.45rem;
+    background-color: rgba(255,255,255,1);
+    border-radius: 0.1875rem;
+
+    i, &.liked:hover i {
+        color: gainsboro;
+    }
+
+    &.liked i, &:hover i {
+        color: #000;
+    }
+}

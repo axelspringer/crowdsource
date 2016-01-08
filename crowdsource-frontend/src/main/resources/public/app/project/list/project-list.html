@@ -9,20 +9,23 @@
     <ul class="project__ul" data-equalizer>
 
         <li class="project__li" ng-repeat="project in projectList.projects | orderBy:[projectList.projectOrderByStatus, projectList.projectOrderByDate]" foundation-reflow="equalizer">
+            <div class="project__tile project-{{project.status.toLowerCase()}}" data-equalizer-watch>
+                <div class="clearfix">
+                    <project-likes project="project" view="list"></project-likes>
+                    <div class="tile__status"></div>
+                </div>
+                <div class="project__tile_clicktarget" ng-click="projectList.showProjectDetails(project)">
+                    <h3 class="tile__heading" ellipsis ng-bind="project.title"></h3>
 
-            <div class="project__tile project-{{project.status.toLowerCase()}}" data-equalizer-watch ng-click="projectList.showProjectDetails(project)">
-                <div class="tile__status"></div>
-                <h3 class="tile__heading" ellipsis ng-bind="project.title"></h3>
+                    <p class="tile__short-desc" ellipsis ng-bind="project.shortDescription"></p>
 
-                <p class="tile__short-desc" ellipsis ng-bind="project.shortDescription"></p>
+                    <div class="tile__metrics">
+                        <progress-bar value="project.pledgedAmount" maximum="project.pledgeGoal"></progress-bar>
 
-                <div class="tile__metrics">
-                    <progress-bar value="project.pledgedAmount" maximum="project.pledgeGoal"></progress-bar>
-
-                    <span class="plist__pill backers-count">{{ project.backers }}</span>
-                    <span class="backers-text">Förderer</span>
-                    <span class="plist__pill pledged-amount">{{ project.pledgedAmount | number }} / {{ project.pledgeGoal | number }}</span> EUR
-
+                        <span class="plist__pill backers-count">{{ project.backers }}</span>
+                        <span class="backers-text">Förderer</span>
+                        <span class="plist__pill pledged-amount">{{ project.pledgedAmount | number }} / {{ project.pledgeGoal | number }}</span> EUR
+                    </div>
                 </div>
             </div>
 
