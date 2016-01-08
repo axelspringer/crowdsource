@@ -10,8 +10,8 @@ import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectDetailPage;
+import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectListPage;
 import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectStatusWidget;
-import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectsPage;
 import de.asideas.crowdsource.testsupport.selenium.SeleniumWait;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverProvider;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverUtils;
@@ -38,7 +38,7 @@ public class ProjectDetailSteps {
     public static final String PROJECT_DESCRIPTION_RENDERED = "<h3>This is the project description text.</h3><p>Due to it is rendered using markdown we can emphasize <code>code like that</code>!</p>";
 
     @Autowired
-    private ProjectsPage projectsPage;
+    private ProjectListPage projectListPage;
 
     @Autowired
     private ProjectDetailPage projectDetailPage;
@@ -122,9 +122,9 @@ public class ProjectDetailSteps {
 
     @When("^the user clicks on the tile of this project$")
     public void the_user_clicks_on_the_tile_of_this_project() throws Throwable {
-        PageFactory.initElements(webDriver, projectsPage);
-        projectsPage.waitForPageLoad();
-        projectsPage.clickProjectTileWithTitle(createdProject.getTitle());
+        PageFactory.initElements(webDriver, projectListPage);
+        projectListPage.waitForPageLoad();
+        projectListPage.clickProjectTileWithTitle(createdProject.getTitle());
     }
 
     @Then("^the project detail page of this project is displayed$")
@@ -170,7 +170,7 @@ public class ProjectDetailSteps {
         an_admin_publishs_the_created_project();
 
         webDriver.get(urlProvider.applicationUrl());
-        projectsPage.waitForPageLoad();
+        projectListPage.waitForPageLoad();
 
         the_user_clicks_on_the_tile_of_this_project();
 

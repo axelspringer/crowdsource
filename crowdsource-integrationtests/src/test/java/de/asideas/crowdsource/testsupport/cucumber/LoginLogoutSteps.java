@@ -9,7 +9,7 @@ import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import de.asideas.crowdsource.testsupport.pageobjects.LoginForm;
 import de.asideas.crowdsource.testsupport.pageobjects.LogoutPage;
 import de.asideas.crowdsource.testsupport.pageobjects.NavigationBar;
-import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectsPage;
+import de.asideas.crowdsource.testsupport.pageobjects.project.ProjectListPage;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverProvider;
 import de.asideas.crowdsource.testsupport.util.UrlProvider;
 import org.openqa.selenium.By;
@@ -40,7 +40,7 @@ public class LoginLogoutSteps {
     private NavigationBar navigationBar;
 
     @Autowired
-    private ProjectsPage projectsPage;
+    private ProjectListPage projectListPage;
 
     @Autowired
     private LoginForm loginForm;
@@ -105,8 +105,8 @@ public class LoginLogoutSteps {
     @Then("^he is redirected to the index page$")
     public void he_is_redirected_to_the_index_page() throws Throwable {
 
-        PageFactory.initElements(webDriver, projectsPage);
-        projectsPage.waitForPageLoad();
+        PageFactory.initElements(webDriver, projectListPage);
+        projectListPage.waitForPageLoad();
     }
 
     @When("^he reloads the page$")
@@ -115,11 +115,11 @@ public class LoginLogoutSteps {
         webDriver.get(webDriver.getCurrentUrl());
     }
 
-    @Given("^the index page is visited$")
+    @Given("^the index page is visited.*$")
     public void the_index_page_is_visited() throws Throwable {
 
         webDriver.get(urlProvider.applicationUrl());
-        projectsPage.waitForPageLoad();
+        projectListPage.waitForPageLoad();
     }
 
     @Given("^the CROWD link is clicked$")

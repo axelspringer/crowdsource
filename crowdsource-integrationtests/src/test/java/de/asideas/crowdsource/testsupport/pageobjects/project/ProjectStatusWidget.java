@@ -1,5 +1,6 @@
 package de.asideas.crowdsource.testsupport.pageobjects.project;
 
+import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.testsupport.selenium.SeleniumWait;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverProvider;
 import org.openqa.selenium.By;
@@ -33,6 +34,12 @@ public class ProjectStatusWidget {
     @FindBy(className = "project-status__backers")
     private WebElement backersLabel;
 
+    @FindBy(className = "project_likes_detail_count")
+    private WebElement likeCountLabel;
+
+    @FindBy(className = "project_likes_detail")
+    private WebElement likeWidget;
+
     @FindBy(css = ".pd-creator strong")
     private WebElement userLabel;
 
@@ -58,6 +65,19 @@ public class ProjectStatusWidget {
 
     public String getUserName() {
         return userLabel.getText();
+    }
+
+    public Long getLikeCount(){
+        return Long.parseLong(likeCountLabel.getText());
+    }
+
+    public void clickLikeWidget(){
+        likeWidget.click();
+    }
+
+    public LikeStatus likedByUser(){
+        return likeWidget.getAttribute("class").contains("liked")?
+                LikeStatus.LIKE : LikeStatus.UNLIKE;
     }
 
     public void clickFundingButton() {

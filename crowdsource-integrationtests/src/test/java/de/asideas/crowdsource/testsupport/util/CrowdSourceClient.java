@@ -161,6 +161,23 @@ public class CrowdSourceClient {
         project.setStatus(ProjectStatus.DEFERRED);
     }
 
+    public void likeProject(Project project, AuthToken token) {
+        final ResponseEntity<Project> exchange = restTemplate.exchange(
+                urlProvider.applicationUrl() + "/projects/" + project.getId() + "/likes",
+                HttpMethod.POST,
+                createRequestEntity(token),
+                Project.class);
+        assertEquals(HttpStatus.OK, exchange.getStatusCode());
+    }
+    public void unlikeProject(Project project, AuthToken token) {
+        final ResponseEntity<Project> exchange = restTemplate.exchange(
+                urlProvider.applicationUrl() + "/projects/" + project.getId() + "/likes",
+                HttpMethod.DELETE,
+                createRequestEntity(token),
+                Project.class);
+        assertEquals(HttpStatus.OK, exchange.getStatusCode());
+    }
+
     private void modifyProjectStatus(String projectId, ProjectStatus status, AuthToken token) {
         final ResponseEntity<Project> exchange = restTemplate.exchange(
                 urlProvider.applicationUrl() + "/project/" + projectId + "/status",
