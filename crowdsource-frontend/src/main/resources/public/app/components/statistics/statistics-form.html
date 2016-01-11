@@ -1,0 +1,20 @@
+<h2 class="plist__heading push-dble--bottom">Statistiken</h2>
+
+<div class="alert-box alert-box__statistics info" ng-if="data.info !== undefined">
+    {{data.info}}
+    <span class="close" ng-click="clearInfo()">&times;</span>
+</div>
+
+<div class="panel">
+    <div class="row">
+        <div class="statistic-form small-12 columns">
+
+            <select name="statistic-type" ng-model="data.statisticType" ng-change="statisticTypeChangeHandler()">
+
+                <option ng-repeat="type in data.availableOptions" value="{{type.name}}">{{type.label}}</option>
+
+            </select>
+
+        </div>
+    </div>
+</div>

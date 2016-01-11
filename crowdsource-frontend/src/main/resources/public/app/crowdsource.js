@@ -94,6 +94,12 @@
                     title: 'Finanzierungsrunden',
                     requireLogin: true
                 })
+                .when('/statistics', {
+                    templateUrl: 'app/statistics/statistics.html',
+                    controller: 'StatisticsController as statistics',
+                    title: 'Statistiken',
+                    requireLogin: true
+                })
                 .when('/about', {
                     templateUrl: 'app/misc/about.html',
                     title: 'Über Uns'
