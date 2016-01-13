@@ -1,11 +1,11 @@
-<div class="panel" ng-show="data.statisticType">
+<div class="panel" ng-show="shouldShowDiagram()">
     <div class="row">
         <div class="statistic-result small-12 columns">
 
             <div class="panel">
                 <div class="row">
                     <div class="columns">
-                        <canvas class="chart chart-line" chart-data="chart.data" chart-labels="chart.labels" chart-legend="chart.showLegend" chart-series="chart.series"></canvas>
+                        <canvas class="chart chart-line" chart-data="data.chart.data" chart-labels="data.chart.labels" chart-legend="true" chart-series="data.chart.series"></canvas>
                     </div>
                 </div>
             </div>

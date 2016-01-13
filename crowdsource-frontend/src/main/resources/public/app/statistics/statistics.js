@@ -5,6 +5,10 @@ angular.module('crowdsource')
 
         CONST = {
             PAGES: {
+                NONE: {
+                    label: "-- Bitte auswählen --",
+                    name: "NONE"
+                },
                 CURRENT: {
                     label: "Anzahl Neuregistrieung / Neu eingereichte Ideen",
                     name: "CURRENT"
@@ -31,6 +35,7 @@ angular.module('crowdsource')
         vm.data = {
             availablePageOptions: CONST.PAGES,
             availableTimePrecisionTypeOptions: CONST.TIME_PRECISION_TYPE,
-            timePrecision: CONST.TIME_PRECISION_TYPE.DAY
+            timePrecision: CONST.TIME_PRECISION_TYPE.DAY,
+            statisticType: CONST.PAGES.NONE
         };
     });

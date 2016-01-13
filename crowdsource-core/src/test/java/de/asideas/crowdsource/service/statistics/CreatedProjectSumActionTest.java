@@ -62,7 +62,7 @@ public class CreatedProjectSumActionTest {
 
     @Test
     public void getCreatedProjectSumByTimeRange_provide_correct_sum_all() throws Exception {
-        final DateTime startDate = DateTime.now().minusDays(10);
+        final DateTime startDate = DateTime.now().minusDays(9);
         final DateTime endDate = DateTime.now();
 
         Future<LineChartStatisticsResult> result = instance.getCreatedProjectSumByTimeRange(new TimeRangedStatisticsRequest(startDate, endDate));
@@ -70,7 +70,7 @@ public class CreatedProjectSumActionTest {
         verify(projectRepository).findByCreatedDateBetween(startDate.withTimeAtStartOfDay(), endDate.plusDays(1).withTimeAtStartOfDay());
 
         assertThat(result.get().getData().size(), is(10));
-        assertThat(result.get().getData().values().stream().reduce(0L, Long::sum), is(10L));
+        assertThat(result.get().getData().stream().map(e -> e.getData()).reduce(0L, Long::sum), is(10L));
     }
 
     @Test
@@ -84,7 +84,7 @@ public class CreatedProjectSumActionTest {
 
         verify(projectRepository).findByCreatedDateBetween(startDate.withTimeAtStartOfDay(), endDate.plusDays(1).withTimeAtStartOfDay());
 
-        assertThat(result.get().getData().values().stream().reduce(0L, Long::sum), is(0L));
+        assertThat(result.get().getData().stream().map(e -> e.getData()).reduce(0L, Long::sum), is(0L));
     }
 
     @Test
@@ -101,6 +101,6 @@ public class CreatedProjectSumActionTest {
         verify(projectRepository).findByCreatedDateBetween(startDate.withTimeAtStartOfDay(), startDate.plusDays(1).withTimeAtStartOfDay());
 
         assertThat(result.get().getData().size(), is(1));
-        assertThat(result.get().getData().values().iterator().next(), is(3L));
+        assertThat(result.get().getData().stream().map(e -> e.getData()).findFirst().get(), is(3L));
     }
 }
