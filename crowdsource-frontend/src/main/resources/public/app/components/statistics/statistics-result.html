@@ -2,7 +2,13 @@
     <div class="row">
         <div class="statistic-result small-12 columns">
 
-            Current statistic type is {{data.statisticType}}
+            <div class="panel">
+                <div class="row">
+                    <div class="columns">
+                        <canvas class="chart chart-line" chart-data="chart.data" chart-labels="chart.labels" chart-legend="chart.showLegend" chart-series="chart.series"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

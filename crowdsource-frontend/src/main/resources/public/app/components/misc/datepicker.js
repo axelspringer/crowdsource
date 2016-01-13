@@ -3,17 +3,21 @@ angular.module('crowdsource')
     .directive('datepicker', function () {
         return {
             require: 'ngModel',
+
             link: function (scope, elem, attrs, ngModel) {
 
-                //allow only dates starting from tomorrow
-                var nowTemp = new Date();
-                var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate() + 1, 0, 0, 0, 0);
+                var future = attrs.future === 'true';
 
                 $(elem).fdatepicker({
                     format: "dd.mm.yyyy",
 
                     onRender: function (date) {
-                        return date.valueOf() < now.valueOf() ? 'disabled' : '';
+                        if (future) {
+                            //allow only dates starting from tomorrow
+                            var nowTemp = new Date();
+                            var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate() + 1, 0, 0, 0, 0);
+                            return date.valueOf() < now.valueOf() ? 'disabled' : '';
+                        }
                     }
                 });
 

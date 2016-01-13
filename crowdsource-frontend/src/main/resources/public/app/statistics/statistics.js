@@ -1,22 +1,36 @@
 angular.module('crowdsource')
-
     .controller('StatisticsController', function () {
 
-        var CONST = {
+        var vm = this,
+
+        CONST = {
             PAGES: {
-                TEST: {
-                    label: "Test label",
-                    name: "TEST"
+                CURRENT: {
+                    label: "Anzahl Neuregistrieung / Neu eingereichte Ideen",
+                    name: "CURRENT"
+                }
+
+            },
+
+            TIME_PRECISION_TYPE: {
+                DAY: {
+                    label: "Tag",
+                    precision: 1
                 },
-                ANOTHER_TEST: {
-                    label: "Another test label",
-                    name: "ANOTHER_TEST"
+                WEEK: {
+                    label: "Woche",
+                    precision: 7
+                },
+                MONTH: {
+                    label: "Monat",
+                    precision: 30
                 }
             }
-        },
-        vm = this;
+        };
 
         vm.data = {
-            availableOptions: CONST.PAGES
+            availablePageOptions: CONST.PAGES,
+            availableTimePrecisionTypeOptions: CONST.TIME_PRECISION_TYPE,
+            timePrecision: CONST.TIME_PRECISION_TYPE.DAY
         };
     });

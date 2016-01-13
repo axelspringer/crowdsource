@@ -17,6 +17,9 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import static de.asideas.crowdsource.domain.shared.StatisticsTypes.SUM_REGISTERED_USER;
+import static de.asideas.crowdsource.service.statistics.StatisticsActionUtil.fillMap;
+import static de.asideas.crowdsource.service.statistics.StatisticsActionUtil.formatDate;
+import static de.asideas.crowdsource.service.statistics.StatisticsActionUtil.getDefaultMap;
 
 @Async
 @Service
@@ -33,8 +36,8 @@ public class RegisteredUserSumAction {
 
         final List<UserEntity> userEntityList = userRepository.findByCreatedDateBetween(request.getStartDate(), request.getEndDate());
 
-        final Map<Instant, Long> map = userEntityList.stream().collect(Collectors.groupingBy(
-                p -> p.getCreatedDate().withTimeAtStartOfDay().toInstant(),
+        final Map<String, Long> map = userEntityList.stream().collect(Collectors.groupingBy(
+                p -> formatDate(p.getCreatedDate()),
                 Collectors.reducing(
                         0L,
                         t -> 1L,
@@ -42,8 +45,12 @@ public class RegisteredUserSumAction {
                 )
         ));
 
-        final LineChartStatisticsResult result = new LineChartStatisticsResult(SUM_REGISTERED_USER.getDisplayName(), new ArrayList<>(map.values()));
+        final Map<String, Long> resultMap = fillMap(
+                getDefaultMap(request),
+                map
+        );
 
+        final LineChartStatisticsResult result = new LineChartStatisticsResult(SUM_REGISTERED_USER.getDisplayName(), resultMap);
 
         return new AsyncResult<>(result);
     }

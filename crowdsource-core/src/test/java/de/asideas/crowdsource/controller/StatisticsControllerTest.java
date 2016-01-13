@@ -11,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -25,6 +26,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -54,8 +56,10 @@ public class StatisticsControllerTest {
 
         final String dateTimeString = "2016-01-12T22:59:59.000Z";
         mockMvc.perform(get("/statistics/current")
+                .contentType(MediaType.APPLICATION_JSON)
                 .param("startDate", dateTimeString)
                 .param("endDate", dateTimeString))
+            .andDo(print())
             .andExpect(status().is(200));
 
         DateTime dateTime = DateTime.parse(dateTimeString).withZone(DateTimeZone.getDefault());

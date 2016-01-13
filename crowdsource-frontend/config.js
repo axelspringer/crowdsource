@@ -31,6 +31,8 @@ var config = {
             'bower_components/ng-file-upload/ng-file-upload-all.min.js',
             'bower_components/clipboard/dist/clipboard.min.js',
             'bower_components/ngclipboard/dist/ngclipboard.min.js',
+            'bower_components/Chart.js/Chart.min.js',
+            'bower_components/angular-chart.js/dist/angular-chart.min.js'
         ],
         unminified: [
             'bower_components/foundation/js/vendor/modernizr.js',

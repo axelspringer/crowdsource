@@ -37,7 +37,7 @@ public class StatisticsServiceTest {
         final DateTime endDate = new DateTime();
         TimeRangedStatisticsRequest timeRangedStatisticsRequest = new TimeRangedStatisticsRequest(startDate, endDate);
 
-        Future<LineChartStatisticsResult> asyncResult = new AsyncResult<>(new LineChartStatisticsResult("name", Collections.emptyList()));
+        Future<LineChartStatisticsResult> asyncResult = new AsyncResult<>(new LineChartStatisticsResult("name", Collections.emptyMap()));
         when(createdProjectSumAction.getCreatedProjectSumByTimeRange(eq(timeRangedStatisticsRequest))).thenReturn(asyncResult);
         when(registeredUserSumAction.getCountOfRegisteredUsersByTimeRange(eq(timeRangedStatisticsRequest))).thenReturn(asyncResult);
 

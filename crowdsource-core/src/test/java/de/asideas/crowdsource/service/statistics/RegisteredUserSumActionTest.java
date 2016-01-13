@@ -51,7 +51,7 @@ public class RegisteredUserSumActionTest {
 
     @Test
     public void getCountOfRegisteredUsersByTimeRange_provide_correct_name_of_statistic() throws Exception {
-        final DateTime startDate = DateTime.now().minusMinutes(30);
+        final DateTime startDate = DateTime.now().minusDays(0);
         final DateTime endDate = DateTime.now();
 
         Future<LineChartStatisticsResult> result = instance.getCountOfRegisteredUsersByTimeRange(new TimeRangedStatisticsRequest(startDate, endDate));
@@ -71,7 +71,7 @@ public class RegisteredUserSumActionTest {
         verify(userRepository).findByCreatedDateBetween(startDate.withTimeAtStartOfDay(), endDate.plusDays(1).withTimeAtStartOfDay());
 
         assertThat(result.get().getData().size(), is(10));
-        assertThat(result.get().getData().stream().reduce(0L, Long::sum), is(10L));
+        assertThat(result.get().getData().values().stream().reduce(0L, Long::sum), is(10L));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class RegisteredUserSumActionTest {
 
         verify(userRepository).findByCreatedDateBetween(startDate.withTimeAtStartOfDay(), endDate.plusDays(1).withTimeAtStartOfDay());
 
-        assertThat(result.get().getData().stream().reduce(0L, Long::sum), is(0L));
+        assertThat(result.get().getData().values().stream().reduce(0L, Long::sum), is(0L));
     }
 
     @Test
@@ -102,6 +102,6 @@ public class RegisteredUserSumActionTest {
         verify(userRepository).findByCreatedDateBetween(startDate.withTimeAtStartOfDay(), startDate.plusDays(1).withTimeAtStartOfDay());
 
         assertThat(result.get().getData().size(), is(1));
-        assertThat(result.get().getData().get(0), is(3L));
+        assertThat(result.get().getData().get(StatisticsActionUtil.formatDate(DateTime.now().minusDays(1))), is(3L));
     }
 }

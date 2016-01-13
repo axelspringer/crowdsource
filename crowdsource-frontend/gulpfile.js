@@ -70,8 +70,8 @@ gulp.task('js-libs', function () {
     var alreadyMinified = gulp.src(config.jsLibFiles.minified);
 
     var nowMinified = gulp.src(config.jsLibFiles.unminified)
-        .pipe(ngAnnotate())
-        .pipe(uglify());
+        .pipe(ngAnnotate());
+        //.pipe(uglify());
 
     merge(alreadyMinified, nowMinified)
         .pipe(concat('libs.min.js'))

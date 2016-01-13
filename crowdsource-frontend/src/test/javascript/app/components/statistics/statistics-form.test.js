@@ -19,7 +19,14 @@ describe('statistics form', function () {
             scope = $rootScope.$new();
 
             scope['data'] = {
-                info: undefined
+                info: undefined,
+                availablePageOptions: {
+                    CURRENT: {
+                        label: "Anzahl Neuregistrieung / Neu eingereichte Ideen",
+                        name: "CURRENT"
+                    }
+
+                }
             };
         });
     });
