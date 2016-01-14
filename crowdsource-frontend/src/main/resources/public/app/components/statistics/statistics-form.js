@@ -3,32 +3,88 @@ angular.module('crowdsource')
         var CONST = {
             "DEFAULT_FROM_DAYS": 14
         }, updateResultData = function (vm) {
-            var currentPrecision = vm.data.timePrecision;
+            var currentPrecision = vm.data.timePrecision,
+                responseData = vm.data.statisticsResponse;
 
             console.log("updating result data with precision set to " + currentPrecision.id);
-            console.log("resultdata: " + vm.data.statisticsResponse);
-
 
             vm.data.chart.data = [];
             vm.data.chart.labels = [];
             vm.data.chart.series = [];
-            vm.data.statisticsResponse.forEach(function (seriesEntry) {
-                var data = [];
-                var labels = [];
 
-                vm.data.chart.series.push(seriesEntry.name);
+            if (currentPrecision.id === vm.data.availableTimePrecisionTypeOptions.WEEK.id) {
+                responseData.forEach(function (seriesEntry) {
+                    var data = [];
+                    var labels = [];
+                    var temp = 0,
+                        startDate = moment(vm.data.startDate);
 
+                    var  endDate = moment(vm.data.endDate),
+                        nextMondayFromStart = moment(vm.data.startDate).day(8),
+                        duration = nextMondayFromStart.diff(startDate, 'days'),
+                        daysBetweenStartAndEnd = endDate.diff(startDate, 'days'),
+                        i = 0,
+                        j = 0,
+                        weekOfYearForStartDate = 1; // todo
 
-                seriesEntry.data.forEach(function (dataEntry) {
-                    labels.push(dataEntry.label);
-                    data.push(dataEntry.data);
+                    console.log("startdate date" + startDate.date());
+                    console.log("nextMondayFromStart date" + nextMondayFromStart.date());
+
+                    console.log("daysBetweenStartAndEnd " + daysBetweenStartAndEnd);
+                    console.log("duration " + duration);
+
+                    //while (i < daysBetweenStartAndEnd) {
+                    while (i < 3) {
+                        j = 0;
+                        console.log("inside week loop with i" + i);
+                        while (j < duration) {
+                            console.log("inside duration with i = " + i + " and duration " + duration);
+                            temp += seriesEntry.data[i];
+                            j++;
+                            i++;
+                        }
+
+                        data.push(temp);
+                        labels.push(weekOfYearForStartDate++);
+
+                        console.log("THE REST OF DAYS: " + daysBetweenStartAndEnd - i);
+                        if (daysBetweenStartAndEnd - i > 7) {
+                            console.log("duration higher 7");
+                            duration = 7;
+                        } else {
+                            duration = daysBetweenStartAndEnd - i > 7;
+                            console.log("duration smaller 7: " + duration);
+                        }
+                    }
+
+                    vm.data.chart.series.push(seriesEntry.name);
+
+                    console.log("DATA " + data);
+                    console.log("LABELS " + labels);
+
+                    vm.data.chart.data.push(data);
+
+                    // NOTE: labels is set twice
+                    vm.data.chart.labels = labels;
                 });
+            } else {
+                responseData.forEach(function (seriesEntry) {
+                    var data = [];
+                    var labels = [];
 
-                vm.data.chart.data.push(data);
+                    vm.data.chart.series.push(seriesEntry.name);
 
-                // NOTE: labels is set twice
-                vm.data.chart.labels = labels;
-            });
+                    seriesEntry.data.forEach(function (dataEntry) {
+                        labels.push(dataEntry.label);
+                        data.push(dataEntry.data);
+                    });
+                    vm.data.chart.data.push(data);
+
+                    // NOTE: labels is set twice
+                    vm.data.chart.labels = labels;
+                });
+            }
+
         };
         return {
             restrict: 'E',
