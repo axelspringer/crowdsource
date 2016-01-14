@@ -101,6 +101,12 @@ npm run watch
 npm run test-watch
 ```
 
+If you want to skip uglifying of your javascript (app AND libs), run
+
+```
+npm run watch-dev
+```
+
 Tracking
 --------
 

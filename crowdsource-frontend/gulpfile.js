@@ -7,7 +7,8 @@ var merge = require('merge-stream');
 var sass = require('gulp-sass');
 var plumber = require('gulp-plumber');
 var autoprefixer = require('gulp-autoprefixer');
-
+var argv = require('yargs').argv;
+var gulpif = require('gulp-if');
 
 // Include our config
 var config = require('./config.js');
@@ -56,10 +57,10 @@ gulp.task('resources', function () {
 
 // js compile task
 gulp.task('js', function () {
-    return gulp.src(config.jsFiles)
+    gulp.src(config.jsFiles)
         .pipe(sourcemaps.init())
         .pipe(ngAnnotate())
-        .pipe(uglify())
+        .pipe(gulpif(!argv.development, uglify()))
         .pipe(concat('crowdsource.min.js'))
         .pipe(sourcemaps.write('.'))
         .pipe(gulp.dest(config.baseDestDir + '/app'));
@@ -70,8 +71,8 @@ gulp.task('js-libs', function () {
     var alreadyMinified = gulp.src(config.jsLibFiles.minified);
 
     var nowMinified = gulp.src(config.jsLibFiles.unminified)
-        .pipe(ngAnnotate());
-        //.pipe(uglify());
+        .pipe(ngAnnotate())
+        .pipe(gulpif(!argv.development, uglify()));
 
     merge(alreadyMinified, nowMinified)
         .pipe(concat('libs.min.js'))

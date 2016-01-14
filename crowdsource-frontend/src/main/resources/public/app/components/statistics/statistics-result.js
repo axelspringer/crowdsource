@@ -9,7 +9,7 @@ angular.module('crowdsource')
             controller: function ($scope) {
                 var vm = $scope;
 
-                vm.shouldShowDiagram = function () {
+                vm.showResults = function () {
                     return vm.data.statisticType.name !== vm.data.availablePageOptions.NONE.name;
                 };
             }
