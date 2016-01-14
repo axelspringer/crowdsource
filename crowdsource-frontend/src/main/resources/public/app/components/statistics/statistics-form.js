@@ -3,15 +3,11 @@ angular.module('crowdsource')
         var CONST = {
             "DEFAULT_FROM_DAYS": 14
         }, updateResultData = function (vm) {
-            var currentPrecision = vm.data.timePrecision;
-
-            console.log("updating result data with precision set to " + currentPrecision.id);
-            console.log("resultdata: " + vm.data.statisticsResponse);
-
 
             vm.data.chart.data = [];
             vm.data.chart.labels = [];
             vm.data.chart.series = [];
+
             vm.data.statisticsResponse.forEach(function (seriesEntry) {
                 var data = [];
                 var labels = [];
@@ -30,6 +26,7 @@ angular.module('crowdsource')
                 vm.data.chart.labels = labels;
             });
         };
+
         return {
             restrict: 'E',
             scope: {
@@ -68,7 +65,6 @@ angular.module('crowdsource')
                 };
 
                 vm.statisticTimePrecisionChangeHandler = function () {
-                    console.log(vm.data.timePrecision);
                     updateResultData(vm);
                 };
 

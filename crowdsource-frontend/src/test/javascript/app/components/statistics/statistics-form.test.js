@@ -1,5 +1,5 @@
 describe('statistics form', function () {
-    var $rootScope, $compile, scope;
+    var $rootScope, $compile, scope, $httpBackend;
     var compiledDirective;
 
     beforeEach(function () {
@@ -45,6 +45,19 @@ describe('statistics form', function () {
         expect(compiledDirective.find('.alert-box__statistics')).not.toExist();
     });
 
+    it("should show data pickers when CURRENT statistic type selected", function () {
+        givenCompiledDirective();
+        scope.$digest();
+        expect(compiledDirective.find(".statistics-form-current")).not.toExist();
+
+        whenStatisticTypeSelected(compiledDirective.isolateScope().data.availablePageOptions.CURRENT);
+        scope.$digest();
+
+        expect(compiledDirective.find(".statistics-form-current")).toExist();
+    });
+
+    it("should call backend when CURRENT statistic type selected");
+
     function givenCompiledDirective() {
         compiledDirective = $compile('<statistics-form data="data"></statistics-form>')(scope);
         scope.$digest();
@@ -57,5 +70,13 @@ describe('statistics form', function () {
     function givenClickOnClose() {
         compiledDirective.find('.close').click();
     };
+
+    function whenStatisticTypeSelected(type) {
+        compiledDirective.isolateScope().data.statisticType = type;
+    };
+
+    function whenStartDateChanged(newDate) {
+        compiledDirective.isolateScope().data.startDate = newDate;
+    }
 
 });
