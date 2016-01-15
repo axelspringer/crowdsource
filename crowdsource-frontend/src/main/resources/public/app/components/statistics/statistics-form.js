@@ -94,7 +94,6 @@ angular.module('crowdsource')
                 };
 
                 vm.statisticTimePrecisionChangeHandler = function () {
-                    console.log(vm.data.timePrecision);
                     prepareDataForLineChart(vm);
                 };
 

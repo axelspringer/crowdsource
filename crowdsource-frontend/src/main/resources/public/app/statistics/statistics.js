@@ -7,17 +7,18 @@ module.constant ("STATISTICS_CONST", {
             id: "DAY",
             label: "Tag",
             precision: 1
-        },
-        WEEK: {
-            id: "WEEK",
-            label: "Woche",
-            precision: 7
-        },
-        MONTH: {
-            id: "MONTH",
-            label: "Monat",
-            precision: 30
         }
+        //,
+        //WEEK: {
+        //    id: "WEEK",
+        //    label: "Woche",
+        //    precision: 7
+        //},
+        //MONTH: {
+        //    id: "MONTH",
+        //    label: "Monat",
+        //    precision: 30
+        //}
     },
     PAGES: {
         NONE: {

@@ -9,29 +9,29 @@
     <div class="row">
         <div class="statistics-form small-12 columns">
 
-            <select name="statistic-type" ng-model="data.statisticType" ng-change="statisticTypeChanged()" ng-options="item.label for item in data.availablePageOptions track by item.name">
+            <select class="statistics-form-type-select-dropdown" name="statistic-type" ng-model="data.statisticType" ng-change="statisticTypeChanged()" ng-options="item.label for item in data.availablePageOptions track by item.name">
             </select>
 
         </div>
     </div>
 
-    <div class="row" ng-if="shouldShowDatePickerWithPrecision()">
+    <div class="row statistics-form-current" ng-if="shouldShowDatePickerWithPrecision()">
         <div class="small-12 medium-4 large-4 columns form-controls-startdate">
             <label>
                 <input ng-change="dateChanged()" class="statistics-startdate" type="text" datepicker="" name="startDate"
                        ng-model="data.startDate"
-                       placeholder="Von..." required readonly>
+                       placeholder="Von..." required readonly timerange="untilToday">
             </label>
         </div>
         <div class="small-12 medium-4 large-4 columns form-controls-enddate">
             <label>
                 <input ng-change="dateChanged()"  class="statistics-enddate" type="text" datepicker="" name="endDate"
                        ng-model="data.endDate"
-                       placeholder="Bis..." required readonly>
+                       placeholder="Bis..." required readonly timerange="untilToday">
             </label>
         </div>
         <div class="small-12 medium-4 large-4 columns form-control-timeprecision">
-            <select name="statistics-time-precision" ng-model="data.timePrecision" ng-change="statisticTimePrecisionChangeHandler()" ng-options="item.label for item in data.availableTimePrecisionTypeOptions track by item.precision">
+            <select name="statistics-time-precision" ng-model="data.timePrecision" ng-change="statisticTimePrecisionChangeHandler()" ng-options="item.label for item in data.availableTimePrecisionTypeOptions track by item.precision" readonly disabled>
             </select>
         </div>
 
