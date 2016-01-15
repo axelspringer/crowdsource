@@ -2,15 +2,13 @@ package de.asideas.crowdsource.repository;
 
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
-import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -25,21 +23,19 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
     }
 
     @Override
-    public Map<ProjectStatus, Long> sumProjectsGroupedByStatus() {
-        EnumMap<ProjectStatus, Long> result = new EnumMap<>(ProjectStatus.class);
-
+    public List<BarChartStatisticsResult> sumProjectsGroupedByStatus() {
         AggregationResults<ProjectPerStatusResult> aggregationResults = mongoTemplate.aggregate(
                 newAggregation(
                         ProjectEntity.class,
                         group("status").count().as("count")
                 ), ProjectPerStatusResult.class);
 
-        aggregationResults.getMappedResults().stream().forEach(p -> result.put(p.getId(), p.getCount()));
-
-        return result;
+        return aggregationResults.getMappedResults().stream()
+                .map(r -> new BarChartStatisticsResult(r.getId().name(), r.getId().getDisplayName(), r.getCount()))
+                .collect(Collectors.toList());
     }
 
-    public class ProjectPerStatusResult {
+    static class ProjectPerStatusResult {
 
         private ProjectStatus id;
 

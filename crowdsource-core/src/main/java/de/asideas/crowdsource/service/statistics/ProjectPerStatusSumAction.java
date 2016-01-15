@@ -1,11 +1,11 @@
 package de.asideas.crowdsource.service.statistics;
 
-import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import de.asideas.crowdsource.repository.ProjectRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
+import java.util.List;
 
 @Service
 public class ProjectPerStatusSumAction {
@@ -17,7 +17,7 @@ public class ProjectPerStatusSumAction {
         this.projectRepository = projectRepository;
     }
 
-    public Map<ProjectStatus, Long> getProjectsPerStatus() {
+    public List<BarChartStatisticsResult> getProjectsPerStatus() {
         return projectRepository.sumProjectsGroupedByStatus();
     }
 }

@@ -9,7 +9,7 @@
     <div class="row">
         <div class="statistics-form small-12 columns">
 
-            <select class="statistics-form-type-select-dropdown" name="statistic-type" ng-model="data.statisticType" ng-change="statisticTypeChanged()" ng-options="item.label for item in data.availablePageOptions track by item.name">
+            <select class="statistics-form-type-select-dropdown" name="statistic-type" ng-model="data.statisticType" ng-change="statisticTypeChanged()" ng-options="item.label for item in STATISTICS_CONST.PAGES track by item.name">
             </select>
 
         </div>

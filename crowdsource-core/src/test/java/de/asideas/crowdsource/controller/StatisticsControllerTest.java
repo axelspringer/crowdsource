@@ -68,6 +68,16 @@ public class StatisticsControllerTest {
 
     }
 
+    @Test
+    public void getProjectsPerStatus_should_call_statistics_service() throws Exception {
+        when(statisticsService.getProjectsPerStatus()).thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/statistics/projects_per_status")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(200));
+
+    }
+
     @EnableWebMvc
     @Configuration
     static class Config {
