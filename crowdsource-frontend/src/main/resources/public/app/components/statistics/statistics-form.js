@@ -65,6 +65,7 @@ angular.module('crowdsource')
             controller: function ($scope, Statistics, STATISTICS_CONST) {
                 var vm = $scope;
 
+                vm.STATISTICS_CONST = STATISTICS_CONST;
                 vm.data.chart = {};
 
                 vm.statisticTypeChanged = function () {

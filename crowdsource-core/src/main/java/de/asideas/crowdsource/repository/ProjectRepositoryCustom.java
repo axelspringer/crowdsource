@@ -1,10 +1,10 @@
 package de.asideas.crowdsource.repository;
 
-import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 
-import java.util.Map;
+import java.util.List;
 
 public interface ProjectRepositoryCustom {
 
-    Map<ProjectStatus, Long> sumProjectsGroupedByStatus();
+    List<BarChartStatisticsResult> sumProjectsGroupedByStatus();
 }

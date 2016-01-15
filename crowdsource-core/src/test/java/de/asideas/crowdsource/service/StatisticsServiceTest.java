@@ -3,6 +3,7 @@ package de.asideas.crowdsource.service;
 import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
 import de.asideas.crowdsource.service.statistics.CreatedProjectSumAction;
+import de.asideas.crowdsource.service.statistics.ProjectPerStatusSumAction;
 import de.asideas.crowdsource.service.statistics.RegisteredUserSumAction;
 import org.joda.time.DateTime;
 import org.junit.Test;
@@ -13,7 +14,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.scheduling.annotation.AsyncResult;
 
 import java.util.Collections;
-import java.util.Date;
 import java.util.concurrent.Future;
 
 import static org.mockito.Matchers.eq;
@@ -28,8 +28,12 @@ public class StatisticsServiceTest {
 
     @Mock
     private CreatedProjectSumAction createdProjectSumAction;
+
     @Mock
     private RegisteredUserSumAction registeredUserSumAction;
+
+    @Mock
+    private ProjectPerStatusSumAction projectPerStatusSumAction;
 
     @Test
     public void getCurrentStatistics_should_callBothActionsToRetrieveData() throws Exception {
@@ -45,5 +49,12 @@ public class StatisticsServiceTest {
 
         verify(createdProjectSumAction).getCreatedProjectSumByTimeRange(timeRangedStatisticsRequest);
         verify(registeredUserSumAction).getCountOfRegisteredUsersByTimeRange(timeRangedStatisticsRequest);
+    }
+
+    @Test
+    public void getProjectsPerStatus_should_delegateToProperActionToRetrieveData() throws Exception {
+        instance.getProjectsPerStatus();
+
+        verify(projectPerStatusSumAction).getProjectsPerStatus();
     }
 }
