@@ -28,9 +28,11 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
     public Map<ProjectStatus, Long> sumProjectsGroupedByStatus() {
         EnumMap<ProjectStatus, Long> result = new EnumMap<>(ProjectStatus.class);
 
-        List<AggregationOperation> operations = Collections.singletonList(group("status").count().as("count"));
-
-        AggregationResults<ProjectPerStatusResult> aggregationResults = mongoTemplate.aggregate(newAggregation(operations), ProjectEntity.class, ProjectPerStatusResult.class);
+        AggregationResults<ProjectPerStatusResult> aggregationResults = mongoTemplate.aggregate(
+                newAggregation(
+                        ProjectEntity.class,
+                        group("status").count().as("count")
+                ), ProjectPerStatusResult.class);
 
         aggregationResults.getMappedResults().stream().forEach(p -> result.put(p.getId(), p.getCount()));
 
