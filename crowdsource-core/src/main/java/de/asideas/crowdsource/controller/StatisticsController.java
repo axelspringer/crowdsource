@@ -2,6 +2,7 @@ package de.asideas.crowdsource.controller;
 
 import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
+import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import de.asideas.crowdsource.service.StatisticsService;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,4 +32,10 @@ public class StatisticsController {
 
         return statisticsService.getCurrentStatistics(new TimeRangedStatisticsRequest(startDate, endDate));
     }
+
+    @RequestMapping(value = "/projects_per_status")
+    public List<BarChartStatisticsResult> getProjectsPerStatus () {
+        return statisticsService.getProjectsPerStatus();
+    }
+
 }

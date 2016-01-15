@@ -5,7 +5,8 @@
             <div class="panel">
                 <div class="row">
                     <div class="columns">
-                        <canvas class="chart chart-line" chart-data="data.chart.data" chart-labels="data.chart.labels" chart-legend="true" chart-series="data.chart.series"></canvas>
+                        <canvas class="chart chart-line" chart-data="data.chart.data" chart-labels="data.chart.labels" chart-legend="true" chart-series="data.chart.series" ng-if="data.chart.renderLine"></canvas>
+                        <canvas class="chart chart-pie" chart-data="data.chart.data" chart-labels="data.chart.labels" chart-legend="true" chart-series="data.chart.series" ng-if="data.chart.renderBar"></canvas>
                     </div>
                 </div>
             </div>
