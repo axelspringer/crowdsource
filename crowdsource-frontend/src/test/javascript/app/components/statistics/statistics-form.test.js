@@ -61,14 +61,16 @@ describe('statistics form', function () {
     it("should not show data pickers when PROJECT_PER_STATUS statistic type selected", function () {
         givenCompiledDirective();
         scope.$digest();
+
         expect(statisticsForm.getSelectsFormForTypeCurrent()).not.toExist();
+
+        $httpBackend.expectGET('/statistics/projects_per_status').respond(200, [{id: "BLA", name: "A_BLA_NAME", count: 2}, {id: "BLA_2", name: "A_BLA_NAME_2", count: 3}]);
 
         whenStatisticTypeSelected(STATISTICS_CONST.PAGES.PROJECT_SUM_PER_STATUS);
         scope.$digest();
-
+        $httpBackend.flush();
 
         expect(statisticsForm.getSelectsFormForTypeCurrent()).not.toExist();
-
     });
 
     it("should call backend when PROJECT_PER_STATUS statistic type selected", function () {
