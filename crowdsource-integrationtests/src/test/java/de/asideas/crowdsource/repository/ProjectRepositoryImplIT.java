@@ -42,7 +42,12 @@ public class ProjectRepositoryImplIT {
     @Before
     public void init() {
         if (projectCreator == null) {
-            projectCreator = userRepository.findAll().get(0);
+            List<UserEntity> allUsers = userRepository.findAll();
+            if (! allUsers.isEmpty()) {
+                projectCreator = allUsers.get(0);
+            } else {
+                projectCreator = userRepository.save(new UserEntity("test@crowdsource.de"));
+            }
         }
     }
 
