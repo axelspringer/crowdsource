@@ -2,14 +2,18 @@ package de.asideas.crowdsource.repository;
 
 import de.asideas.crowdsource.config.MongoDBConfig;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.EnumMap;
@@ -29,6 +33,18 @@ public class ProjectRepositoryImplIT {
 
     @Autowired
     ProjectRepository projectRepository;
+
+    @Autowired
+    UserRepository userRepository;
+
+    private UserEntity projectCreator;
+
+    @Before
+    public void init() {
+        if (projectCreator == null) {
+            projectCreator = userRepository.findAll().get(0);
+        }
+    }
 
     @Test
     public void sumProjectsGroupedByStatus_aggregation_returns_uptodate_data() {
@@ -53,6 +69,11 @@ public class ProjectRepositoryImplIT {
 
     @Test
     public void sumProjectsGroupedByStatus_aggregation_returns_unchanged_data() {
+        // Assure at least 1 project exists in db for each status to test.
+        givenProjectsWithStatus(1, PROPOSED);
+        givenProjectsWithStatus(1, FULLY_PLEDGED);
+        givenProjectsWithStatus(1, PUBLISHED);
+
         // Actually the aggregation should return same results as simply doing a count query for each separate status.
         Map<ProjectStatus, Long> initialCountsByStatus = getProjectCountsByStatus();
 
@@ -80,8 +101,10 @@ public class ProjectRepositoryImplIT {
     }
 
     private void givenProjectsWithStatus(int desiredProjectCount, ProjectStatus desiredStatus) {
+
         for (int i = 0; i < desiredProjectCount; i++) {
             ProjectEntity project = new ProjectEntity();
+            project.setCreator(projectCreator);
             project.setTitle("project from ProjectRepositoryImplIT idx" + i);
             project.setDescription("project from ProjectRepositoryImplIT idx" + i);
             project.setPledgeGoal(1000);
