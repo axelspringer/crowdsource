@@ -37,11 +37,12 @@ public class CommentRepositoryImplTest {
 
     @InjectMocks
     private CommentRepositoryImpl commentRepository;
+
     private DateTime startDate;
     private DateTime endDate;
 
     @Test
-    public void testSumCommentsGroupByCreatedDate_should_return_empty_linechart_instance_although_no_data_from_db() throws Exception {
+    public void sumCommentsGroupByCreatedDate_should_return_empty_linechart_instance_although_no_data_from_db() throws Exception {
         DateTime startDate = DateTime.now().minusDays(1);
         DateTime endDate = DateTime.now();
 
@@ -63,7 +64,7 @@ public class CommentRepositoryImplTest {
     }
 
     @Test
-    public void testSumCommentsGroupByCreatedDate_should_call_mongo_with_timerange_query() throws Exception {
+    public void sumCommentsGroupByCreatedDate_should_call_mongo_with_timerange_query() throws Exception {
         DateTime startDate = DateTime.now().minusDays(1);
         DateTime endDate = DateTime.now();
 
@@ -91,7 +92,7 @@ public class CommentRepositoryImplTest {
     }
 
     @Test
-    public void testSumCommentsGroupByCreatedDate_should_map_results_into_linechart_representation() {
+    public void sumCommentsGroupByCreatedDate_should_map_results_into_linechart_representation() {
         DateTime startDate = DateTime.now().minusDays(1);
         DateTime endDate = DateTime.now();
 
@@ -103,7 +104,7 @@ public class CommentRepositoryImplTest {
         Iterator mockIterator = mock(Iterator.class);
         when(mockedMapReduceResult.iterator()).thenReturn(mockIterator);
         CommentRepositoryImpl.ValueObject mockResult1 = new CommentRepositoryImpl.ValueObject("1453037072969", 3.0f);
-        CommentRepositoryImpl.ValueObject mockResult2 = new CommentRepositoryImpl.ValueObject("1452898800000", 1.0f);
+        CommentRepositoryImpl.ValueObject mockResult2 = new CommentRepositoryImpl.ValueObject("1452945600000", 1.0f);
 
         when(mockIterator.hasNext()).thenReturn(true, true, false);
         when(mockIterator.next()).thenReturn(mockResult1, mockResult2);
@@ -122,7 +123,7 @@ public class CommentRepositoryImplTest {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testSumCommentsGroupByCreatedDate_should_throw_exception_on_unparseable_data_from_db() {
+    public void sumCommentsGroupByCreatedDate_should_throw_exception_on_unparseable_data_from_db() {
         startDate = DateTime.now().minusDays(1);
         endDate = DateTime.now();
 

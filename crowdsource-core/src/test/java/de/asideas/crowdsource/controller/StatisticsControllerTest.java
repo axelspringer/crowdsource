@@ -1,6 +1,7 @@
 package de.asideas.crowdsource.controller;
 
 import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
+import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
 import de.asideas.crowdsource.service.StatisticsService;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -24,9 +25,10 @@ import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -50,7 +52,7 @@ public class StatisticsControllerTest {
     }
 
     @Test
-    public void getCurrentStatisticsResult_should_call_statistics_service() throws Exception {
+    public void getCurrentStatisticsResult_shouldCallStatisticsService() throws Exception {
         ArgumentCaptor<TimeRangedStatisticsRequest> argumentCaptor = ArgumentCaptor.forClass(TimeRangedStatisticsRequest.class);
         when(statisticsService.getCurrentStatistics(argumentCaptor.capture())).thenReturn(Collections.emptyList());
 
@@ -59,7 +61,6 @@ public class StatisticsControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .param("startDate", dateTimeString)
                 .param("endDate", dateTimeString))
-            .andDo(print())
             .andExpect(status().is(200));
 
         DateTime dateTime = DateTime.parse(dateTimeString).withZone(DateTimeZone.getDefault());
@@ -69,7 +70,7 @@ public class StatisticsControllerTest {
     }
 
     @Test
-    public void getProjectsPerStatus_should_call_statistics_service() throws Exception {
+    public void getProjectsPerStatus_shouldCallStatisticsService() throws Exception {
         when(statisticsService.getProjectsPerStatus()).thenReturn(Collections.emptyList());
 
         mockMvc.perform(get("/statistics/projects_per_status")
@@ -78,23 +79,21 @@ public class StatisticsControllerTest {
 
     }
 
-
     @Test
-    public void getSumComments_should_call_statistics_service() throws Exception {
-        ArgumentCaptor<TimeRangedStatisticsRequest> argumentCaptor = ArgumentCaptor.forClass(TimeRangedStatisticsRequest.class);
-        when(statisticsService.getCurrentStatistics(argumentCaptor.capture())).thenReturn(Collections.emptyList());
+    public void getSumComments_shouldCallStatisticsService() throws Exception {
+        ArgumentCaptor<TimeRangedStatisticsRequest> requestCaptor = ArgumentCaptor.forClass(TimeRangedStatisticsRequest.class);
+        when(statisticsService.getSumComments(requestCaptor.capture())).thenReturn(new LineChartStatisticsResult("test_res", Collections.emptyList()));
 
         final String dateTimeString = "2016-01-12T22:59:59.000Z";
         mockMvc.perform(get("/statistics/comments/sum")
                 .contentType(MediaType.APPLICATION_JSON)
                 .param("startDate", dateTimeString)
                 .param("endDate", dateTimeString))
-                .andDo(print())
                 .andExpect(status().is(200));
 
         DateTime dateTime = DateTime.parse(dateTimeString).withZone(DateTimeZone.getDefault());
-        assertThat(argumentCaptor.getValue().getStartDate(), is(dateTime.withTimeAtStartOfDay()));
-        assertThat(argumentCaptor.getValue().getEndDate(), is(dateTime.plusDays(1).withTimeAtStartOfDay()));
+        assertThat(requestCaptor.getValue().getStartDate(), is(dateTime.withTimeAtStartOfDay()));
+        assertThat(requestCaptor.getValue().getEndDate(), is(dateTime.plusDays(1).withTimeAtStartOfDay()));
 
     }
 
