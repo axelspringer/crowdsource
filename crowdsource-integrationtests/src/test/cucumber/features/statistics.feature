@@ -9,6 +9,7 @@ Feature: Crowdsource platform statistics
     |statistic-type                                           |
     | 'Anzahl Neuregistrieung / Neu eingereichte Ideen'       |
     | 'Projekte je Projektstatus'                             |
+    | 'Kommentare je Projekt'                                 |
 
 
 

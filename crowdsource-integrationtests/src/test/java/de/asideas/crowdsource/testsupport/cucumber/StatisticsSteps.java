@@ -5,10 +5,7 @@ import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
-import de.asideas.crowdsource.testsupport.pageobjects.statistics.CountUserRegistrationsAndNewProjects;
-import de.asideas.crowdsource.testsupport.pageobjects.statistics.ProjectsByStatus;
-import de.asideas.crowdsource.testsupport.pageobjects.statistics.StatisticsContainer;
-import de.asideas.crowdsource.testsupport.pageobjects.statistics.StatisticsPage;
+import de.asideas.crowdsource.testsupport.pageobjects.statistics.*;
 import de.asideas.crowdsource.testsupport.selenium.SeleniumWait;
 import de.asideas.crowdsource.testsupport.selenium.WebDriverProvider;
 import org.openqa.selenium.WebDriver;
@@ -68,6 +65,9 @@ public class StatisticsSteps {
             case "Projekte je Projektstatus":
                 verifyStatistic_projectsByStatus((ProjectsByStatus) currentStatisticsContainer);
                 break;
+            case "Kommentare je Projekt":
+                verifyStatistic_CountCommentOfProject((CommentCountByProject) currentStatisticsContainer);
+                break;
             default:
                 throw new IllegalArgumentException("Statistic type not supported: " + currentStatisticType);
         }
@@ -82,5 +82,10 @@ public class StatisticsSteps {
         assertThat(currentStatisticsContainer.startDateSelectionDisplayed(), is(true));
         assertThat(currentStatisticsContainer.endDateSelectionDisplayed(), is(true));
         assertThat(currentStatisticsContainer.resultContainerDisplayed(), is(true));
+    }
+
+    private void verifyStatistic_CountCommentOfProject(CommentCountByProject commentCountByProject) {
+        assertThat(commentCountByProject.projectCountDisplayed(), is(true));
+        assertThat(commentCountByProject.resultContainerDisplayed(), is(true));
     }
 }

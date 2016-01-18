@@ -38,6 +38,9 @@ public class StatisticsPage {
     @Autowired
     private ProjectsByStatus projectsByStatus;
 
+    @Autowired
+    private CommentCountByProject commentCountByProject;
+
     public void open(){
         webDriverProvider.provideDriver().get(urlProvider.applicationUrl() + "/#/statistics");
         waitForPageLoad();
@@ -59,6 +62,9 @@ public class StatisticsPage {
             case "Projekte je Projektstatus":
                 projectsByStatus.waitForPageload();
                 return projectsByStatus;
+            case "Kommentare je Projekt":
+                commentCountByProject.waitForPageload();
+                return commentCountByProject;
             default:
                 throw new IllegalArgumentException("Requested statistics type not supported: " + statisticType);
         }
