@@ -25,9 +25,7 @@ import java.util.Collections;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -97,7 +95,25 @@ public class StatisticsControllerTest {
 
     }
 
-    @EnableWebMvc
+    @Test
+    public void getCommentCountPerProject_should_call_service_with_default_project_count() throws Exception {
+        mockMvc.perform(get("/statistics/comment_count_per_project"))
+                .andExpect(status().is(200));
+
+        verify(statisticsService).getCommentsCountPerProject(5);
+    }
+
+    @Test
+    public void getCommentCountPerProject_should_call_service_honor_project_count_from_request() throws Exception {
+        mockMvc.perform(get("/statistics/comment_count_per_project").param("projectCount", "10"))
+                .andExpect(status().is(200));
+
+        verify(statisticsService).getCommentsCountPerProject(10);
+    }
+
+
+
+    @EnableWebMvc // this annotation is important to render all the http request converters
     @Configuration
     static class Config {
 

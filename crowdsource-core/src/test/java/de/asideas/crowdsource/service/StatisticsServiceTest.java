@@ -2,6 +2,7 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
+import de.asideas.crowdsource.service.statistics.CommentCountPerProjectAction;
 import de.asideas.crowdsource.service.statistics.CreatedProjectSumAction;
 import de.asideas.crowdsource.service.statistics.ProjectPerStatusSumAction;
 import de.asideas.crowdsource.service.statistics.RegisteredUserSumAction;
@@ -35,6 +36,9 @@ public class StatisticsServiceTest {
     @Mock
     private ProjectPerStatusSumAction projectPerStatusSumAction;
 
+    @Mock
+    private CommentCountPerProjectAction commentCountPerProjectAction;
+
     @Test
     public void getCurrentStatistics_should_callBothActionsToRetrieveData() throws Exception {
         final DateTime startDate = new DateTime();
@@ -56,5 +60,12 @@ public class StatisticsServiceTest {
         instance.getProjectsPerStatus();
 
         verify(projectPerStatusSumAction).getProjectsPerStatus();
+    }
+
+    @Test
+    public void getCommentsCountPerProject_should_call_action() throws Exception {
+        instance.getCommentsCountPerProject(5);
+
+        verify(commentCountPerProjectAction).getCommentCountPerProjectStatistic(5);
     }
 }
