@@ -86,7 +86,10 @@ public class CommentRepositoryIT {
         createComments(3, dayBefore);
         createComments(1, twoDaysBefore);
 
-        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(twoDaysBefore.withTimeAtStartOfDay(), today.plusDays(1).withTimeAtStartOfDay());
+        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(
+                twoDaysBefore.withTimeAtStartOfDay(),
+                today.plusDays(1).withTimeAtStartOfDay()
+        );
 
         LineChartStatisticsResult.LineChartEntry resultTwoDaysAgo = result.getData().get(0);
         LineChartStatisticsResult.LineChartEntry resultOneDayAgo = result.getData().get(1);
