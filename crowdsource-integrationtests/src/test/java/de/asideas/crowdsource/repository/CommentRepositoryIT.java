@@ -8,8 +8,8 @@ import de.asideas.crowdsource.presentation.statistics.results.LineChartStatistic
 import de.asideas.crowdsource.service.statistics.StatisticsActionUtil;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,13 +74,13 @@ public class CommentRepositoryIT {
     @Test
     public void sumCommentsGroupByCreatedDate_returns_same_as_count_per_day_sorted_by_day_ASC() {
 
-        DateTime today = DateTime.now();
+        DateTime today = DateTime.now(DateTimeZone.UTC);
         DateTime dayBefore = today.minusDays(1);
         DateTime twoDaysBefore = today.minusDays(2);
 
-        long commentsCreatedAtThisDay = getCountCommentsThisDay(today);
-        long commentsCreatedAtTheDayBefore = getCountCommentsThisDay(dayBefore);
-        long commentsCreatedAtTwoDaysAgo = getCountCommentsThisDay(twoDaysBefore);
+        long commentsCreatedAtThisDay = getCountCommentsAtDayOf(today);
+        long commentsCreatedAtTheDayBefore = getCountCommentsAtDayOf(dayBefore);
+        long commentsCreatedAtTwoDaysAgo = getCountCommentsAtDayOf(twoDaysBefore);
 
         createComments(5, today);
         createComments(3, dayBefore);
@@ -104,9 +104,33 @@ public class CommentRepositoryIT {
     }
 
     @Test
-    @Ignore
     public void sumCommentsGroupByCreatedDate_should_respect_timerange_bounds_inclusive () {
 
+        DateTime today = DateTime.now(DateTimeZone.UTC);
+        DateTime dayBefore = today.minusDays(1);
+        DateTime twoDaysBefore = today.minusDays(2);
+        DateTime threeDaysBefore = today.minusDays(3);
+
+        long commentsCreatedAt1DayAgo = getCountCommentsAtDayOf(dayBefore);
+        long commentsCreatedAt2DaysAgo = getCountCommentsAtDayOf(twoDaysBefore);
+
+        createComments(5, today);
+        createComments(3, dayBefore);
+        createComments(1, twoDaysBefore);
+        createComments(17, threeDaysBefore);
+
+        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(
+                twoDaysBefore.withTimeAtStartOfDay(),
+                twoDaysBefore.plusDays(2).withTimeAtStartOfDay()
+        );
+
+        LineChartStatisticsResult.LineChartEntry resultTwoDaysAgo = result.getData().get(0);
+        LineChartStatisticsResult.LineChartEntry resultOneDayAgo = result.getData().get(1);
+
+        assertThat(resultTwoDaysAgo.getLabel(), is(StatisticsActionUtil.formatDate(twoDaysBefore)));
+        assertThat(resultTwoDaysAgo.getData(), is(commentsCreatedAt2DaysAgo + 1));
+        assertThat(resultOneDayAgo.getLabel(), is(StatisticsActionUtil.formatDate(dayBefore)));
+        assertThat(resultOneDayAgo.getData(), is(commentsCreatedAt1DayAgo + 3));
     }
 
     private void createComments(int count, DateTime dateTime) {
@@ -122,7 +146,7 @@ public class CommentRepositoryIT {
         }
     }
 
-    private long getCountCommentsThisDay(DateTime date) {
+    private long getCountCommentsAtDayOf(DateTime date) {
         DateTime start = date.withTimeAtStartOfDay();
         DateTime end = date.plusDays(1).withTimeAtStartOfDay();
         Query dayCreatedQuery = Query.query(Criteria.where("createdDate").gte(start).lte(end));

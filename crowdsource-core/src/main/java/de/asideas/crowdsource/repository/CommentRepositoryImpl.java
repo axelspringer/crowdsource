@@ -11,8 +11,11 @@ import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static de.asideas.crowdsource.domain.model.CommentEntity.COLLECTION_NAME;
 
@@ -29,7 +32,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     @Override
     public List<BarChartStatisticsResult> countCommentsGroupByProject(int projectCount) {
 
-        final String map = "function(){ emit( this.project.$id , 1 ); } ";
+        final String map = "function(){ emit(this.project.$id , 1 ); } ";
         final String reduce = "function(key,values){ return values.length;}";
 
         MapReduceResults<KeyValuePair> results = mongoTemplate.mapReduce(COLLECTION_NAME, map, reduce, KeyValuePair.class);
@@ -41,17 +44,26 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
 
         Collections.sort(sortedList);
 
-        return sortedList.stream().limit(projectCount).map(b -> new BarChartStatisticsResult(
-                b.getId(),
-                mongoTemplate.findOne(new Query(Criteria.where("id").is(b.getId())), ProjectEntity.class).getTitle(),
-                b.getValue())).collect(Collectors.toList());
+        List<BarChartStatisticsResult> res = new ArrayList<>(projectCount);
+        for (KeyValuePair kv : sortedList) {
+            ProjectEntity project = mongoTemplate.findOne(new Query(Criteria.where("id").is(kv.getId())), ProjectEntity.class);
+
+            if (project != null) {
+                res.add(new BarChartStatisticsResult(kv.getId(), project.getTitle(), kv.getValue()));
+            }
+            if (res.size() >= projectCount) {
+                break;
+            }
+        }
+
+        return res;
     }
 
     @Override
     public LineChartStatisticsResult sumCommentsGroupByCreatedDate(DateTime startDate, DateTime endDate) {
         // Emit UTC millis (only year, month, week and day are taken into account) of createdDate as key
         // Value is set to 1 to sum up later (reduce)
-        String map  = "function () {  " +
+        String map = "function () {  " +
                 "   var day = Date.UTC(this.createdDate.getFullYear(), this.createdDate.getMonth(), this.createdDate.getDate()); " +
                 "   emit(day.toString(), 1); " +
                 "}";
@@ -60,7 +72,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
 
         Query filter = Query.query(Criteria.where("createdDate").gte(startDate).lte(endDate));
 
-        MapReduceResults<KeyValuePair> sumResults = mongoTemplate.mapReduce (
+        MapReduceResults<KeyValuePair> sumResults = mongoTemplate.mapReduce(
                 filter,
                 COLLECTION_NAME,
                 map,
@@ -79,15 +91,15 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
             try {
                 dateFromDbId = new DateTime(Long.parseLong(vo.getId()));
             } catch (NumberFormatException nfe) {
-                throw new IllegalStateException("MapReduce emitted wrong format for id / key field. Expected UTC millis." , nfe);
+                throw new IllegalStateException("MapReduce emitted wrong format for id / key field. Expected UTC millis.", nfe);
             }
 
-            results.put(StatisticsActionUtil.formatDate(dateFromDbId), Float.valueOf(vo.getValue()).longValue());
+            results.put(StatisticsActionUtil.formatDate(dateFromDbId), vo.getValue());
         }
 
         return new LineChartStatisticsResult(
-            CHART_NAME_SUM_COMMENTS,
-            results
+                CHART_NAME_SUM_COMMENTS,
+                results
         );
     }
 
