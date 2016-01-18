@@ -78,6 +78,26 @@ public class StatisticsControllerTest {
 
     }
 
+
+    @Test
+    public void getSumComments_should_call_statistics_service() throws Exception {
+        ArgumentCaptor<TimeRangedStatisticsRequest> argumentCaptor = ArgumentCaptor.forClass(TimeRangedStatisticsRequest.class);
+        when(statisticsService.getCurrentStatistics(argumentCaptor.capture())).thenReturn(Collections.emptyList());
+
+        final String dateTimeString = "2016-01-12T22:59:59.000Z";
+        mockMvc.perform(get("/statistics/comments/sum")
+                .contentType(MediaType.APPLICATION_JSON)
+                .param("startDate", dateTimeString)
+                .param("endDate", dateTimeString))
+                .andDo(print())
+                .andExpect(status().is(200));
+
+        DateTime dateTime = DateTime.parse(dateTimeString).withZone(DateTimeZone.getDefault());
+        assertThat(argumentCaptor.getValue().getStartDate(), is(dateTime.withTimeAtStartOfDay()));
+        assertThat(argumentCaptor.getValue().getEndDate(), is(dateTime.plusDays(1).withTimeAtStartOfDay()));
+
+    }
+
     @EnableWebMvc
     @Configuration
     static class Config {

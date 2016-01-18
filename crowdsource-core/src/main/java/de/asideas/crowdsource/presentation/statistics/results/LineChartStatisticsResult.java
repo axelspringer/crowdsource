@@ -3,6 +3,7 @@ package de.asideas.crowdsource.presentation.statistics.results;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class LineChartStatisticsResult {
 
@@ -12,9 +13,7 @@ public class LineChartStatisticsResult {
     public LineChartStatisticsResult(String name, Map<String, Long> rawdata) {
         this.name = name;
         data = new ArrayList<>();
-        for (Map.Entry<String, Long> entry : rawdata.entrySet()) {
-            data.add(new LineChartEntry(entry.getValue(), entry.getKey()));
-        }
+        data.addAll(rawdata.entrySet().stream().map(entry -> new LineChartEntry(entry.getValue(), entry.getKey())).collect(Collectors.toList()));
     }
 
     public String getName() {

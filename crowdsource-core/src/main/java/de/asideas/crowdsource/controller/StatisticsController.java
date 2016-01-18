@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -37,5 +38,13 @@ public class StatisticsController {
     public List<BarChartStatisticsResult> getProjectsPerStatus () {
         return statisticsService.getProjectsPerStatus();
     }
+
+    @RequestMapping(value = "/comments/sum", method = RequestMethod.GET)
+    public List<LineChartStatisticsResult> getSumComments(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)  DateTime startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) DateTime endDate) {
+        return Collections.singletonList(statisticsService.getSumComments(new TimeRangedStatisticsRequest(startDate, endDate)));
+    }
+
 
 }

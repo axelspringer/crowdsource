@@ -3,6 +3,7 @@ package de.asideas.crowdsource.service;
 import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
+import de.asideas.crowdsource.service.statistics.CommentSumAction;
 import de.asideas.crowdsource.service.statistics.CreatedProjectSumAction;
 import de.asideas.crowdsource.service.statistics.ProjectPerStatusSumAction;
 import de.asideas.crowdsource.service.statistics.RegisteredUserSumAction;
@@ -20,12 +21,14 @@ public class StatisticsService {
     private final CreatedProjectSumAction createdProjectSumAction;
     private final RegisteredUserSumAction registeredUserSumAction;
     private final ProjectPerStatusSumAction projectPerStatusSumAction;
+    private final CommentSumAction commentSumAction;
 
     @Autowired
-    public StatisticsService(CreatedProjectSumAction createdProjectSumAction, RegisteredUserSumAction registeredUserSumAction, ProjectPerStatusSumAction projectPerStatusSumAction) {
+    public StatisticsService(CreatedProjectSumAction createdProjectSumAction, RegisteredUserSumAction registeredUserSumAction, ProjectPerStatusSumAction projectPerStatusSumAction, CommentSumAction commentSumAction) {
         this.createdProjectSumAction = createdProjectSumAction;
         this.registeredUserSumAction = registeredUserSumAction;
         this.projectPerStatusSumAction = projectPerStatusSumAction;
+        this.commentSumAction = commentSumAction;
     }
 
     public List<LineChartStatisticsResult> getCurrentStatistics(TimeRangedStatisticsRequest request) {
@@ -40,5 +43,9 @@ public class StatisticsService {
 
     public List<BarChartStatisticsResult> getProjectsPerStatus() {
         return projectPerStatusSumAction.getProjectsPerStatus();
+    }
+
+    public LineChartStatisticsResult getSumComments(TimeRangedStatisticsRequest request) {
+        return commentSumAction.getSumComments(request);
     }
 }
