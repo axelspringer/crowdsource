@@ -28,13 +28,13 @@ public class StatisticsController {
 
     @RequestMapping(value = "/current", method = RequestMethod.GET)
     public List<LineChartStatisticsResult> getCurrentStatisticsResult(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)  DateTime startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) DateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) DateTime endDate) {
 
         return statisticsService.getCurrentStatistics(new TimeRangedStatisticsRequest(startDate, endDate));
     }
 
-    @RequestMapping(value = "/projects_per_status")
+    @RequestMapping(value = "/projects_per_status", method = RequestMethod.GET)
     public List<BarChartStatisticsResult> getProjectsPerStatus () {
         return statisticsService.getProjectsPerStatus();
     }
@@ -45,7 +45,7 @@ public class StatisticsController {
     }
     @RequestMapping(value = "/comments/sum", method = RequestMethod.GET)
     public List<LineChartStatisticsResult> getSumComments(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)  DateTime startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) DateTime startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) DateTime endDate) {
         return Collections.singletonList(statisticsService.getSumComments(new TimeRangedStatisticsRequest(startDate, endDate)));
     }

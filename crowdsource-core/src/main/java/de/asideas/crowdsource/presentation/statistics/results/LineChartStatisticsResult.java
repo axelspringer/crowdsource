@@ -10,10 +10,16 @@ public class LineChartStatisticsResult {
     private final String name;
     private final List<LineChartEntry> data;
 
+
+    public LineChartStatisticsResult(String name, List<LineChartEntry> data) {
+        this.name = name;
+        this.data = data;
+    }
+
     public LineChartStatisticsResult(String name, Map<String, Long> rawdata) {
         this.name = name;
-        data = new ArrayList<>();
-        data.addAll(rawdata.entrySet().stream().map(entry -> new LineChartEntry(entry.getValue(), entry.getKey())).collect(Collectors.toList()));
+        this.data = new ArrayList<>();
+        this.data.addAll(rawdata.entrySet().stream().map(entry -> new LineChartEntry(entry.getValue(), entry.getKey())).collect(Collectors.toList()));
     }
 
     public String getName() {

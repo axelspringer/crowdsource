@@ -37,6 +37,7 @@ public class CommentRepositoryImplTest {
 
     @InjectMocks
     private CommentRepositoryImpl commentRepository;
+
     private DateTime startDate;
     private DateTime endDate;
 
