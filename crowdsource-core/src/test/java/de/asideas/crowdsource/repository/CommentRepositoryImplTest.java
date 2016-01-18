@@ -103,7 +103,7 @@ public class CommentRepositoryImplTest {
         DateTime endDate = DateTime.now();
 
         CommentRepositoryImpl.KeyValuePair mockResult1 = new CommentRepositoryImpl.KeyValuePair("1453037072969", 3L);
-        CommentRepositoryImpl.KeyValuePair mockResult2 = new CommentRepositoryImpl.KeyValuePair("1452898800000", 1L);
+        CommentRepositoryImpl.KeyValuePair mockResult2 = new CommentRepositoryImpl.KeyValuePair("1452945600000", 1L);
 
         when(mockIterator.hasNext()).thenReturn(true, true, false);
         when(mockIterator.next()).thenReturn(mockResult1, mockResult2);

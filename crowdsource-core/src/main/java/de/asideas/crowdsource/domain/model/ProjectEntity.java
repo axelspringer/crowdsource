@@ -68,8 +68,13 @@ public class ProjectEntity {
         this.attachments = new ArrayList<>();
     }
 
+    @Deprecated
+    /**
+     * @deprecated DO NOT use this one, due to this causes problems in ATs, violating this model's constraints!
+     */
     public ProjectEntity() {
         this.attachments = new ArrayList<>();
+        this.status = ProjectStatus.PROPOSED;
     }
 
     /**
