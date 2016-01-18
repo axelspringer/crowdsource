@@ -31,16 +31,17 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
                 ), ProjectPerStatusResult.class);
 
         return aggregationResults.getMappedResults().stream()
-                .map(r -> new BarChartStatisticsResult(r.getId().name(), r.getId().getDisplayName(), r.getCount()))
+                .map(res -> new BarChartStatisticsResult(res.getId().name(), res.getId().getDisplayName(), res.getCount()))
                 .collect(Collectors.toList());
     }
 
     static class ProjectPerStatusResult {
 
         private ProjectStatus id;
-
         private Long count;
 
+        private ProjectPerStatusResult() {
+        }
         public ProjectPerStatusResult(ProjectStatus id, Long count) {
             this.id = id;
             this.count = count;
@@ -49,7 +50,6 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
         public ProjectStatus getId() {
             return id;
         }
-
         public Long getCount() {
             return count;
         }

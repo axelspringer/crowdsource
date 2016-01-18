@@ -43,7 +43,6 @@ public class CommentRepositoryIT {
     private MongoTemplate mongoTemplate;
 
     private UserEntity commentedBy;
-
     private ProjectEntity commentCreatedFor;
 
     @Before
