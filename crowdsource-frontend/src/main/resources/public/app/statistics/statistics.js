@@ -37,6 +37,20 @@ angular.module('crowdsource')
                 label: "Kommentare je Projekt",
                 name: "COMMENT_SUM_PER_PROJECT"
             }
+        },
+        COUNT: {
+            THREE: {
+                label: "Drei",
+                value: 3
+            },
+            FIVE: {
+                label: "Fünf",
+                value: 5
+            },
+            TEN: {
+                label: "Zehn",
+                value: 10
+            },
 
         }
     })
@@ -47,6 +61,8 @@ angular.module('crowdsource')
             availablePageOptions: STATISTICS_CONST.PAGES,
             availableTimePrecisionTypeOptions: STATISTICS_CONST.TIME_PRECISION_TYPE,
             timePrecision: STATISTICS_CONST.TIME_PRECISION_TYPE.DAY,
-            statisticType: STATISTICS_CONST.PAGES.NONE
+            statisticType: STATISTICS_CONST.PAGES.NONE,
+            availableProjectCount: STATISTICS_CONST.COUNT,
+            projectCount: STATISTICS_CONST.COUNT.FIVE
         };
     });

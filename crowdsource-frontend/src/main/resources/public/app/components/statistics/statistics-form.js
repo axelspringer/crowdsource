@@ -88,7 +88,7 @@ angular.module('crowdsource')
                             function () {RESPONSE_HANDLERS.defaultErrorHandler(vm);}
                         );
                     } else if (vm.data.statisticType.name === STATISTICS_CONST.PAGES.COMMENT_SUM_PER_PROJECT.name) {
-                        Statistics.getCommentCountPerProject().then(
+                        Statistics.getCommentCountPerProject({projectCount: vm.data.projectCount.value}).then(
                             function (response) {RESPONSE_HANDLERS.commentsPerProjectResponseHandler(vm, response)},
                             function () {RESPONSE_HANDLERS.defaultErrorHandler(vm);}
                         );
@@ -112,6 +112,15 @@ angular.module('crowdsource')
                     return vm.data.statisticType !== undefined
                         && STATISTICS_CONST.PAGES.CURRENT.name === vm.data.statisticType.name;
                 };
+
+                vm.shouldShowCountPicker = function () {
+                    return vm.data.projectCount !== undefined
+                        && STATISTICS_CONST.PAGES.COMMENT_SUM_PER_PROJECT.name === vm.data.statisticType.name;
+                };
+
+                vm.statisticsProjectCountChangeHandler = function () {
+                    vm.statisticTypeChanged(vm);
+                }
             }
         };
     });

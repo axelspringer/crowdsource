@@ -91,6 +91,21 @@ describe('statistics form', function () {
 
     });
 
+    it("should show count picker when COMMENT_SUM_PER_PROJECT statistic type selected", function () {
+        givenCompiledDirective();
+        scope.$digest();
+        expect(statisticsForm.getSelectsFormForTypeCountPerProject()).not.toExist();
+
+        compiledDirective.isolateScope().data.projectCount = {label: 'whatever', value: 20};
+
+        $httpBackend.expectGET('/statistics/comment_count_per_project?projectCount=20').respond(200);
+
+        whenStatisticTypeSelected(STATISTICS_CONST.PAGES.COMMENT_SUM_PER_PROJECT);
+        scope.$digest();
+
+        expect(statisticsForm.getSelectsFormForTypeCountPerProject()).toExist();
+    });
+
     function givenCompiledDirective() {
         compiledDirective = $compile('<statistics-form data="data"></statistics-form>')(scope);
         statisticsForm = new StatisticsForm(compiledDirective);
@@ -109,9 +124,4 @@ describe('statistics form', function () {
         compiledDirective.isolateScope().data.statisticType = type;
         compiledDirective.isolateScope().statisticTypeChanged();
     };
-
-    function whenStartDateChanged(newDate) {
-        compiledDirective.isolateScope().data.startDate = newDate;
-    }
-
 });

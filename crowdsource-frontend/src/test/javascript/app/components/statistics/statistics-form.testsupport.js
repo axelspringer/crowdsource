@@ -12,6 +12,10 @@ function StatisticsForm(element) {
         return element.find(".statistics-form-current");
     };
 
+    this.getSelectsFormForTypeCountPerProject = function () {
+        return element.find(".statistics-form-comments-per-project");
+    };
+
     this.getAlertBox = function () {
         return element.find('.alert-box__statistics');
     };
