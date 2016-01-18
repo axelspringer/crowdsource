@@ -9,11 +9,11 @@ import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.EnumMap;
@@ -31,6 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @IntegrationTest
 public class ProjectRepositoryImplIT {
 
+    private static final Logger log = LoggerFactory.getLogger(ProjectRepositoryImplIT.class);
     @Autowired
     ProjectRepository projectRepository;
 
@@ -41,6 +42,7 @@ public class ProjectRepositoryImplIT {
 
     @Before
     public void init() {
+        projectRepository.deleteAll();
         if (projectCreator == null) {
             List<UserEntity> allUsers = userRepository.findAll();
             if (! allUsers.isEmpty()) {
@@ -63,6 +65,9 @@ public class ProjectRepositoryImplIT {
         givenProjectsWithStatus(addProposed, PROPOSED);
         givenProjectsWithStatus(addPledged, FULLY_PLEDGED);
         givenProjectsWithStatus(addPublished, PUBLISHED);
+
+        log.info("|-- ALL PROJECTS CURRENTLY IN REPO: ");
+        projectRepository.findAll().stream().forEach(e -> log.info(" -- " + e));
 
         List<BarChartStatisticsResult> aggregationResult = projectRepository.sumProjectsGroupedByStatus();
 
