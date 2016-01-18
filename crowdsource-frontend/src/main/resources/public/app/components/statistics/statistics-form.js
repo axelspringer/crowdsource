@@ -51,6 +51,11 @@ angular.module('crowdsource')
                 initChartData(vm);
                 prepareDataForBarChart(vm);
             },
+            commentsPerProjectResponseHandler : function (vm, response) {
+                vm.data.statisticsResponse = response;
+                initChartData(vm);
+                prepareDataForBarChart(vm);
+            },
             defaultErrorHandler : function (vm) {
                 vm.data.info = "Ooooops! Da ist etwas schief gelaufen!";
             }
@@ -78,8 +83,13 @@ angular.module('crowdsource')
                             function () {RESPONSE_HANDLERS.defaultErrorHandler(vm);}
                         );
                     } else if (vm.data.statisticType.name === STATISTICS_CONST.PAGES.PROJECT_SUM_PER_STATUS.name) {
-                        Statistics.getProjectsPerStatus({startDate: vm.data.startDate, endDate: vm.data.endDate}).then(
+                        Statistics.getProjectsPerStatus().then(
                             function (response) {RESPONSE_HANDLERS.projectsPerStatusResponseHandler(vm, response)},
+                            function () {RESPONSE_HANDLERS.defaultErrorHandler(vm);}
+                        );
+                    } else if (vm.data.statisticType.name === STATISTICS_CONST.PAGES.COMMENT_SUM_PER_PROJECT.name) {
+                        Statistics.getCommentCountPerProject().then(
+                            function (response) {RESPONSE_HANDLERS.commentsPerProjectResponseHandler(vm, response)},
                             function () {RESPONSE_HANDLERS.defaultErrorHandler(vm);}
                         );
                     }

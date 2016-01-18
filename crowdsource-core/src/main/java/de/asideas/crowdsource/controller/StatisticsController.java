@@ -39,6 +39,10 @@ public class StatisticsController {
         return statisticsService.getProjectsPerStatus();
     }
 
+    @RequestMapping(value = "/comment_count_per_project")
+    public List<BarChartStatisticsResult> getCommentCountPerProject (@RequestParam(defaultValue = "5") int projectCount) {
+        return statisticsService.getCommentsCountPerProject(projectCount);
+    }
     @RequestMapping(value = "/comments/sum", method = RequestMethod.GET)
     public List<LineChartStatisticsResult> getSumComments(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)  DateTime startDate,

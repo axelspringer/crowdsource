@@ -32,6 +32,10 @@ angular.module('crowdsource')
             PROJECT_SUM_PER_STATUS: {
                 label: "Projekte je Projektstatus",
                 name: "PROJECT_SUM_PER_STATUS"
+            },
+            COMMENT_SUM_PER_PROJECT: {
+                label: "Kommentare je Projekt",
+                name: "COMMENT_SUM_PER_PROJECT"
             }
 
         }

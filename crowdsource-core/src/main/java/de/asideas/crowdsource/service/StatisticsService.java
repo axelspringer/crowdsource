@@ -4,6 +4,7 @@ import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatist
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
 import de.asideas.crowdsource.service.statistics.CommentSumAction;
+import de.asideas.crowdsource.service.statistics.CommentCountPerProjectAction;
 import de.asideas.crowdsource.service.statistics.CreatedProjectSumAction;
 import de.asideas.crowdsource.service.statistics.ProjectPerStatusSumAction;
 import de.asideas.crowdsource.service.statistics.RegisteredUserSumAction;
@@ -22,13 +23,15 @@ public class StatisticsService {
     private final RegisteredUserSumAction registeredUserSumAction;
     private final ProjectPerStatusSumAction projectPerStatusSumAction;
     private final CommentSumAction commentSumAction;
+    private final CommentCountPerProjectAction commentCountPerProjectAction;
 
     @Autowired
-    public StatisticsService(CreatedProjectSumAction createdProjectSumAction, RegisteredUserSumAction registeredUserSumAction, ProjectPerStatusSumAction projectPerStatusSumAction, CommentSumAction commentSumAction) {
+    public StatisticsService(CreatedProjectSumAction createdProjectSumAction, RegisteredUserSumAction registeredUserSumAction, ProjectPerStatusSumAction projectPerStatusSumAction, CommentSumAction commentSumAction, CommentCountPerProjectAction commentCountPerProjectAction) {
         this.createdProjectSumAction = createdProjectSumAction;
         this.registeredUserSumAction = registeredUserSumAction;
         this.projectPerStatusSumAction = projectPerStatusSumAction;
         this.commentSumAction = commentSumAction;
+        this.commentCountPerProjectAction = commentCountPerProjectAction;
     }
 
     public List<LineChartStatisticsResult> getCurrentStatistics(TimeRangedStatisticsRequest request) {
@@ -47,5 +50,9 @@ public class StatisticsService {
 
     public LineChartStatisticsResult getSumComments(TimeRangedStatisticsRequest request) {
         return commentSumAction.getSumComments(request);
+    }
+
+    public List<BarChartStatisticsResult> getCommentsCountPerProject(int projectCount) {
+        return commentCountPerProjectAction.getCommentCountPerProjectStatistic(projectCount);
     }
 }
