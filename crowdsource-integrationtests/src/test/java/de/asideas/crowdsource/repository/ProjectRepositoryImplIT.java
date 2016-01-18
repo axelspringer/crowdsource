@@ -42,7 +42,6 @@ public class ProjectRepositoryImplIT {
 
     @Before
     public void init() {
-        projectRepository.deleteAll();
         if (projectCreator == null) {
             List<UserEntity> allUsers = userRepository.findAll();
             if (! allUsers.isEmpty()) {
