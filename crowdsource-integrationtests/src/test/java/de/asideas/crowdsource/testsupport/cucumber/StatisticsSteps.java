@@ -68,6 +68,9 @@ public class StatisticsSteps {
             case "Kommentare je Projekt":
                 verifyStatistic_CountCommentOfProject((CommentCountByProject) currentStatisticsContainer);
                 break;
+            case "Anzahl Kommentare":
+                verifyStatistic_CountCommentOfDateRange((CommentCountByDateRange) currentStatisticsContainer);
+                break;
             default:
                 throw new IllegalArgumentException("Statistic type not supported: " + currentStatisticType);
         }
@@ -87,5 +90,11 @@ public class StatisticsSteps {
     private void verifyStatistic_CountCommentOfProject(CommentCountByProject commentCountByProject) {
         assertThat(commentCountByProject.projectCountDisplayed(), is(true));
         assertThat(commentCountByProject.resultContainerDisplayed(), is(true));
+    }
+
+    private void verifyStatistic_CountCommentOfDateRange(CommentCountByDateRange commentCountByDateRange) {
+        assertThat(commentCountByDateRange.startDateSelectionDisplayed(), is(true));
+        assertThat(commentCountByDateRange.endDateSelectionDisplayed(), is(true));
+        assertThat(commentCountByDateRange.resultContainerDisplayed(), is(true));
     }
 }
