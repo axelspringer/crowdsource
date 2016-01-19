@@ -6,7 +6,9 @@ import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
+import de.asideas.crowdsource.service.statistics.StatisticsActionUtil;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,23 +64,28 @@ public class CommentRepositoryImplTest {
     }
 
     @Test
-    public void sumCommentsGroupByCreatedDate_should_return_empty_linechart_instance_although_no_data_from_db() throws Exception {
-        DateTime startDate = DateTime.now().minusDays(1);
-        DateTime endDate = DateTime.now();
+    public void sumCommentsGroupByCreatedDate_no_data_from_DB_should_return_linechart_instance_with_dates_of_timespan_and_zeros() throws Exception {
+        DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(1);
+        DateTime endDate = DateTime.now(DateTimeZone.UTC);
 
-        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(new TimeRangedStatisticsRequest(startDate, endDate));
+        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(
+                new TimeRangedStatisticsRequest(startDate, endDate));
 
         // Verify empty result generation for empty data from db.
         verify(mockIterator).hasNext();
 
         assertThat(result.getName(), is(CHART_NAME_SUM_COMMENTS));
-        assertThat(result.getData().size(), is(0));
+        assertThat(result.getData().size(), is(2));
+        assertThat(result.getData().get(0).getLabel(), is(StatisticsActionUtil.formatDate(startDate)));
+        assertThat(result.getData().get(0).getData(), is(0L));
+        assertThat(result.getData().get(1).getLabel(), is(StatisticsActionUtil.formatDate(endDate)));
+        assertThat(result.getData().get(1).getData(), is(0L));
     }
 
     @Test
     public void sumCommentsGroupByCreatedDate_should_call_mongo_with_timerange_query() throws Exception {
-        DateTime startDate = DateTime.now().minusDays(1);
-        DateTime endDate = DateTime.now();
+        DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(1);
+        DateTime endDate = DateTime.now(DateTimeZone.UTC);
 
         ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 
@@ -94,32 +101,50 @@ public class CommentRepositoryImplTest {
         BasicDBObject createdDateFromQuery = (BasicDBObject) capturedQuery.get("createdDate");
         assertThat(createdDateFromQuery.get("$gte"), instanceOf(DateTime.class));
         assertThat(createdDateFromQuery.get("$lte"), instanceOf(DateTime.class));
-        assertThat(createdDateFromQuery.get("$gte"), is(startDate));
-        assertThat(createdDateFromQuery.get("$lte"), is(endDate));
+        assertThat( ((DateTime) createdDateFromQuery.get("$gte")).getMillis(), is(startDate.withTimeAtStartOfDay().getMillis()));
+        assertThat( ((DateTime) createdDateFromQuery.get("$lte")).getMillis(), is(endDate.withTimeAtStartOfDay().plusDays(1).getMillis()));
     }
 
     @Test
-    public void sumCommentsGroupByCreatedDate_should_map_results_into_linechart_representation() {
-        DateTime startDate = DateTime.now().minusDays(1);
-        DateTime endDate = DateTime.now();
+    public void sumCommentsGroupByCreatedDate_should_map_results_into_linechart_representation_and_fillNonDefinedDays() {
+        // GIVEN
+        DateTime startDate = DateTime.now(DateTimeZone.UTC).minusDays(5);
+        DateTime existingResDate_0 = startDate.plusDays(1);
+        DateTime existingResDate_1 = startDate.plusDays(3);
+        DateTime endDate = DateTime.now(DateTimeZone.UTC);
 
-        CommentRepositoryImpl.KeyValuePair mockResult1 = new CommentRepositoryImpl.KeyValuePair("1453037072969", 3L);
-        CommentRepositoryImpl.KeyValuePair mockResult2 = new CommentRepositoryImpl.KeyValuePair("1452945600000", 1L);
+        CommentRepositoryImpl.KeyValuePair mockResult1 = new CommentRepositoryImpl.KeyValuePair("" + existingResDate_0.getMillis(), 3L);
+        CommentRepositoryImpl.KeyValuePair mockResult2 = new CommentRepositoryImpl.KeyValuePair("" + existingResDate_1.getMillis(), 1L);
 
+        // WHEN
         when(mockIterator.hasNext()).thenReturn(true, true, false);
         when(mockIterator.next()).thenReturn(mockResult1, mockResult2);
-
         LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(new TimeRangedStatisticsRequest(startDate, endDate));
 
+        // THEN
         verify(mockIterator, times(3)).hasNext();
         verify(mockIterator, times(2)).next();
 
         assertThat(result.getName(), is(CHART_NAME_SUM_COMMENTS));
-        assertThat(result.getData().size(), is(2));
-        assertThat(result.getData().get(0).getLabel(), is("2016-01-17"));
-        assertThat(result.getData().get(0).getData(), is(3L));
-        assertThat(result.getData().get(1).getLabel(), is("2016-01-16"));
-        assertThat(result.getData().get(1).getData(), is(1L));
+        assertThat(result.getData().size(), is(6));
+
+        // Verify all intermediate dates set in result
+        assertThat(result.getData().get(0).getLabel(), is(StatisticsActionUtil.formatDate(startDate)));
+        assertThat(result.getData().get(1).getLabel(), is(StatisticsActionUtil.formatDate(existingResDate_0)));
+        assertThat(result.getData().get(2).getLabel(), is(StatisticsActionUtil.formatDate(existingResDate_0.plusDays(1))));
+        assertThat(result.getData().get(3).getLabel(), is(StatisticsActionUtil.formatDate(existingResDate_1)));
+        assertThat(result.getData().get(4).getLabel(), is(StatisticsActionUtil.formatDate(existingResDate_1.plusDays(1))));
+        assertThat(result.getData().get(5).getLabel(), is(StatisticsActionUtil.formatDate(endDate)));
+
+        // Verify expected, existing results
+        assertThat(result.getData().get(1).getData(), is(mockResult1.getValue()));
+        assertThat(result.getData().get(3).getData(), is(mockResult2.getValue()));
+        // Verify expected, filled results
+        assertThat(result.getData().get(0).getData(), is(0L));
+        assertThat(result.getData().get(2).getData(), is(0L));
+        assertThat(result.getData().get(4).getData(), is(0L));
+        assertThat(result.getData().get(5).getData(), is(0L));
+
     }
 
     @Test(expected = IllegalStateException.class)

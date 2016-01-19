@@ -6,6 +6,7 @@ import de.asideas.crowdsource.presentation.statistics.results.BarChartStatistics
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
 import de.asideas.crowdsource.service.statistics.StatisticsActionUtil;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
@@ -90,7 +91,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
         for (KeyValuePair vo : sumResults) {
             DateTime dateFromDbId;
             try {
-                dateFromDbId = new DateTime(Long.parseLong(vo.getId()));
+                dateFromDbId = new DateTime(Long.parseLong(vo.getId()), DateTimeZone.UTC);
             } catch (NumberFormatException nfe) {
                 throw new IllegalStateException("MapReduce emitted wrong format for id / key field. Expected UTC millis.", nfe);
             }

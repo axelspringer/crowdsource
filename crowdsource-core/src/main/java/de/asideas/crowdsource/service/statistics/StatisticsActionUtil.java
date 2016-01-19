@@ -35,7 +35,7 @@ public final class StatisticsActionUtil {
         isTrue(defaultMap.size() >= mapToFill.size(), "default map should not have less element than mapToFill, so that the result should contain all the elements of both maps");
         final Map<String, Long> resultMap = new LinkedHashMap<>();
 
-        // merging default map and map from db to fill up days, which no data exists
+        // merging default map and map from db to fill up days, for which no data exists
         defaultMap.forEach((k, v) -> resultMap.merge(k, v, Long::max));
         mapToFill.forEach((k, v) -> resultMap.merge(k, v, Long::max));
 
