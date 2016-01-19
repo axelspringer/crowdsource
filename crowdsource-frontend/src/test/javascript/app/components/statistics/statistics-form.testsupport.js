@@ -9,7 +9,7 @@ function StatisticsForm(element) {
     };
 
     this.getSelectsFormForTypeCurrent = function () {
-        return element.find(".statistics-form-current");
+        return element.find(".statistics-form-datepicker");
     };
 
     this.getSelectsFormForTypeCountPerProject = function () {

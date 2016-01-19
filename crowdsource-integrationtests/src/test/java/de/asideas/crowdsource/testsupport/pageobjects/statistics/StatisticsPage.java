@@ -41,6 +41,9 @@ public class StatisticsPage {
     @Autowired
     private CommentCountByProject commentCountByProject;
 
+    @Autowired
+    private CommentCountByDateRange commentCountByDateRange;
+
     public void open(){
         webDriverProvider.provideDriver().get(urlProvider.applicationUrl() + "/#/statistics");
         waitForPageLoad();
@@ -65,6 +68,9 @@ public class StatisticsPage {
             case "Kommentare je Projekt":
                 commentCountByProject.waitForPageload();
                 return commentCountByProject;
+            case "Anzahl Kommentare":
+                commentCountByDateRange.waitForPageload();
+                return commentCountByDateRange;
             default:
                 throw new IllegalArgumentException("Requested statistics type not supported: " + statisticType);
         }
