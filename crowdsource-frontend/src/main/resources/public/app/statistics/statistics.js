@@ -36,19 +36,23 @@ angular.module('crowdsource')
             COMMENT_SUM_PER_PROJECT: {
                 label: "Kommentare je Projekt",
                 name: "COMMENT_SUM_PER_PROJECT"
+            },
+            COMMENT_SUM: {
+                label: "Anzahl Kommentare",
+                name: "COMMENT_SUM"
             }
         },
         COUNT: {
             THREE: {
-                label: "Drei",
+                label: "Top Drei",
                 value: 3
             },
             FIVE: {
-                label: "Fünf",
+                label: "Top Fünf",
                 value: 5
             },
             TEN: {
-                label: "Zehn",
+                label: "Top Zehn",
                 value: 10
             },
 

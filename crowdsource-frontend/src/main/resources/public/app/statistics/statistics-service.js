@@ -14,5 +14,10 @@ angular.module('crowdsource')
         service.getCommentCountPerProject = function (data) {
             return $resource("/statistics/comment_count_per_project").query(data).$promise;
         };
+
+        service.getSumComments = function (data) {
+            return $resource("/statistics/comments/sum").query(data).$promise;
+        };
+
         return service;
     });

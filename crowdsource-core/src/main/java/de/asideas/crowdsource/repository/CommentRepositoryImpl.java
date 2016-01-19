@@ -1,6 +1,7 @@
 package de.asideas.crowdsource.repository;
 
 import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
 import de.asideas.crowdsource.service.statistics.StatisticsActionUtil;
@@ -60,7 +61,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
     }
 
     @Override
-    public LineChartStatisticsResult sumCommentsGroupByCreatedDate(DateTime startDate, DateTime endDate) {
+    public LineChartStatisticsResult sumCommentsGroupByCreatedDate(TimeRangedStatisticsRequest request) {
         // Emit UTC millis (only year, month, week and day are taken into account) of createdDate as key
         // Value is set to 1 to sum up later (reduce)
         String map = "function () {  " +
@@ -70,7 +71,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
         // Reduce all the values for one "key" (for details about key, see above) by summing up each value.
         final String reduce = "function(key,values){ return values.length;}";
 
-        Query filter = Query.query(Criteria.where("createdDate").gte(startDate).lte(endDate));
+        Query filter = Query.query(Criteria.where("createdDate").gte(request.getStartDate()).lte(request.getEndDate()));
 
         MapReduceResults<KeyValuePair> sumResults = mongoTemplate.mapReduce(
                 filter,
@@ -80,10 +81,10 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
                 KeyValuePair.class
         );
 
-        return toLineChartStatisticsResult(sumResults);
+        return toLineChartStatisticsResult(sumResults, request);
     }
 
-    private LineChartStatisticsResult toLineChartStatisticsResult(MapReduceResults<KeyValuePair> sumResults) {
+    private LineChartStatisticsResult toLineChartStatisticsResult(MapReduceResults<KeyValuePair> sumResults, TimeRangedStatisticsRequest request) {
         Map<String, Long> results = new LinkedHashMap<>();
 
         for (KeyValuePair vo : sumResults) {
@@ -99,7 +100,7 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom {
 
         return new LineChartStatisticsResult(
                 CHART_NAME_SUM_COMMENTS,
-                results
+                StatisticsActionUtil.fillMap(StatisticsActionUtil.getDefaultMap(request), results)
         );
     }
 

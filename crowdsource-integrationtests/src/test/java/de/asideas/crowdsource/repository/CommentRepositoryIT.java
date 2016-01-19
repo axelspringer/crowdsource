@@ -4,6 +4,7 @@ import de.asideas.crowdsource.config.MongoDBConfig;
 import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
 import de.asideas.crowdsource.service.statistics.StatisticsActionUtil;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
@@ -87,9 +88,8 @@ public class CommentRepositoryIT {
         createComments(1, twoDaysBefore);
 
         LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(
-                twoDaysBefore.withTimeAtStartOfDay(),
-                today.plusDays(1).withTimeAtStartOfDay()
-        );
+                new TimeRangedStatisticsRequest(twoDaysBefore.withTimeAtStartOfDay(),
+                today.plusDays(1).withTimeAtStartOfDay()));
 
         LineChartStatisticsResult.LineChartEntry resultTwoDaysAgo = result.getData().get(0);
         LineChartStatisticsResult.LineChartEntry resultOneDayAgo = result.getData().get(1);
@@ -120,9 +120,8 @@ public class CommentRepositoryIT {
         createComments(17, threeDaysBefore);
 
         LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(
-                twoDaysBefore.withTimeAtStartOfDay(),
-                twoDaysBefore.plusDays(2).withTimeAtStartOfDay()
-        );
+                new TimeRangedStatisticsRequest(twoDaysBefore.withTimeAtStartOfDay(),
+                twoDaysBefore.plusDays(2).withTimeAtStartOfDay()));
 
         LineChartStatisticsResult.LineChartEntry resultTwoDaysAgo = result.getData().get(0);
         LineChartStatisticsResult.LineChartEntry resultOneDayAgo = result.getData().get(1);

@@ -56,6 +56,11 @@ angular.module('crowdsource')
                 initChartData(vm);
                 prepareDataForBarChart(vm);
             },
+            sumCommentsResponseHandler : function (vm, response) {
+                vm.data.statisticsResponse = response;
+                initChartData(vm);
+                prepareDataForLineChart(vm);
+            },
             defaultErrorHandler : function (vm) {
                 vm.data.info = "Ooooops! Da ist etwas schief gelaufen!";
             }
@@ -92,6 +97,14 @@ angular.module('crowdsource')
                             function (response) {RESPONSE_HANDLERS.commentsPerProjectResponseHandler(vm, response)},
                             function () {RESPONSE_HANDLERS.defaultErrorHandler(vm);}
                         );
+                    } else if (vm.data.statisticType.name === STATISTICS_CONST.PAGES.COMMENT_SUM.name) {
+                        vm.data.startDate = sanitizeStartDate(vm);
+                        vm.data.endDate = sanitizeEndDate(vm);
+
+                        Statistics.getSumComments({startDate: vm.data.startDate, endDate: vm.data.endDate}).then(
+                            function (response) {RESPONSE_HANDLERS.sumCommentsResponseHandler(vm, response)},
+                            function () {RESPONSE_HANDLERS.defaultErrorHandler(vm);}
+                        );
                     }
                 };
 
@@ -110,7 +123,8 @@ angular.module('crowdsource')
 
                 vm.shouldShowDatePickerWithPrecision = function () {
                     return vm.data.statisticType !== undefined
-                        && STATISTICS_CONST.PAGES.CURRENT.name === vm.data.statisticType.name;
+                        && STATISTICS_CONST.PAGES.CURRENT.name === vm.data.statisticType.name
+                        && STATISTICS_CONST.PAGES.COMMENT_SUM.name === vm.data.statisticType.name;
                 };
 
                 vm.shouldShowCountPicker = function () {

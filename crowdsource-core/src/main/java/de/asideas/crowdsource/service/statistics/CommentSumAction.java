@@ -6,8 +6,6 @@ import de.asideas.crowdsource.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 @Service
 public class CommentSumAction {
 
@@ -19,7 +17,7 @@ public class CommentSumAction {
     }
 
     public LineChartStatisticsResult getSumComments(TimeRangedStatisticsRequest request) {
-        return commentRepository.sumCommentsGroupByCreatedDate(request.getStartDate(), request.getEndDate());
+        return commentRepository.sumCommentsGroupByCreatedDate(request);
     }
 
 }

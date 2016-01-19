@@ -3,6 +3,7 @@ package de.asideas.crowdsource.repository;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
 import org.joda.time.DateTime;
@@ -65,7 +66,7 @@ public class CommentRepositoryImplTest {
         DateTime startDate = DateTime.now().minusDays(1);
         DateTime endDate = DateTime.now();
 
-        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(startDate, endDate);
+        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(new TimeRangedStatisticsRequest(startDate, endDate));
 
         // Verify empty result generation for empty data from db.
         verify(mockIterator).hasNext();
@@ -84,7 +85,7 @@ public class CommentRepositoryImplTest {
         when(mongoTemplate.mapReduce(captor.capture(), eq(COLLECTION_NAME), anyString(), anyString(), eq(CommentRepositoryImpl.KeyValuePair.class)))
                 .thenReturn(mockedMapReduceResult);
 
-        commentRepository.sumCommentsGroupByCreatedDate(startDate, endDate);
+        commentRepository.sumCommentsGroupByCreatedDate(new TimeRangedStatisticsRequest(startDate, endDate));
 
         Query capturedTimeFilterParam = captor.getValue();
 
@@ -108,7 +109,7 @@ public class CommentRepositoryImplTest {
         when(mockIterator.hasNext()).thenReturn(true, true, false);
         when(mockIterator.next()).thenReturn(mockResult1, mockResult2);
 
-        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(startDate, endDate);
+        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(new TimeRangedStatisticsRequest(startDate, endDate));
 
         verify(mockIterator, times(3)).hasNext();
         verify(mockIterator, times(2)).next();
@@ -131,7 +132,7 @@ public class CommentRepositoryImplTest {
         when(mockIterator.hasNext()).thenReturn(true, false);
         when(mockIterator.next()).thenReturn(mockResult);
 
-        commentRepository.sumCommentsGroupByCreatedDate(startDate, endDate);
+        commentRepository.sumCommentsGroupByCreatedDate(new TimeRangedStatisticsRequest(startDate, endDate));
     }
 
     @Test
