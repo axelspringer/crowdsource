@@ -57,6 +57,18 @@ describe('statistics form', function () {
         expect(statisticsForm.getSelectsFormForTypeCurrent()).toExist();
     });
 
+    it("should show data pickers when COMMENT_SUM statistic type selected", function () {
+        givenCompiledDirective();
+        scope.$digest();
+        expect(statisticsForm.getSelectsFormForTypeCurrent()).not.toExist();
+
+        $httpBackend.expectGET(/.*?statistics\/comments\/sum?.*/g).respond(200, [{}]);
+
+        whenStatisticTypeSelected(STATISTICS_CONST.PAGES.COMMENT_SUM);
+        scope.$digest();
+
+        expect(statisticsForm.getSelectsFormForTypeCurrent()).toExist();
+    });
 
     it("should not show data pickers when PROJECT_PER_STATUS statistic type selected", function () {
         givenCompiledDirective();
@@ -88,6 +100,24 @@ describe('statistics form', function () {
         expect(statisticsForm.getSelectsFormForTypeCurrent()).not.toExist();
         expect(statisticsForm.getSelectedStatisticsType()).toHaveText(STATISTICS_CONST.PAGES.PROJECT_SUM_PER_STATUS.label);
         expect(statisticsForm.getSelectedStatisticsType()).toHaveValue(STATISTICS_CONST.PAGES.PROJECT_SUM_PER_STATUS.name);
+
+    });
+
+    it("should call backend when COMMENT_SUM statistic type selected", function () {
+        givenCompiledDirective();
+
+        scope.$digest();
+
+        $httpBackend.expectGET(/.*?statistics\/comments\/sum?.*/g).respond(200, [{"name":"Summe Kommentare","data":[]}]);
+
+        whenStatisticTypeSelected(STATISTICS_CONST.PAGES.COMMENT_SUM);
+
+        $httpBackend.flush();
+        scope.$digest();
+
+        expect(statisticsForm.getSelectsFormForTypeCurrent()).not.toExist();
+        expect(statisticsForm.getSelectedStatisticsType()).toHaveText(STATISTICS_CONST.PAGES.COMMENT_SUM.label);
+        expect(statisticsForm.getSelectedStatisticsType()).toHaveValue(STATISTICS_CONST.PAGES.COMMENT_SUM.name);
 
     });
 

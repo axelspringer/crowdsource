@@ -123,8 +123,8 @@ angular.module('crowdsource')
 
                 vm.shouldShowDatePickerWithPrecision = function () {
                     return vm.data.statisticType !== undefined
-                        && STATISTICS_CONST.PAGES.CURRENT.name === vm.data.statisticType.name
-                        && STATISTICS_CONST.PAGES.COMMENT_SUM.name === vm.data.statisticType.name;
+                        && (STATISTICS_CONST.PAGES.CURRENT.name === vm.data.statisticType.name
+                        || STATISTICS_CONST.PAGES.COMMENT_SUM.name === vm.data.statisticType.name);
                 };
 
                 vm.shouldShowCountPicker = function () {
