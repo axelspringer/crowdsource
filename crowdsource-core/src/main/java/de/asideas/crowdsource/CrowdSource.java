@@ -7,7 +7,6 @@ import de.asideas.crowdsource.config.mail.MailSenderConfig;
 import de.asideas.crowdsource.config.mail.MailTemplateConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -27,7 +26,6 @@ import java.util.List;
     @PropertySource(value = "build.properties", ignoreResourceNotFound = true),
     @PropertySource(value = "build.core.properties", ignoreResourceNotFound = false)
 })
-@EnableConfigurationProperties()
 public class CrowdSource extends WebMvcConfigurerAdapter {
 
     @Autowired(required = false)
