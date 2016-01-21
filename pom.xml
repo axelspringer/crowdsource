@@ -12,7 +12,7 @@
 
     <groupId>de.asideas.crowdsource</groupId>
     <artifactId>crowdsource-parent</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
 
     <packaging>pom</packaging>
 
@@ -77,7 +77,7 @@
         </profile>
         <profile>
             <id>release</id>
-            <properties/>
+            <properties />
             <build>
                 <plugins>
                     <plugin>
@@ -177,7 +177,7 @@
         <connection>scm:git:https://github.com/as-ideas/crowdsource</connection>
         <developerConnection>scm:git:https://github.com/as-ideas/crowdsource.git</developerConnection>
         <url>https://github.com/as-ideas/crowdsource</url>
-        <tag>HEAD</tag>
+        <tag>crowdsource-parent-1.2</tag>
     </scm>
 
 </project>
