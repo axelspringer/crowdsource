@@ -1,19 +1,48 @@
 angular.module('crowdsource')
 
     .directive('datepicker', function () {
+
+        var CONST = {
+            DATE_TIME_SELECTION_RANGE: {
+                FROM_TODAY: "fromToday",
+                UNTIL_TODAY: "untilToday",
+                FUTURE: "future",
+                PAST: "past"
+            }
+        };
+
         return {
             require: 'ngModel',
+
             link: function (scope, elem, attrs, ngModel) {
 
-                //allow only dates starting from tomorrow
-                var nowTemp = new Date();
-                var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate() + 1, 0, 0, 0, 0);
+                var timerange = attrs.timerange;
 
                 $(elem).fdatepicker({
                     format: "dd.mm.yyyy",
 
                     onRender: function (date) {
-                        return date.valueOf() < now.valueOf() ? 'disabled' : '';
+                        if (timerange === CONST.DATE_TIME_SELECTION_RANGE.FROM_TODAY) {
+                            //allow only dates starting from today
+                            var nowTemp = new Date();
+                            var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
+                            return date.valueOf() < now.valueOf() ? 'disabled' : '';
+                        } else if (timerange === CONST.DATE_TIME_SELECTION_RANGE.UNTIL_TODAY) {
+                            //allow only dates until today
+                            var nowTemp = new Date();
+                            var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate() + 1, 0, 0, 0, 0);
+                            return date.valueOf() > now.valueOf() ? 'disabled' : '';
+                        } else if (timerange === CONST.DATE_TIME_SELECTION_RANGE.PAST) {
+                            //allow only dates until today exclusive
+                            var nowTemp = new Date();
+                            var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate(), 0, 0, 0, 0);
+                            return date.valueOf() > now.valueOf() ? 'disabled' : '';
+                        } else if (timerange === CONST.DATE_TIME_SELECTION_RANGE.FUTURE) {
+                            //allow only dates starting from tomorrow
+                            var nowTemp = new Date();
+                            var now = new Date(nowTemp.getFullYear(), nowTemp.getMonth(), nowTemp.getDate() + 1, 0, 0, 0, 0);
+                            return date.valueOf() < now.valueOf() ? 'disabled' : '';
+                        }
                     }
                 });
 

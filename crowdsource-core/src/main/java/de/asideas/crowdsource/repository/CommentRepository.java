@@ -6,7 +6,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
-public interface CommentRepository extends MongoRepository<CommentEntity, String> {
+public interface CommentRepository extends MongoRepository<CommentEntity, String>, CommentRepositoryCustom {
 
     List<CommentEntity> findByProject(ProjectEntity projectEntity);
+
 }

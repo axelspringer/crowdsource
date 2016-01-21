@@ -14,6 +14,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "comments")
 public class CommentEntity {
 
+    public static final String COLLECTION_NAME = "comments";
+
     @Id
     private String id;
 

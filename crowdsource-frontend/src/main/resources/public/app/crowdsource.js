@@ -21,7 +21,7 @@
      * global application configuration
      */
     angular.module('crowdsource', ['ngRoute', 'ngResource', 'ngMessages', 'dibari.angular-ellipsis', 'ngScrollTo',
-                    'angulartics', 'angulartics.piwik', 'ngSanitize', 'ng-showdown', 'ngFileUpload', 'ngclipboard'])
+                    'angulartics', 'angulartics.piwik', 'ngSanitize', 'ng-showdown', 'ngFileUpload', 'ngclipboard', 'chart.js'])
         .config(function ($routeProvider, $locationProvider, $httpProvider, $analyticsProvider, $showdownProvider) {
             $routeProvider
                 .when('/projects', {
@@ -92,6 +92,12 @@
                     templateUrl: 'app/financing-rounds/financing-rounds.html',
                     controller: 'FinancingRoundsController as financingRounds',
                     title: 'Finanzierungsrunden',
+                    requireLogin: true
+                })
+                .when('/statistics', {
+                    templateUrl: 'app/statistics/statistics.html',
+                    controller: 'StatisticsController as statistics',
+                    title: 'Statistiken',
                     requireLogin: true
                 })
                 .when('/about', {

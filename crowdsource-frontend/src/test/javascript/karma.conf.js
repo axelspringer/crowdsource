@@ -24,6 +24,8 @@ module.exports = function (config) {
             'bower_components/ng-file-upload/ng-file-upload-all.min.js',
             'bower_components/clipboard/dist/clipboard.min.js',
             'bower_components/ngclipboard/dist/ngclipboard.js',
+            'bower_components/Chart.js/Chart.min.js',
+            'bower_components/angular-chart.js/dist/angular-chart.min.js',
 
 
             // actually, this file would have been picked up by the wildcard pattern app/**/*.js

@@ -37,6 +37,7 @@ public class UserEntity {
 
     private int budget = 0;
 
+    @Indexed
     @CreatedDate
     private DateTime createdDate;
 
