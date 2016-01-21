@@ -3,8 +3,6 @@ package de.asideas.crowdsource.repository;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -16,9 +14,6 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.grou
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
 public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
-
-    private static final Logger log = LoggerFactory.getLogger(ProjectRepositoryImpl.class);
-
 
     private final MongoTemplate mongoTemplate;
 
@@ -35,9 +30,6 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
                         group("status").count().as("count")
                 ), ProjectPerStatusResult.class);
 
-        log.info("|-- AggregationResults: ");
-        aggregationResults.getMappedResults().stream().forEach(e -> log.info("RES: " + (e == null ? "NULL" : "ID: " + e.getId() + "; Count: " + e.getCount()) ));
-
         return aggregationResults.getMappedResults().stream()
                 .map(res -> new BarChartStatisticsResult(res.getId().name(), res.getId().getDisplayName(), res.getCount()))
                 .collect(Collectors.toList());
@@ -50,6 +42,7 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
 
         private ProjectPerStatusResult() {
         }
+
         public ProjectPerStatusResult(ProjectStatus id, Long count) {
             this.id = id;
             this.count = count;
@@ -58,6 +51,7 @@ public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
         public ProjectStatus getId() {
             return id;
         }
+
         public Long getCount() {
             return count;
         }
