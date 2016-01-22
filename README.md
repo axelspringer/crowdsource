@@ -166,7 +166,7 @@ Maven
     <dependency>
         <groupId>de.asideas.crowdsource</groupId>
         <artifactId>crowdsource-core</artifactId>
-        <version>1.1</version>
+        <version>1.2</version>
     </dependency>
 </dependencies>
 
