@@ -14,7 +14,12 @@ install: true
 script:
 - sh release-res/release.sh
 
-cache: false
+cache:
+  directories:
+  - $HOME/.m2
+  - crowdsource-frontend/node
+  - crowdsource-frontend/node_modules
+  - crowdsource-frontend/bower_components
 
 before_install:
 - export DISPLAY=:99.0

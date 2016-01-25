@@ -21,9 +21,9 @@ if [ "${TRAVIS_BRANCH}" = ${BRANCH_TRIGGERING_RELEASE} ]; then
 
     PASSPHRASE_STRING="-Darguments=-Dgpg.passphrase="${GPG_PASSPHRASE}
     mvn -B release:clean release:prepare --settings release-res/settings.xml -DskipTests
-    mvn -B -Prelease -Prelease-sign-artifacts release:perform ${PASSPHRASE_STRING} --settings release-res/settings.xml -DskipTests
+    mvn -B -Prelease -Prelease-sign-artifacts release:perform ${PASSPHRASE_STRING} --settings release-res/settings.xml -DskipTests -Dgit.branch=${TRAVIS_BRANCH}
 else
     echo "Going to test and deploy snapshot release ${TRAVIS_BRANCH} ..."
-    mvn deploy -Prelease --settings release-res/settings.xml
+    mvn deploy -Prelease --settings release-res/settings.xml -Dgit.branch=${TRAVIS_BRANCH}
 fi
 exit $?
