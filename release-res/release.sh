@@ -26,4 +26,3 @@ else
     echo "Going to test and deploy snapshot release ${TRAVIS_BRANCH} ..."
     mvn deploy -Prelease --settings release-res/settings.xml -Dgit.branch=${TRAVIS_BRANCH}
 fi
-exit $?
