@@ -128,7 +128,7 @@ $pd-icon-dimension: 24px;
 
 /*ul*/
 .pm-list {
-    @extend %list--plain;
+    @include list--plain;
     @extend .clearfix;
 }
 
