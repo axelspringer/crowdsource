@@ -40,6 +40,7 @@ import static junit.framework.TestCase.fail;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -95,11 +96,6 @@ public class FinancingRoundServiceTest {
         financingRoundEntities.add(financingRoundEntity(ROUND_ID + "2", fixedDate.minusDays(40), fixedDate.minusDays(30)));
         when(financingRoundRepository.findAll()).thenReturn(financingRoundEntities);
 
-        List<UserEntity> userEntities = new ArrayList<>();
-        userEntities.add(new UserEntity("test1@mail.com"));
-        userEntities.add(new UserEntity("test2@mail.com"));
-        when(userRepository.findAll()).thenReturn(userEntities);
-
         when(financingRoundRepository.save(any(FinancingRoundEntity.class))).thenAnswer(invocationOnMock -> {
             FinancingRoundEntity round = (FinancingRoundEntity) invocationOnMock.getArguments()[0];
             round.setId(ROUND_ID);
@@ -115,7 +111,7 @@ public class FinancingRoundServiceTest {
         financingRoundEntities.get(0).setTerminationPostProcessingDone(true);
         financingRoundEntities.get(1).setTerminationPostProcessingDone(true);
         when(pledgeRepository.findByFinancingRoundAndCreatedDateGreaterThan(financingRoundEntities.get(1), financingRoundEntities.get(1).getEndDate()))
-                .thenReturn(Collections.singletonList( aPledgeEntity(financingRoundEntities.get(1), pledgedAmountAfterTermination)));
+                .thenReturn(Collections.singletonList(aPledgeEntity(financingRoundEntities.get(1), pledgedAmountAfterTermination)));
 
         final List<FinancingRound> res = financingRoundService.allFinancingRounds();
 
@@ -179,6 +175,8 @@ public class FinancingRoundServiceTest {
 
     @Test
     public void startFinancingRound_succeeds() throws Exception {
+        givenTwoUsersInDatabase();
+
         final FinancingRound financingRoundCreationCmd = financingRound(new DateTime().plusDays(1), 99);
         ProjectEntity proposedProject = project(ProjectStatus.PROPOSED);
         ProjectEntity deferredProject = project(ProjectStatus.DEFERRED);
@@ -213,6 +211,25 @@ public class FinancingRoundServiceTest {
         updatedProjects.stream().forEach(p -> assertThat(p.getFinancingRound(), is(financingRoundCaptor.getValue())));
 
         verify(crowdScheduler).schedule(any(Runnable.class), eq(res.getEndDate().toDate()));
+    }
+
+
+    @Test
+    public void startFinancingRound_withSomeDeletedUsers_ShouldOnlyUseNotDeletedUsers() throws Exception {
+        final FinancingRound financingRoundCreationCmd = financingRound(new DateTime().plusDays(1), 99);
+        ProjectEntity publishedProject = project(ProjectStatus.PUBLISHED);
+        when(projectRepository.findAll()).thenReturn(Arrays.asList(publishedProject));
+
+
+        UserEntity user = createUser("test1@mail.com");
+        UserEntity deletedUser = createDeletedUser("test2@mail.com");
+
+        givenUsersInDatabase(user, deletedUser);
+
+        final FinancingRound res = financingRoundService.startNewFinancingRound(financingRoundCreationCmd);
+
+        assertEquals(99, user.getBudget());
+        assertEquals(0, deletedUser.getBudget());
     }
 
     @Test
@@ -288,7 +305,7 @@ public class FinancingRoundServiceTest {
 
         final List<Date> capturedScheduleDates = scheduleDateCaptor.getAllValues();
         assertThat(capturedScheduleDates.size(), is(financingRoundEntities.size()));
-        for(int i = 0; i< capturedScheduleDates.size(); i++){
+        for (int i = 0; i < capturedScheduleDates.size(); i++) {
             assertTrue("Should have captured actual end dates as scheduler dates", capturedScheduleDates.contains(financingRoundEntities.get(i).getEndDate().toDate()));
         }
     }
@@ -314,6 +331,18 @@ public class FinancingRoundServiceTest {
         assertFinancingRoundDto(financingRoundEntity, res, 0);
 
         verify(pledgeRepository, never()).findByFinancingRoundAndCreatedDateGreaterThan(any(FinancingRoundEntity.class), any(DateTime.class));
+    }
+
+    private void givenUsersInDatabase(UserEntity... users) {
+        when(userRepository.findAll()).thenReturn(Arrays.asList(users));
+    }
+
+
+    private void givenTwoUsersInDatabase() {
+        List<UserEntity> userEntities = new ArrayList<>();
+        userEntities.add(new UserEntity("test1@mail.com"));
+        userEntities.add(new UserEntity("test2@mail.com"));
+        when(userRepository.findAll()).thenReturn(userEntities);
     }
 
     private void assertFinancingRoundDto(FinancingRoundEntity financingRoundEntity, FinancingRound res, Integer expPostRoundBudgetRemaining) {
@@ -361,6 +390,17 @@ public class FinancingRoundServiceTest {
         final PledgeEntity res = new PledgeEntity(new ProjectEntity(), null, new Pledge(pledgeAmount), financingRoundEntity);
         res.setCreatedDate(DateTime.now());
         return res;
+    }
+
+    private UserEntity createDeletedUser(String s) {
+        UserEntity user = createUser(s);
+        user.setDeleted(true);
+        return user;
+
+    }
+
+    private UserEntity createUser(String s) {
+        return new UserEntity(s);
     }
 
 }

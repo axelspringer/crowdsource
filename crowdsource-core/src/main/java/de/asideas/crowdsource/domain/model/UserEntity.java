@@ -35,6 +35,8 @@ public class UserEntity {
 
     private boolean activated = false;
 
+    private boolean deleted = false;
+
     private int budget = 0;
 
     @Indexed
@@ -90,6 +92,14 @@ public class UserEntity {
 
     public String getEmail() {
         return this.email;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 
     public String getPassword() {
@@ -166,7 +176,7 @@ public class UserEntity {
         }
         UserEntity that = (UserEntity) o;
 
-        if(this.id == null && that.id == null){
+        if (this.id == null && that.id == null) {
             return this == that;
         }
 
