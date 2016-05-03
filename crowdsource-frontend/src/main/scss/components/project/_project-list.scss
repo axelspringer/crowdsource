@@ -113,7 +113,7 @@ $intro-box-break: "only screen and (max-width: 740px)";
 
 /*ul*/
 .project__ul {
-    @extend %list--plain;
+    @include list--plain;
 
     @media #{$two-tiles-up} {
         display: flex;
@@ -261,8 +261,7 @@ $intro-box-break: "only screen and (max-width: 740px)";
 /*h3*/
 .tile__heading {
     @include limit-lines(1, 20px, 1.4);
-    @extend %full-width;
-    @extend %font-smoothing;
+    @include font-smoothing;
     margin: 0 0 2rem 0;
     font-weight: 600;
 }
@@ -270,7 +269,6 @@ $intro-box-break: "only screen and (max-width: 740px)";
 /*p*/
 .tile__short-desc {
     @include limit-lines(4, 16px, 1.5);
-    @extend %full-width;
     margin: 0;
 }
 
@@ -280,9 +278,13 @@ $intro-box-break: "only screen and (max-width: 740px)";
     background-color: $white;
 }
 
+.round-description-section {
+    @extend .intro-section;
+}
+
 /*ul*/
-.intro-box {
-    @extend %list--plain;
+.intro-box, .round-description-box {
+    @include list--plain;
     display: flex;
     margin: 2rem 0;
     border: 1px solid $clr-border;
@@ -295,7 +297,7 @@ $intro-box-break: "only screen and (max-width: 740px)";
 }
 
 /*li*/
-.intro-box__item {
+.intro-box__item, .round-description-box__item {
     flex: 0 1 33.333333333%; // Force all flex-items to get the same width
     order: 1;
     padding: rem-calc(20px);
@@ -327,7 +329,7 @@ $intro-box-break: "only screen and (max-width: 740px)";
 }
 
 /*li*/
-.intro-box__item--important {
+.intro-box__item--important, .round-description-box__item--important {
     @extend .intro-box__item;
     background-color: $clr-bg;
 
@@ -337,7 +339,7 @@ $intro-box-break: "only screen and (max-width: 740px)";
 }
 
 /*h3*/
-.intro-box__heading {
+.intro-box__heading, .round-description-box__heading {
     margin: 1rem 0;
     font-size: rem-calc(16px);
     font-weight: 600;
@@ -347,14 +349,25 @@ $intro-box-break: "only screen and (max-width: 740px)";
 }
 
 /*h3*/
-.intro-box__heading--has-divider {
+.intro-box__heading--has-divider, .round-description-box__heading--has-divider {
     @extend .intro-box__heading;
     @include typographic-divider((height: 0.125rem, width: 2.5rem, offset-bottom: 1rem));
 }
 
 /*p*/
-.intro-box__intro {
+.intro-box__intro, .round-description-box__intro {
     // @extend %font-smoothing;
+}
+
+.round-description-box__intro {
+    text-align: left;
+    word-wrap: break-word;
+    word-break: normal;
+
+    ul {
+        list-style-type: none;
+    }
+
 }
 
 %intro-box__item-icon {
@@ -383,4 +396,26 @@ $intro-box-break: "only screen and (max-width: 740px)";
 .intro-box__item-icon--clock {
     @extend %intro-box__item-icon;
     background-image: url('../images/icon-clock-white.svg');
+}
+
+.intro-box__header {
+    color: $clr-green-shade-4;
+}
+
+.round-description-box__item-icon--capital {
+    @extend %intro-box__item-icon;
+    background-color: $clr-green-shade-3;
+    background-image: url('../images/icons/credit_card.svg');
+}
+
+.round-description-box__item-icon--user {
+    @extend %intro-box__item-icon;
+    background-color: $clr-green-shade-3;
+    background-image: url('../images/icons/ticket_with_star.svg');
+}
+
+.round-description-box__item-icon--clock {
+    @extend %intro-box__item-icon;
+    background-color: $clr-green-shade-3;
+    background-image: url('../images/icons/time_clock_with_arrow.svg');
 }

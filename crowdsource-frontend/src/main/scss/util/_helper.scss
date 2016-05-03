@@ -138,7 +138,7 @@
 // Text-Helpers
 //
 
-%font-smoothing {
+@mixin font-smoothing {
     -webkit-font-smoothing: antialiased;
 }
 
@@ -215,7 +215,7 @@
 // List + List items
 //
 
-%child-reset-margins-h {
+@mixin child-reset-margins-h {
     &:first-child {
         margin-left: 0;
     }
@@ -247,10 +247,13 @@
     }
 }
 
-%list--plain,
-.list--plain {
+@mixin list--plain {
     margin: 0; // Reset margins
     list-style-type: none;
+}
+
+.list--plain {
+    @include list--plain;
 }
 
 @mixin list-item--inline($options:()) {
@@ -262,7 +265,7 @@
                     ),
                     $options);
 
-    @extend %child-reset-margins-h;
+    @include child-reset-margins-h;
 
     @if (map-get($options, float)) {
         float: left;

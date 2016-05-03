@@ -148,7 +148,7 @@
 
 /*h2*/
 .teaser-action-bar__heading {
-    @extend %font-smoothing;
+    @include font-smoothing;
     position: relative;
     margin: 0 0 rem-calc(4px) 0;
     padding-top: rem-calc(56px);
@@ -172,7 +172,7 @@
 /*p*/
 .teaser-action-bar__lede {
     @include typographic-divider((width: 3rem, height: .25rem, offset-bottom: 1rem));
-    @extend %font-smoothing;
+    @include font-smoothing;
     font-size: rem-calc(18px);
     line-height: 1.3333;
     color: $white;
@@ -181,7 +181,7 @@
 
 /*p*/
 .teaser-action-bar__metrics {
-    @extend %font-smoothing;
+    @include font-smoothing;
     font-size: rem-calc(18px);
     line-height: 1;
 }
@@ -196,7 +196,7 @@
 
     @media #{$medium-up} {
         @include css-table((table-layout:fixed));
-        @extend %font-smoothing;
+        @include font-smoothing;
         max-width: 62.5rem;
         margin: 2rem auto;
         border: 1px solid rgba($clr-yellow-shade-1, .5);
@@ -227,7 +227,7 @@
 
     @media #{$medium-up} {
         @include css-table-cell((valign: top));
-        @extend %list--plain;
+        @include list--plain;
         padding: 1rem;
     }
 }
