@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class FinancingRoundService implements ApplicationListener<ContextRefreshedEvent>{
+public class FinancingRoundService implements ApplicationListener<ContextRefreshedEvent> {
 
     private static final Logger log = LoggerFactory.getLogger(FinancingRoundService.class);
 
@@ -58,14 +58,14 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
     }
 
     @Override
-    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent ) {
+    public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         this.reschedulePostProcessingOfFinancingRounds();
     }
 
-    public List<FinancingRound> allFinancingRounds(){
+    public List<FinancingRound> allFinancingRounds() {
         final List<FinancingRoundEntity> all = financingRoundRepository.findAll();
 
-        if(all.isEmpty()) {
+        if (all.isEmpty()) {
             return Collections.emptyList();
         }
 
@@ -74,7 +74,7 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
                 .collect(Collectors.toList());
     }
 
-    public FinancingRound currentlyActiveRound(){
+    public FinancingRound currentlyActiveRound() {
         final FinancingRoundEntity financingRoundEntity = financingRoundRepository.findActive(DateTime.now());
         if (financingRoundEntity == null) {
             throw new ResourceNotFoundException();
@@ -90,7 +90,7 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
         return financingRound(mostRecentRoundEntity());
     }
 
-    public FinancingRoundEntity mostRecentRoundEntity(){
+    public FinancingRoundEntity mostRecentRoundEntity() {
         final Page<FinancingRoundEntity> pageMostRecent = financingRoundRepository.financingRounds(new PageRequest(0, 1, Sort.Direction.DESC, "createdDate"));
         if (pageMostRecent.getNumberOfElements() < 1) {
             throw new ResourceNotFoundException();
@@ -100,7 +100,7 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
 
     public FinancingRound startNewFinancingRound(FinancingRound creationCommand) {
 
-        final List<UserEntity> userEntities = userRepository.findAll();
+        final List<UserEntity> userEntities = findAllNotDeletedUsers();
 
         // create round
         final FinancingRoundEntity financingRoundEntity = FinancingRoundEntity
@@ -127,7 +127,11 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
         return financingRound(res);
     }
 
-    public FinancingRound stopFinancingRound(String financingRoundId) throws ResourceNotFoundException, InvalidRequestException{
+    private List<UserEntity> findAllNotDeletedUsers() {
+        return userRepository.findAll().stream().filter(user -> !user.isDeleted()).collect(Collectors.toList());
+    }
+
+    public FinancingRound stopFinancingRound(String financingRoundId) throws ResourceNotFoundException, InvalidRequestException {
         FinancingRoundEntity financingRoundEntity = financingRoundRepository.findOne(financingRoundId);
 
         if (financingRoundEntity == null) {
@@ -148,6 +152,7 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
     /**
      * Post processes a financing round upon its termination according to domain logic implemented
      * in {@link FinancingRoundPostProcessor}
+     *
      * @param financingRound the round to be processed after termination
      */
     void schedulePostProcessing(FinancingRoundEntity financingRound) {
@@ -170,10 +175,10 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
      * post processing of financing rounds already terminated in case the application was not active
      * at point in time when triggering of post processing should have occurred.
      */
-    void reschedulePostProcessingOfFinancingRounds(){
+    void reschedulePostProcessingOfFinancingRounds() {
         log.info("Going to (re-) schedule post processing of still active or not already processed inactive financing rounds.");
         financingRoundRepository.findAll().stream()
-                .filter(fr -> !fr.getTerminationPostProcessingDone() )
+                .filter(fr -> !fr.getTerminationPostProcessingDone())
                 .forEach(this::schedulePostProcessing);
     }
 
