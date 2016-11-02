@@ -281,6 +281,7 @@ describe('project pledging form', function () {
 
         expect(elements.slider).toHaveClass('disabled');
         expect(elements.pledgeAmount.getInputField()).toBeDisabled();
+
         expectNoValidationError(elements.pledgeAmount);
     });
 
