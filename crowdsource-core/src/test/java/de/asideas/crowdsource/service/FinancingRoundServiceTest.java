@@ -178,7 +178,7 @@ public class FinancingRoundServiceTest {
         final FinancingRound res = financingRoundService.startNewFinancingRound(financingRoundCreationCmd);
 
         assertThat(res.isActive(), is(true));
-        assertThat(res.getBudget(), is(99));
+        assertThat(res.getBudget(), is(BigDecimal.valueOf(99)));
         assertThat(res.getEndDate().getMillis(), is(financingRoundCreationCmd.getEndDate().getMillis()));
         assertThat(res.getStartDate().toDate(), DateMatchers.sameMinute(financingRoundCreationCmd.getStartDate().toDate()));
         assertThat(res.getPostRoundBudget(), is(nullValue()));
@@ -214,8 +214,8 @@ public class FinancingRoundServiceTest {
 
         final FinancingRound res = financingRoundService.startNewFinancingRound(financingRoundCreationCmd);
 
-        assertEquals(99, user.getBudget());
-        assertEquals(0, deletedUser.getBudget());
+        assertEquals(BigDecimal.valueOf(99), user.getBudget());
+        assertEquals(BigDecimal.valueOf(0), deletedUser.getBudget());
     }
 
     @Test

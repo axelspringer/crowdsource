@@ -23,8 +23,7 @@ public class FinancingRoundNotCollidingValidator implements ConstraintValidator<
 
             // if the other financing round is not starting after financingrounds end
             // AND it is not ending before financingrounds start we have a collision
-            if (!fr.getStartDate().isAfter(financingRound.getEndDate())
-                    && !fr.getEndDate().isBefore(financingRound.getStartDate())) {
+            if (!fr.getStartDate().isAfter(financingRound.getEndDate()) && !fr.getEndDate().isBefore(financingRound.getStartDate())) {
                 context.buildConstraintViolationWithTemplate("non-colliding").addConstraintViolation();
                 return false;
             }

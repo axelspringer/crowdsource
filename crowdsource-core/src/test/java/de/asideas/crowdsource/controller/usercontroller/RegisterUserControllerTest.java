@@ -2,6 +2,7 @@ package de.asideas.crowdsource.controller.usercontroller;
 
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.presentation.user.UserRegistration;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.MediaType;
@@ -22,7 +23,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class RegisterUserControllerTest extends AbstractUserControllerTest {
 
-    private UserRegistration userRegistration = new UserRegistration();
+    private UserRegistration userRegistration;
+
+    @Before
+    public void setup() {
+        super.setup();
+        userRegistration = new UserRegistration();
+        userRegistration.setFirstname("firstname");
+        userRegistration.setLastname("lastname");
+    }
 
     @Test
     public void registerUser_shouldReturnSuccessfullyWhenEmailAndTosOkOnSave() throws Exception {

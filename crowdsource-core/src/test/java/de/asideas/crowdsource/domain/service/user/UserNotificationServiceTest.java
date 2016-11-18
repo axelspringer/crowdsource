@@ -76,7 +76,7 @@ public class UserNotificationServiceTest {
         assertThat(mail.getTo(), arrayContaining(user.getEmail()));
         assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_ACTIVATION));
         assertThat(replaceLineBreaksIfWindows(mail.getText()), is(
-                "Hallo Some Creator,\n\n" +
+                "Hallo firstname lastname,\n\n" +
                         "Du hast Dich gerade auf der CrowdSource Platform angemeldet.\n" +
                         "Um Deine Registrierung abzuschließen, öffne bitte diesen Link und setze Dein Passwort:\n\n" +
                         "https://crowd.asideas.de#/signup/some.creator@email.com/activation/activationTok3n\n\n" +
@@ -95,7 +95,7 @@ public class UserNotificationServiceTest {
         assertThat(mail.getTo(), arrayContaining(user.getEmail()));
         assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_PASSWORD_FORGOTTEN));
         assertThat(replaceLineBreaksIfWindows(mail.getText()), is(
-                "Hallo Some Creator,\n\n" +
+                "Hallo firstname lastname,\n\n" +
                         "Du hast soeben ein neues Passwort für Dein Konto bei der CrowdSource Plattform angefordert.\n\n" +
                         "Bitte öffne diesen Link:\n\n" +
                         "https://crowd.asideas.de#/login/password-recovery/some.creator@email.com/activation/activationTok3n\n\n" +
@@ -108,18 +108,18 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForPublished() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.PUBLISHED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(3L, ProjectStatus.PUBLISHED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
         assertThat(mail.getTo(), arrayContaining(user.getEmail()));
         assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_PUBLISHED));
         assertThat(replaceLineBreaksIfWindows(mail.getText()), is(
-                "Hallo Some Creator,\n\n" +
+                "Hallo firstname lastname,\n\n" +
                         "Dein Projekt wurde erfolgreich freigegeben!\n" +
                         "Weitere Informationen hinsichtlich des Prozesses kannst Du der FAQ entnehmen.\n\n" +
                         "Zu Deinem Projekt:\n\n" +
-                        "https://crowd.asideas.de#/project/proj3ctId\n\n" +
+                        "https://crowd.asideas.de#/project/3\n\n" +
                         "Mit freundlichen Grüßen\n" +
                         "Dein CrowdSource Team"));
     }
@@ -128,18 +128,18 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForRejected() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.REJECTED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(3L, ProjectStatus.REJECTED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
         assertThat(mail.getTo(), arrayContaining(user.getEmail()));
         assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_REJECTED));
         assertThat(replaceLineBreaksIfWindows(mail.getText()), is(
-                "Hallo Some Creator,\n\n" +
+                "Hallo firstname lastname,\n\n" +
                         "Dein Projekt wurde leider abgelehnt.\n" +
                         "Das CrowdSource Team wird in Kürze mit Dir in Kontakt treten, um die nächsten Schritte zu besprechen.\n\n" +
                         "Zu Deinem Projekt:\n\n" +
-                        "https://crowd.asideas.de#/project/proj3ctId\n\n" +
+                        "https://crowd.asideas.de#/project/3\n\n" +
                         "Mit freundlichen Grüßen\nDein CrowdSource Team"));
     }
 
@@ -147,18 +147,18 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForDeferred() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.DEFERRED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(3L, ProjectStatus.DEFERRED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
         assertThat(mail.getTo(), arrayContaining(user.getEmail()));
         assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_DEFERRED));
         assertThat(replaceLineBreaksIfWindows(mail.getText()), is(
-                "Hallo Some Creator,\n\n" +
+                "Hallo firstname lastname,\n\n" +
                         "Dein Projekt wurde leider zurückgestellt und nimmt daher nicht an der nächsten Finanzierungsrunde teil.\n" +
                         "Das Projekt wird jedoch für die darauf folgende Finanzierungsrunde automatisch freigegeben.\n\n" +
                         "Zu Deinem Projekt:\n\n" +
-                        "https://crowd.asideas.de#/project/proj3ctId\n\n" +
+                        "https://crowd.asideas.de#/project/3\n\n" +
                         "Mit freundlichen Grüßen\nDein CrowdSource Team"));
     }
 
@@ -166,18 +166,18 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForPublishedDeferred() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.PUBLISHED_DEFERRED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(3L, ProjectStatus.PUBLISHED_DEFERRED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
         assertThat(mail.getTo(), arrayContaining(user.getEmail()));
         assertThat(mail.getSubject(), is(UserNotificationService.SUBJECT_PROJECT_DEFERRED));
         assertThat(replaceLineBreaksIfWindows(mail.getText()), is(
-                "Hallo Some Creator,\n\n" +
+                "Hallo firstname lastname,\n\n" +
                         "Dein Projekt wurde leider zurückgestellt und nimmt daher nicht an der nächsten Finanzierungsrunde teil.\n" +
                         "Das Projekt wird jedoch für die darauf folgende Finanzierungsrunde automatisch freigegeben.\n\n" +
                         "Zu Deinem Projekt:\n\n" +
-                        "https://crowd.asideas.de#/project/proj3ctId\n\n" +
+                        "https://crowd.asideas.de#/project/3\n\n" +
                         "Mit freundlichen Grüßen\nDein CrowdSource Team"));
     }
 
@@ -185,7 +185,7 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForFallback() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.PROPOSED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(3L, ProjectStatus.PROPOSED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -198,7 +198,7 @@ public class UserNotificationServiceTest {
     public void testNotifyAdminOnProjectCreation() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyAdminOnProjectCreation(project(1L, ProjectStatus.PUBLISHED, user, "My Super Project"), ADMIN_EMAIL);
+        userNotificationService.notifyAdminOnProjectCreation(project(3L, ProjectStatus.PUBLISHED, user, "My Super Project"), ADMIN_EMAIL);
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -207,7 +207,7 @@ public class UserNotificationServiceTest {
         assertThat(replaceLineBreaksIfWindows(mail.getText()), is(
                 "Hallo Admin,\n\n" +
                         "es liegt ein neues Projekt zur Freigabe vor:\n\n" +
-                        "https://crowd.asideas.de#/project/proj3ctId\n\n" +
+                        "https://crowd.asideas.de#/project/3\n\n" +
                         "Mit freundlichen Grüßen\n" +
                         "Dein CrowdSource Team"));
     }
@@ -218,7 +218,7 @@ public class UserNotificationServiceTest {
         final UserEntity modifier = aUser(1L);
         final UserEntity admin = aUser(2L, "admin.0@email.com");
         final List<UserEntity> admins = Arrays.asList(admin);
-        final ProjectEntity project = project(1L, ProjectStatus.PUBLISHED, creator, "My Super Project");
+        final ProjectEntity project = project(3L, ProjectStatus.PUBLISHED, creator, "My Super Project");
 
         when(userRepository.findAllAdminUsers()).thenReturn(admins);
         userNotificationService.notifyCreatorAndAdminOnProjectModification(project, modifier);
@@ -261,9 +261,10 @@ public class UserNotificationServiceTest {
         final UserEntity creator = aProjectCreator();
         final UserEntity commentingUser = aUser(1L);
         final ProjectEntity project = project(3L, ProjectStatus.PUBLISHED, creator, "My Super Project");
-        final String projectLink = "https://crowd.asideas.de#/project/proj3ctId";
+        final String projectLink = "https://crowd.asideas.de#/project/3";
         final String testComment = aTestComment(UserNotificationService.COMMENT_EXCERPT_LENGTH + 5);
         final CommentEntity comment = new CommentEntity(project, testComment);
+        comment.setCreator(commentingUser);
         final String expMessage = "Hallo %s,\n\n" +
                 "zu Deinem Projekt \"%s\" wurde ein Kommentar von %s hinzugefügt:\n\n" +
                 "\"%s\"\n\n" +
@@ -287,9 +288,10 @@ public class UserNotificationServiceTest {
     public void notifyCreatorOnComment_commentingProjectCreatorDoesntReceiveMail() {
         final UserEntity creator = aProjectCreator();
         final ProjectEntity project = project(3L, ProjectStatus.PUBLISHED, creator, "My Super Project");
-        final String projectLink = "https://crowd.asideas.de#/project/proj3ctId";
+        final String projectLink = "https://crowd.asideas.de#/project/3";
         final String testComment = aTestComment(UserNotificationService.COMMENT_EXCERPT_LENGTH + 5);
         final CommentEntity comment = new CommentEntity(project, testComment);
+        comment.setCreator(creator);
 
         userNotificationService.notifyCreatorOnComment(comment);
 
@@ -297,7 +299,7 @@ public class UserNotificationServiceTest {
     }
 
     private void assertCreatorModifierAndAdminNotifiedOfProjectEdit(UserEntity creator, UserEntity modifier, UserEntity admin, List<SimpleMailMessage> capturedMessages) {
-        final String projectLink = "https://crowd.asideas.de#/project/proj3ctId";
+        final String projectLink = "https://crowd.asideas.de#/project/3";
         final String expMessage = "Hallo %s,\n\n" +
                 "das folgende Projekt wurde von %s editiert.\n" +
                 "Weitere Informationen hinsichtlich des Prozesses kannst Du der FAQ entnehmen.\n\n" +

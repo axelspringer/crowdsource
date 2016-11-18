@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
-import org.springframework.boot.test.IntegrationTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.TaskScheduler;
@@ -33,7 +33,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@IntegrationTest
+@SpringBootTest
 @ContextConfiguration(classes = {FinancingRoundServiceSchedulingIT.Cfg.class, SchedulerConfig.class})
 public class FinancingRoundServiceSchedulingIT {
 
@@ -65,7 +65,7 @@ public class FinancingRoundServiceSchedulingIT {
             roundsToProcess.add(newFinancingRound(i, BigDecimal.valueOf(i), DateTime.now()));
         }
         when(financingRoundRepository.findOne(anyLong())).thenAnswer(i -> {
-            String desiredId = (String) i.getArguments()[0];
+            Long desiredId = (Long) i.getArguments()[0];
             return roundsToProcess.stream().filter(round -> round.getId().equals(desiredId)).findFirst().get();
         });
     }

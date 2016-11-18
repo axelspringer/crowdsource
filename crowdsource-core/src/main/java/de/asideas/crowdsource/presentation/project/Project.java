@@ -9,6 +9,7 @@ import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import lombok.Data;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.Min;
@@ -27,24 +28,24 @@ public class Project {
     @JsonView(ProjectSummaryView.class)
     private ProjectStatus status;
 
-    @NotEmpty
+    @NotBlank
     @JsonView(ProjectSummaryView.class)
     private String title;
 
-    @NotEmpty
+    @NotBlank
     @JsonView(ProjectSummaryView.class)
     private String shortDescription;
 
-    @NotEmpty
+    @NotBlank
     private String description;
 
-    @Min(1)
+    @Min(1L)
     @JsonView(ProjectSummaryView.class)
-    private BigDecimal pledgeGoal;
+    private BigDecimal pledgeGoal = BigDecimal.ZERO;
 
     // no validation here on purpose, as this is only filled on response and ignored in request
     @JsonView(ProjectSummaryView.class)
-    private BigDecimal pledgedAmount;
+    private BigDecimal pledgedAmount = BigDecimal.ZERO;
 
     // no validation here on purpose, as this is only filled on response and ignored in request
     @JsonView(ProjectSummaryView.class)
@@ -60,10 +61,10 @@ public class Project {
     private Date lastModifiedDate;
 
     @JsonView(ProjectSummaryView.class)
-    private BigDecimal pledgedAmountByRequestingUser;
+    private BigDecimal pledgedAmountByRequestingUser = BigDecimal.ZERO;
 
     @JsonView(ProjectSummaryView.class)
-    private BigDecimal pledgedAmountByPostRoundBudget;
+    private BigDecimal pledgedAmountByPostRoundBudget = BigDecimal.ZERO;
 
     @JsonView(ProjectSummaryView.class)
     private long likeCount;
@@ -73,7 +74,7 @@ public class Project {
     private LikeStatus likeStatusOfRequestUser;
 
 //    private List<Attachment> attachments;
-    
+// FIXME: 18/11/16 what is requesting user?
     public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser) {
         this.id = projectEntity.getId();
         this.status = projectEntity.getStatus();

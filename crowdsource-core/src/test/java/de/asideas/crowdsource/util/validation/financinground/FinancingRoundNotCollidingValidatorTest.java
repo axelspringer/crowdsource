@@ -1,8 +1,7 @@
 package de.asideas.crowdsource.util.validation.financinground;
 
-import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.presentation.FinancingRound;
-import de.asideas.crowdsource.repository.FinancingRoundRepository;
+import de.asideas.crowdsource.service.FinancingRoundService;
 import de.asideas.crowdsource.testutil.ValidatorTestUtil;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -22,17 +21,17 @@ import static org.mockito.Mockito.when;
 public class FinancingRoundNotCollidingValidatorTest {
 
     @Mock
-    private FinancingRoundRepository financingRoundRepository;
+    private FinancingRoundService financingRoundService;
 
     @InjectMocks
     private FinancingRoundNotCollidingValidator financingRoundNotCollidingValidator;
 
     @Before
     public void init() {
-        FinancingRoundEntity reference = new FinancingRoundEntity();
+        FinancingRound reference = new FinancingRound();
         reference.setStartDate(new DateTime(2015, 1, 10, 0, 0, 0, 0));
         reference.setEndDate(new DateTime(2015, 1, 20, 0, 0, 0, 0));
-        when(financingRoundRepository.findAll()).thenReturn(Collections.singletonList(reference));
+        when(financingRoundService.allFinancingRounds()).thenReturn(Collections.singletonList(reference));
     }
 
     @Test

@@ -44,7 +44,7 @@ public class CommentControllerTest {
     public static final String EXISTING_USER_MAIL = "test.name@test.de";
     public static final String NON_EXISTING_USER_MAIL = "i_dont_exist@test.de";
     private final static Long EXISTING_PROJECT_ID = 158L;
-    private final static String NON_EXISTING_PROJECT_ID = "I_DONT_EXIST";
+    private final static Long NON_EXISTING_PROJECT_ID = 999L;
     private final ObjectMapper mapper = new ObjectMapper();
 
     private Comment aComment;
@@ -79,7 +79,7 @@ public class CommentControllerTest {
 
         assertThat(
                 mvcResult.getResponse().getContentAsString(),
-                is("[{\"created\":" + aComment.getCreated().getMillis()+ ",\"userName\":\"Test Name\",\"comment\":\"some comment\"}]"));
+                is("[{\"created\":" + aComment.getCreated().getMillis()+ ",\"userName\":\"firstname lastname\",\"comment\":\"some comment\"}]"));
 
     }
 

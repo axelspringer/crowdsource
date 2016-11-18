@@ -46,7 +46,7 @@ public class FinancingRoundEntity {
     @Column
     private BigDecimal budgetPerUser;
     @Column
-    private Boolean terminationPostProcessingDone;
+    private Boolean terminationPostProcessingDone = false;
     @ManyToOne
     private OrganisationUnitEntity organisationUnit;
     @OneToMany(mappedBy = "financingRound")
@@ -122,7 +122,18 @@ public class FinancingRoundEntity {
         if (postRoundPledges == null || postRoundPledges.isEmpty()) {
             return this.postRoundBudget;
         }
-        Collections.sort(postRoundPledges, (p1, p2) -> p1.getCreatedDate().compareTo(p2.getCreatedDate()) );
+        Collections.sort(postRoundPledges, (o1, o2) -> {
+            if( o1 == o2) {
+                return 0;
+            }
+            if(o1 == null) {
+                return -1;
+            }
+            if (o2 == null) {
+                return 1;
+            }
+            return o1.getCreatedDate().compareTo(o2.getCreatedDate());
+        } );
         Assert.isTrue(postRoundPledges.get(0).getCreatedDate().getMillis() > this.endDate.getMillis(),
                 "Method must not be called with pledgeEntities from active financing round! One entry was: " + postRoundPledges.get(0));
 
@@ -142,7 +153,9 @@ public class FinancingRoundEntity {
         if (this.postRoundBudget != null) {
             throw new IllegalStateException("PostRoundBudget must not be initialized more than once!");
         }
+
         BigDecimal budgetRemainingAfterRound = getBudget().subtract(pledgeAmountByUsers);
+
         if (budgetRemainingAfterRound.compareTo(ZERO) < 0) {
             log.warn("It seems, within this financing round there were more pledges done than budget available; Setting remaining budget to 0; " +
                     "The pledge amount above budget is: {}; FinancingRound was: {}", budgetRemainingAfterRound, this);

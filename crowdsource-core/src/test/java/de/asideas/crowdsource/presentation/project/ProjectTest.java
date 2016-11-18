@@ -36,6 +36,7 @@ public class ProjectTest {
         activeFinancingRoundEntity.setEndDate(DateTime.now().plusDays(1));
         Project project = new Project();
         projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), activeFinancingRoundEntity);
+        projectEntity.setCreator(creator);
 //        projectEntity.addAttachment(new AttachmentValue("test_fileRef", "test_contentType", "test_filename", 17, DateTime.now()));
 
         user1 = new UserEntity("user1@xyz.com", "firstname", "lastname");

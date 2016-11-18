@@ -54,6 +54,7 @@ public class CommentServiceTest {
         projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), new FinancingRoundEntity());
         userEntity = new UserEntity("test.name@test.de", "firstname", "lastname");
         aComment = new CommentEntity(projectEntity, "some comment");
+        aComment.setCreator(userEntity);
     }
 
     @Test

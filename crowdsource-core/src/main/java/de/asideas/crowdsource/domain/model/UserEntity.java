@@ -36,7 +36,7 @@ public class UserEntity {
     @Column
     private boolean deleted;
     @Column
-    private BigDecimal budget;
+    private BigDecimal budget = BigDecimal.ZERO;
     @ManyToMany(mappedBy = "members")
     private List<OrganisationUnitEntity> organisationUnits;
     @CreatedDate

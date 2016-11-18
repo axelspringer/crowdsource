@@ -21,7 +21,7 @@ public class PledgeEntityTest {
 
         PledgeEntity res = p0.add(p1);
 
-        assertThat(res.getAmount(), is(10));
+        assertThat(res.getAmount(), is(BigDecimal.valueOf(10)));
         assertThat(res.getCreator(), is(user));
         assertThat(res.getCreatedDate(), is(nullValue()));
         assertThat(res.getId(), is(nullValue()));
@@ -48,7 +48,7 @@ public class PledgeEntityTest {
 
         PledgeEntity res = p0.add(p1);
 
-        assertThat(res.getAmount(), is(10));
+        assertThat(res.getAmount(), is(BigDecimal.valueOf(10)));
         assertThat(res.getCreator(), is(user));
         assertThat(res.getCreatedDate(), is(nullValue()));
         assertThat(res.getLastModifiedDate(), is(nullValue()));
@@ -67,7 +67,7 @@ public class PledgeEntityTest {
 
         PledgeEntity res = p0.add(null);
 
-        assertThat(res.getAmount(), is(7));
+        assertThat(res.getAmount(), is(BigDecimal.valueOf(7)));
         assertThat(res.getCreator(), is(user));
         assertThat(res.getCreatedDate(), is(nullValue()));
         assertThat(res.getLastModifiedDate(), is(nullValue()));
@@ -86,7 +86,7 @@ public class PledgeEntityTest {
 
         PledgeEntity res = p0.add(p1);
 
-        assertThat(res.getAmount(), is(10));
+        assertThat(res.getAmount(), is(BigDecimal.valueOf(10)));
         assertThat(res.getCreator(), is(user));
         assertThat(res.getCreatedDate(), is(nullValue()));
         assertThat(res.getId(), is(nullValue()));
@@ -106,7 +106,7 @@ public class PledgeEntityTest {
 
         PledgeEntity res = p0.add(p1);
 
-        assertThat(res.getAmount(), is(10));
+        assertThat(res.getAmount(), is(BigDecimal.valueOf(10)));
         assertThat(res.getCreator(), is(nullValue()));
         assertThat(res.getCreatedDate(), is(nullValue()));
         assertThat(res.getId(), is(nullValue()));

@@ -19,12 +19,12 @@ public class FinancingRoundEntityTest {
 
     @Test
     public void budgetPerUserClearRounding() {
-        assertThat(newFinancingRound(BigDecimal.valueOf(100), 10).getBudgetPerUser(), is(10));
+        assertThat(newFinancingRound(BigDecimal.valueOf(100), 10).getBudgetPerUser(), is(BigDecimal.valueOf(10)));
     }
 
     @Test
     public void budgetPerUserNonClearRounding() {
-        assertThat(newFinancingRound(BigDecimal.valueOf(109), 10).getBudgetPerUser(), is(10));
+        assertThat(newFinancingRound(BigDecimal.valueOf(109), 10).getBudgetPerUser(), is(BigDecimal.valueOf(10)));
     }
 
     @Test
@@ -38,7 +38,7 @@ public class FinancingRoundEntityTest {
         final FinancingRoundEntity res = FinancingRoundEntity.newFinancingRound(countUsers, creationCmd.getEndDate(), creationCmd.getBudget());
 
         assertThat(res.getId(), is(nullValue()));
-        assertThat(res.getBudgetPerUser(), is(100));
+        assertThat(res.getBudgetPerUser(), is(BigDecimal.valueOf(100)));
         assertThat(res.getBudget(), is(creationCmd.getBudget()));
         assertThat(res.getEndDate(), is(creationCmd.getEndDate()));
         assertThat(res.getStartDate().toDate(), DateMatchers.sameSecond(new Date()));
@@ -129,7 +129,7 @@ public class FinancingRoundEntityTest {
         final FinancingRoundEntity financingRound = newFinancingRound(BigDecimal.valueOf(100), 10, new DateTime().minusHours(1));
 
         financingRound.initPostRoundBudget(BigDecimal.valueOf(17));
-        assertThat(financingRound.getPostRoundBudget(), is(983));
+        assertThat(financingRound.getPostRoundBudget(), is(BigDecimal.valueOf(83)));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -154,14 +154,14 @@ public class FinancingRoundEntityTest {
         round.setPostRoundBudget(BigDecimal.valueOf(400));
         round.setTerminationPostProcessingDone(true);
 
-        assertThat(round.postRoundPledgableBudgetRemaining(preparePostRoundPledges(round)), is(400 - (1 + 2 + 3 + 4 + 5)));
+        assertThat(round.postRoundPledgableBudgetRemaining(preparePostRoundPledges(round)), is(BigDecimal.valueOf(400 - (1 + 2 + 3 + 4 + 5))));
     }
 
     @Test
     public void postRoundPledgableBudgetRemaining_returnsZeroOnNonTerminatedRound() throws Exception {
         FinancingRoundEntity round = newFinancingRound(BigDecimal.valueOf(100), 12, new DateTime().minusDays(2));
         round.setTerminationPostProcessingDone(false);
-        assertThat(round.postRoundPledgableBudgetRemaining(preparePostRoundPledges(round)), is(0));
+        assertThat(round.postRoundPledgableBudgetRemaining(preparePostRoundPledges(round)), is(BigDecimal.ZERO));
     }
     @Test
     public void postRoundPledgableBudgetRemaining_shouldReturnPostRoundBudgetOnNullOrEmptyPledges() throws Exception {
@@ -169,8 +169,8 @@ public class FinancingRoundEntityTest {
         round.setPostRoundBudget(BigDecimal.valueOf(400));
         round.setTerminationPostProcessingDone(true);
 
-        assertThat(round.postRoundPledgableBudgetRemaining(null), is(400));
-        assertThat(round.postRoundPledgableBudgetRemaining(Collections.emptyList()), is(400));
+        assertThat(round.postRoundPledgableBudgetRemaining(null), is(BigDecimal.valueOf(400)));
+        assertThat(round.postRoundPledgableBudgetRemaining(Collections.emptyList()), is(BigDecimal.valueOf(400)));
     }
 
     @Test(expected = IllegalArgumentException.class)

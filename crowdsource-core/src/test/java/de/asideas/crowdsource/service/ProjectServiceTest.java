@@ -97,7 +97,11 @@ public class ProjectServiceTest {
         final Project project = project("myTitle", "theFullDescription", "theShortDescription", BigDecimal.valueOf(50), ProjectStatus.PROPOSED);
         final ArgumentCaptor<ProjectEntity> projectEntity = ArgumentCaptor.forClass(ProjectEntity.class);
 
-        when(projectRepository.save(projectEntity.capture())).thenAnswer(a -> a.getArgumentAt(0, ProjectEntity.class));
+        when(projectRepository.save(projectEntity.capture())).thenAnswer(a -> {
+            ProjectEntity pe = a.getArgumentAt(0, ProjectEntity.class);
+            pe.setCreator(user(USER_EMAIL));
+            return pe;
+        });
         prepareActiveFinanzingRound(null);
 
         Project res = projectService.addProject(project, user(USER_EMAIL));
@@ -111,7 +115,11 @@ public class ProjectServiceTest {
         final ArgumentCaptor<ProjectEntity> projectEntity = ArgumentCaptor.forClass(ProjectEntity.class);
 
         when(financingRoundRepository.findActive(any())).thenReturn(null);
-        when(projectRepository.save(projectEntity.capture())).thenAnswer(a -> a.getArgumentAt(0, ProjectEntity.class));
+        when(projectRepository.save(projectEntity.capture())).thenAnswer(a -> {
+            ProjectEntity answer = a.getArgumentAt(0, ProjectEntity.class);
+            answer.setCreator(user(USER_EMAIL));
+            return answer;
+        });
 
         Project res = projectService.addProject(project, user(USER_EMAIL));
         assertThat(res, is(new Project(projectEntity.getValue(), new ArrayList<>(), null, 0, LIKE)));
@@ -121,6 +129,12 @@ public class ProjectServiceTest {
     @Test
     public void createProjectTriggersAdminNotification() throws Exception {
         final Project newProject = new Project();
+
+        when(projectRepository.save(any(ProjectEntity.class))).thenAnswer(a -> {
+            ProjectEntity answer = a.getArgumentAt(0, ProjectEntity.class);
+            answer.setCreator(user(USER_EMAIL));
+            return answer;
+        });
 
         projectService.addProject(newProject, user("some@mail.com"));
 
@@ -394,6 +408,9 @@ public class ProjectServiceTest {
     public void modifyProjectStatus_updatedStateTriggersUserNotificationAndPeristence() throws Exception {
         final UserEntity user = user(USER_EMAIL);
         final ProjectEntity projectEntity = projectEntity(1L, ProjectStatus.PROPOSED, user);
+        projectEntity.setCreator(user);
+
+        when(projectRepository.findOne(anyLong())).thenReturn(projectEntity);
 
         projectService.modifyProjectStatus(2L, ProjectStatus.PUBLISHED, user);
 
@@ -434,6 +451,7 @@ public class ProjectServiceTest {
         final UserEntity user = user(USER_EMAIL);
         final Project projectCmd = project("title", "descr", "descrShort", BigDecimal.valueOf(17), ProjectStatus.PROPOSED);
         final ProjectEntity project = new ProjectEntity(projectCmd.getTitle(), projectCmd.getShortDescription(), projectCmd.getDescription(), projectCmd.getPledgeGoal(), null);
+        project.setCreator(user);
 
         when(projectRepository.findOne(projectId)).thenReturn(project);
         projectService.modifyProjectMasterdata(projectId, projectCmd, user);

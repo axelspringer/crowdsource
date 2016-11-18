@@ -37,7 +37,7 @@ public class ProjectEntity {
     @Column
     private ProjectStatus status;
     @Column
-    private BigDecimal pledgeGoal;
+    private BigDecimal pledgeGoal = ZERO;
 
     @ManyToOne
     private FinancingRoundEntity financingRound;
@@ -148,7 +148,7 @@ public class ProjectEntity {
             throw InvalidRequestException.pledgeGoalExceeded();
         }
 
-        if (newPledgedAmount == this.pledgeGoal) {
+        if (newPledgedAmount.compareTo(this.pledgeGoal) == 0 ) {
             setStatus(ProjectStatus.FULLY_PLEDGED);
         }
 

@@ -15,12 +15,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@WebAppConfiguration
+@SpringBootTest
 @ContextConfiguration(classes = FinancingRoundControllerMockMvcTest.Config.class)
 public class FinancingRoundControllerMockMvcTest {
 
@@ -181,7 +181,7 @@ public class FinancingRoundControllerMockMvcTest {
         // attempt to create round with 0-budget
         final MvcResult mvcResult = mockMvc.perform(post("/financingrounds")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(financingRound(new DateTime().plusDays(1), BigDecimal.valueOf(99)))))
+                .content(mapper.writeValueAsString(financingRound(new DateTime().plusDays(1), BigDecimal.ZERO))))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -194,7 +194,9 @@ public class FinancingRoundControllerMockMvcTest {
     public void startFinancingRoundCollidingRounds() throws Exception {
 
         // create currently running financing round
-        when(financingRoundRepository.findAll()).thenReturn(Collections.singletonList(financingRoundEntity(new DateTime().minusDays(5), new DateTime().plusDays(1))));
+        FinancingRound financingRound = financingRound(new DateTime().plusDays(5), BigDecimal.valueOf(99));
+        financingRound.setStartDate(new DateTime().minusDays(5));
+        when(financingRoundService.allFinancingRounds()).thenReturn(Collections.singletonList(financingRound));
 
         // attempt to create a new (otherwise valid) one
         final MvcResult mvcResult = mockMvc.perform(post("/financingrounds")

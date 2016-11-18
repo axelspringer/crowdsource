@@ -21,7 +21,7 @@ public class PledgeEntity {
     @ManyToOne
     private FinancingRoundEntity financingRound;
     @Column
-    private BigDecimal amount;
+    private BigDecimal amount = BigDecimal.ZERO;
 
     @CreatedDate
     private DateTime createdDate;

@@ -34,7 +34,7 @@ import static org.mockito.Mockito.*;
 @RunWith(MockitoJUnitRunner.class)
 public class FinancingRoundPostProcessorTest {
 
-    final int EXPECTED_REMAINING_BUDGET_AFTER_ROUND = 44444 + 444444 - ((22222 - 11111) + (222222 - 111111));
+    final BigDecimal EXPECTED_REMAINING_BUDGET_AFTER_ROUND = BigDecimal.valueOf(44444 + 444444 - ((22222 - 11111) + (222222 - 111111)));
 
     private ProjectEntity project_0;
     private ProjectEntity project_1;
@@ -154,7 +154,7 @@ public class FinancingRoundPostProcessorTest {
 
         financingRoundPostProcessor.assignUnpledgedBudgetToFinancingRound(financingRound);
 
-        assertThat(financingRound.getPostRoundBudget(), is(0));
+        assertThat(financingRound.getPostRoundBudget(), is(BigDecimal.ZERO));
     }
 
     private ProjectEntity projectEntity(UserEntity userEntity, Long id, String title, BigDecimal pledgeGoal, String shortDescription, String description, ProjectStatus status, DateTime lastModifiedDate) {

@@ -58,6 +58,7 @@ public class ProjectEntityTest {
         Project project = new Project();
         projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), anActiveFinancingRound());
         projectEntity.setPledgeGoal(PLEDGE_GOAL);
+        projectEntity.setCreator(projectCreator);
     }
 
     /**
@@ -67,12 +68,12 @@ public class ProjectEntityTest {
      */
     @Test
     public void pledge() throws Exception {
-        final List<PledgeEntity> pledgesDoneBeforw = bunchOfPledgesDone();
+        final List<PledgeEntity> pledgesDoneBefore = bunchOfPledgesDone();
         final Pledge pledge = new Pledge(BigDecimal.valueOf(40));
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         BigDecimal userBudgetBefore = aUser.getBudget();
 
-        final PledgeEntity pledgeRes = projectEntity.pledge(pledge.getAmount(), aUser, pledgesDoneBeforw);
+        final PledgeEntity pledgeRes = projectEntity.pledge(pledge.getAmount(), aUser, pledgesDoneBefore);
 
         assertThat(pledgeRes, is(new PledgeEntity(projectEntity, aUser, pledge.getAmount(), projectEntity.getFinancingRound())));
         assertThat(aUser.getBudget(), is(userBudgetBefore.subtract(pledge.getAmount())));
@@ -81,15 +82,15 @@ public class ProjectEntityTest {
 
     @Test
     public void pledge_reverse() throws Exception {
-        final List<PledgeEntity> pledgesDoneBeforw = bunchOfPledgesDone();
+        final List<PledgeEntity> pledgesDoneBefore = bunchOfPledgesDone();
         final Pledge pledge = new Pledge(BigDecimal.valueOf(-10));
         projectEntity.setStatus(ProjectStatus.PUBLISHED);
         BigDecimal userBudgetBefore = aUser.getBudget();
 
-        final PledgeEntity pledgeRes = projectEntity.pledge(pledge.getAmount(), aUser, pledgesDoneBeforw);
+        final PledgeEntity pledgeRes = projectEntity.pledge(pledge.getAmount(), aUser, pledgesDoneBefore);
 
         assertThat(pledgeRes, is(new PledgeEntity(projectEntity, aUser, pledge.getAmount(), projectEntity.getFinancingRound())));
-        assertThat(aUser.getBudget(), is(userBudgetBefore.add(pledge.getAmount())));
+        assertThat(aUser.getBudget(), is(userBudgetBefore.add(pledge.getAmount().abs())));
     }
 
     @Test
@@ -525,18 +526,16 @@ public class ProjectEntityTest {
 
     @Test
     public void pledgedAmount() throws Exception {
-        final FinancingRoundEntity activeFinancingRound = new FinancingRoundEntity();
-        assertThat(projectEntity.pledgedAmount(bunchOfPledgesDone()), is(160));
+        assertThat(projectEntity.pledgedAmount(bunchOfPledgesDone()), is(BigDecimal.valueOf(160)));
     }
 
     @Test
     public void pledgedAmount_isZeroOnEmptyPledges() throws Exception {
-        assertThat(projectEntity.pledgedAmount(new ArrayList<>()), is(0));
+        assertThat(projectEntity.pledgedAmount(new ArrayList<>()), is(BigDecimal.ZERO));
     }
 
     @Test
     public void countBackers() throws Exception {
-        final FinancingRoundEntity activeFinancingRound = new FinancingRoundEntity();
         assertThat(projectEntity.countBackers(bunchOfPledgesDone()), is(2L));
     }
 
@@ -547,19 +546,17 @@ public class ProjectEntityTest {
 
     @Test
     public void pledgedAmountOfUser() throws Exception {
-        final FinancingRoundEntity activeFinancingRound = new FinancingRoundEntity();
-        assertThat(projectEntity.pledgedAmountOfUser(bunchOfPledgesDone(), aUser), is(30));
+        assertThat(projectEntity.pledgedAmountOfUser(bunchOfPledgesDone(), aUser), is(BigDecimal.valueOf(30)));
     }
 
     @Test
     public void pledgedAmountOfUser_ReturnsZeroOnNullUser() throws Exception {
-        final FinancingRoundEntity activeFinancingRound = new FinancingRoundEntity();
-        assertThat(projectEntity.pledgedAmountOfUser(bunchOfPledgesDone(), null), is(0));
+        assertThat(projectEntity.pledgedAmountOfUser(bunchOfPledgesDone(), null), is(BigDecimal.ZERO));
     }
 
     @Test
     public void pledgedAmountOfUser_ReturnsZeroOnEmptyPledges() throws Exception {
-        assertThat(projectEntity.pledgedAmountOfUser(new ArrayList<>(), aUser), is(0));
+        assertThat(projectEntity.pledgedAmountOfUser(new ArrayList<>(), aUser), is(BigDecimal.ZERO));
     }
 
     @Test
@@ -887,7 +884,7 @@ public class ProjectEntityTest {
     @Test
     public void pledgedAmountPostRound() throws Exception {
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
-        assertThat(projectEntity.pledgedAmountPostRound(bunchOfWithPostRoundPledgesDone()), is(1 + 2 + 3 + 4 + 5));
+        assertThat(projectEntity.pledgedAmountPostRound(bunchOfWithPostRoundPledgesDone()), is(BigDecimal.valueOf(1 + 2 + 3 + 4 + 5)));
     }
 
     @Test
@@ -895,15 +892,15 @@ public class ProjectEntityTest {
         List<PledgeEntity> pledges = bunchOfPledgesDone();
 
         projectEntity.setFinancingRound(null);
-        assertThat(projectEntity.pledgedAmountPostRound(pledges), is(0));
+        assertThat(projectEntity.pledgedAmountPostRound(pledges), is(BigDecimal.ZERO));
 
         projectEntity.setFinancingRound(anActiveFinancingRound());
-        assertThat(projectEntity.pledgedAmountPostRound(pledges), is(0));
+        assertThat(projectEntity.pledgedAmountPostRound(pledges), is(BigDecimal.ZERO));
 
         projectEntity.setFinancingRound(aTerminatedFinancingRound());
-        assertThat(projectEntity.pledgedAmountPostRound(null), is(0));
+        assertThat(projectEntity.pledgedAmountPostRound(null), is(BigDecimal.ZERO));
 
-        assertThat(projectEntity.pledgedAmountPostRound(Collections.emptyList()), is(0));
+        assertThat(projectEntity.pledgedAmountPostRound(Collections.emptyList()), is(BigDecimal.ZERO));
     }
 
     @Test
@@ -1009,7 +1006,7 @@ public class ProjectEntityTest {
         res.setId(100L);
         res.setCreatedDate(new DateTime().minusDays(3));
 
-        res.initPostRoundBudget(bunchOfPledgesDone().stream().map(p -> p.getAmount()).reduce(BigDecimal.ZERO, BigDecimal::add));
+        res.initPostRoundBudget(bunchOfPledgesDone().stream().map(PledgeEntity::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
         res.setTerminationPostProcessingDone(true);
         return res;
     }
@@ -1035,28 +1032,25 @@ public class ProjectEntityTest {
     }
 
     private FinancingRoundEntity aFinancingRound(DateTime endDate) {
-        FinancingRound creationCmd = new FinancingRound();
-        creationCmd.setEndDate(endDate);
-        creationCmd.setBudget(BigDecimal.valueOf(1000));
-        FinancingRoundEntity res = FinancingRoundEntity.newFinancingRound(5, endDate, BigDecimal.valueOf(7));
+        FinancingRoundEntity res = FinancingRoundEntity.newFinancingRound(7, endDate, BigDecimal.valueOf(1000));
         res.setStartDate(new DateTime().minusDays(2));
         return res;
     }
 
     private List<PledgeEntity> bunchOfPledgesDone() {
         List<PledgeEntity> res = new ArrayList<>();
-        res.add(new PledgeEntity(projectEntity, aUser, BigDecimal.valueOf(1), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, adminUser, BigDecimal.valueOf(2), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(2), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, aUser, BigDecimal.valueOf(4), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, adminUser, BigDecimal.valueOf(5),projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, aUser, BigDecimal.valueOf(6),projectEntity.getFinancingRound()));
         res.add(new PledgeEntity(projectEntity, aUser, BigDecimal.valueOf(10), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, adminUser, BigDecimal.valueOf(60), projectEntity.getFinancingRound()));
         res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(180), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, aUser, BigDecimal.valueOf(20), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, adminUser, BigDecimal.valueOf(70),projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, aUser, BigDecimal.valueOf(10),projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, aUser, BigDecimal.valueOf(-10), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(-180), projectEntity.getFinancingRound()));
 
         res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(-10), projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(-20),projectEntity.getFinancingRound()));
-        res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(-10), projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(110),projectEntity.getFinancingRound()));
+        res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(10), projectEntity.getFinancingRound()));
         res.add(new PledgeEntity(projectEntity, projectCreator, BigDecimal.valueOf(-110), projectEntity.getFinancingRound()));
         return res;
     }
