@@ -2,7 +2,6 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.config.SchedulerConfig;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.service.financinground.FinancingRoundPostProcessor;
 import de.asideas.crowdsource.repository.FinancingRoundRepository;
 import de.asideas.crowdsource.repository.PledgeRepository;
@@ -23,15 +22,15 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @IntegrationTest
@@ -52,7 +51,7 @@ public class FinancingRoundServiceSchedulingIT {
 
     private Set<FinancingRoundEntity> roundsToProcess;
 
-    private volatile Set<String> invocationIds = new HashSet<>();
+    private volatile Set<Long> invocationIds = new HashSet<>();
 
     public FinancingRoundServiceSchedulingIT() {
     }
@@ -62,10 +61,10 @@ public class FinancingRoundServiceSchedulingIT {
         reset(financingRoundPostProcessor, financingRoundRepository );
         invocationIds = new HashSet<>();
         roundsToProcess = new LinkedHashSet<>(COUNT_TASKS);
-        for (int i = 0; i < COUNT_TASKS; i++) {
-            roundsToProcess.add(newFinancingRound("test_roundId_" + i, i, DateTime.now()));
+        for (long i = 0; i < COUNT_TASKS; i++) {
+            roundsToProcess.add(newFinancingRound(i, BigDecimal.valueOf(i), DateTime.now()));
         }
-        when(financingRoundRepository.findOne(any(String.class))).thenAnswer(i -> {
+        when(financingRoundRepository.findOne(anyLong())).thenAnswer(i -> {
             String desiredId = (String) i.getArguments()[0];
             return roundsToProcess.stream().filter(round -> round.getId().equals(desiredId)).findFirst().get();
         });
@@ -83,18 +82,15 @@ public class FinancingRoundServiceSchedulingIT {
             return arg;
         });
 
-        roundsToProcess.stream().forEach(financingRoundService::schedulePostProcessing);
+        roundsToProcess.forEach(financingRoundService::schedulePostProcessing);
         // Wait for tasks to be completed
         Thread.sleep(COUNT_TASKS * timePerTask + 100);
 
-        roundsToProcess.stream().forEach( expRound -> assertTrue("Round with ID " + expRound.getId() + " has been executed", invocationIds.contains(expRound.getId())));
+        roundsToProcess.forEach( expRound -> assertTrue("Round with ID " + expRound.getId() + " has been executed", invocationIds.contains(expRound.getId())));
     }
 
-    private FinancingRoundEntity newFinancingRound(String id, int budget, DateTime endDate) {
-        final FinancingRound cmd = new FinancingRound();
-        cmd.setBudget(budget);
-        cmd.setEndDate(endDate);
-        FinancingRoundEntity res = FinancingRoundEntity.newFinancingRound(cmd, 17);
+    private FinancingRoundEntity newFinancingRound(Long id, BigDecimal budget, DateTime endDate) {
+        FinancingRoundEntity res = FinancingRoundEntity.newFinancingRound(17, endDate, budget);
         res.setId(id);
         return res;
     }

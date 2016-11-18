@@ -1,195 +1,67 @@
 package de.asideas.crowdsource.domain.model;
 
-import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.security.Roles;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Arrays;
+import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.List;
-import java.util.Objects;
 
-import static java.util.stream.Collectors.joining;
+import static java.util.Arrays.asList;
 
-// needed for serialization
-@Document(collection = "users")
+@Data
+@Entity
 public class UserEntity {
 
     @Id
-    private String id;
-
-    @Indexed(unique = true)
+    @GeneratedValue
+    private Long id;
+    @Column
     private String email;
-
+    @Column
+    private String firstname;
+    @Column
+    private String lastname;
+    @Column
     private String password;
-
+    @Column
     private String activationToken;
-
-    private List<String> roles = Arrays.asList(Roles.ROLE_USER);
-
-    private boolean activated = false;
-
-    private boolean deleted = false;
-
-    private int budget = 0;
-
-    @Indexed
+    @Column
+    private List<String> roles = asList(Roles.ROLE_USER);
+    @Column
+    private boolean activated;
+    @Column
+    private boolean deleted;
+    @Column
+    private BigDecimal budget;
+    @ManyToMany(mappedBy = "members")
+    private List<OrganisationUnitEntity> organisationUnits;
     @CreatedDate
     private DateTime createdDate;
-
     @LastModifiedDate
     private DateTime lastModifiedDate;
-
-    public UserEntity(String email) {
-        this(email, null);
-    }
-
-    public UserEntity(String email, String password) {
-        this.email = email;
-        this.password = password;
-    }
 
     public UserEntity() {
     }
 
-    public void accountPledge(Pledge pledge) {
-        if ((budget - pledge.getAmount()) < 0) {
-            throw new IllegalArgumentException("User budget may not drop below 0");
-        }
-
-        budget -= pledge.getAmount();
-    }
-
-    public String fullNameFromEmail() {
-        if (email == null) {
-            return null;
-        }
-
-        int atPos = email.indexOf('@');
-        if (atPos < 1) {
-            return null;
-        }
-
-        String localPart = email.substring(0, atPos);
-        List<String> localParts = Arrays.asList(localPart.split("\\."));
-
-        return localParts.stream()
-                .map(s -> s.replaceAll("\\d+", ""))
-                .map(StringUtils::capitalize)
-                .collect(joining(" "));
-    }
-
-
-    public String getId() {
-        return this.id;
-    }
-
-    public String getEmail() {
-        return this.email;
-    }
-
-    public boolean isDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public String getActivationToken() {
-        return this.activationToken;
-    }
-
-    public List<String> getRoles() {
-        return this.roles;
-    }
-
-    public boolean isActivated() {
-        return this.activated;
-    }
-
-    public int getBudget() {
-        return this.budget;
-    }
-
-    public DateTime getCreatedDate() {
-        return this.createdDate;
-    }
-
-    public DateTime getLastModifiedDate() {
-        return this.lastModifiedDate;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setEmail(String email) {
+    public UserEntity(String email, String firstname, String lastname) {
         this.email = email;
+        this.firstname = firstname;
+        this.lastname = lastname;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public String getName() {
+        return firstname + " " + lastname;
     }
 
-    public void setActivationToken(String activationToken) {
-        this.activationToken = activationToken;
-    }
-
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
-    }
-
-    public void setActivated(boolean activated) {
-        this.activated = activated;
-    }
-
-    public void setBudget(int budget) {
-        this.budget = budget;
-    }
-
-    public void setCreatedDate(DateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public void setLastModifiedDate(DateTime lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        UserEntity that = (UserEntity) o;
-
-        if (this.id == null && that.id == null) {
-            return this == that;
+    public void accountPledge(BigDecimal amount) {
+        if (budget.compareTo(amount) < 0) {
+            throw new IllegalArgumentException("UserEntity budget may not drop below 0");
         }
 
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+        budget = budget.subtract(amount);
     }
 }

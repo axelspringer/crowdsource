@@ -11,21 +11,21 @@ public class ProjectCreatorTest {
 
     @Test
     public void testDetermineNameFromEmail() throws Exception {
-        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("foo.bar@domain.com"));
+        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("foo.bar@domain.com", "firstname", "lastname"));
 
         assertThat(projectCreator.getName(), is("Foo Bar"));
     }
 
     @Test
     public void testDetermineNameFromEmail_withDigits() throws Exception {
-        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("f12oo123.91bar2@domain.com"));
+        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("f12oo123.91bar2@domain.com", "firstname", "lastname"));
 
         assertThat(projectCreator.getName(), is("Foo Bar"));
     }
 
     @Test
     public void testDetermineNameFromEmail_singleName() throws Exception {
-        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("foo@domain.com"));
+        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("foo@domain.com", "firstname", "lastname"));
 
         assertThat(projectCreator.getName(), is("Foo"));
     }
@@ -39,14 +39,14 @@ public class ProjectCreatorTest {
 
     @Test
     public void testDetermineNameFromEmail_invalidEmail() throws Exception {
-        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("invalid-email"));
+        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("invalid-email", "firstname", "lastname"));
 
         assertThat(projectCreator.getName(), is(nullValue()));
     }
 
     @Test
     public void testDetermineNameFromEmail_noLocalPart() throws Exception {
-        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("@domain.com"));
+        ProjectCreator projectCreator = new ProjectCreator(new UserEntity("@domain.com", "firstname", "lastname"));
 
         assertThat(projectCreator.getName(), is(nullValue()));
     }

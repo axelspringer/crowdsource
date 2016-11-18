@@ -16,9 +16,9 @@ import javax.annotation.PostConstruct;
 import static java.util.stream.Collectors.toList;
 
 @Service
-public class MongoUserDetailsService implements UserDetailsService {
+public class CrowdUserDetailsService implements UserDetailsService {
 
-    private static final Logger LOG = org.slf4j.LoggerFactory.getLogger(MongoUserDetailsService.class);
+    private static final Logger LOG = org.slf4j.LoggerFactory.getLogger(CrowdUserDetailsService.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -51,7 +51,7 @@ public class MongoUserDetailsService implements UserDetailsService {
         }
 
         if (!user.isActivated()) {
-            throw new UsernameNotFoundException("User with username [" + username + "] is not activated yet");
+            throw new UsernameNotFoundException("UserEntity with username [" + username + "] is not activated yet");
         }
 
         return new org.springframework.security.core.userdetails.User(

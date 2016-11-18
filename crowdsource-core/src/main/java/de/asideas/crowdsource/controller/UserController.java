@@ -19,14 +19,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.math.BigDecimal;
 import java.security.Principal;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -58,7 +54,7 @@ public class UserController {
         UserEntity userEntity = userRepository.findByEmail(email);
 
         if (userEntity == null) {
-            userEntity = new UserEntity(email);
+            userEntity = new UserEntity(email, userRegistration.getFirstname(), userRegistration.getLastname());
         } else {
             LOG.debug("A user with the address {} already exists, assigning a new activation token", email);
         }
@@ -128,7 +124,7 @@ public class UserController {
         if (currentFinancingRound == null) {
             // if there is no active financing round, the budget of the user should be 0
             // but we have no scheduler that resets the budget of every user to 0 when the financing round ends
-            userEntity.setBudget(0);
+            userEntity.setBudget(BigDecimal.ZERO);
         }
 
         return new User(userEntity);

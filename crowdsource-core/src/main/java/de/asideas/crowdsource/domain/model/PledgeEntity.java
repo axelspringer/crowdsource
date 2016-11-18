@@ -1,56 +1,53 @@
 package de.asideas.crowdsource.domain.model;
 
-import de.asideas.crowdsource.presentation.Pledge;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import lombok.Data;
 import org.joda.time.DateTime;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Comparator;
+import javax.persistence.*;
+import java.math.BigDecimal;
 
-// needed for serialization
-@Document(collection = "pledges")
+@Data
+@Entity
 public class PledgeEntity {
 
     @Id
-    private String id;
-    @DBRef
+    @GeneratedValue
+    private Long id;
+    @ManyToOne
     private ProjectEntity project;
-    @DBRef
-    private UserEntity user;
-    @DBRef
+    @ManyToOne
     private FinancingRoundEntity financingRound;
-
-    private int amount;
+    @Column
+    private BigDecimal amount;
 
     @CreatedDate
     private DateTime createdDate;
-
     @LastModifiedDate
     private DateTime lastModifiedDate;
+    @CreatedBy
+    private UserEntity creator;
 
     public PledgeEntity() {
     }
-    public PledgeEntity(ProjectEntity projectEntity, UserEntity userEntity, Pledge pledge, FinancingRoundEntity financingRoundEntity) {
+    // // FIXME: 18/11/16 user should be automatically added
+    public PledgeEntity(ProjectEntity projectEntity, UserEntity userEntity, BigDecimal amount, FinancingRoundEntity financingRoundEntity) {
         this.project = projectEntity;
-        this.user = userEntity;
+        this.creator = userEntity;
         this.financingRound = financingRoundEntity;
-        this.amount = pledge.getAmount();
+        this.amount = amount;
     }
     /** Copy Constructor */
-    private PledgeEntity(int amount, DateTime createdDate, FinancingRoundEntity financingRound, String id, DateTime lastModifiedDate, ProjectEntity project, UserEntity user) {
+    private PledgeEntity(BigDecimal amount, DateTime createdDate, FinancingRoundEntity financingRound, Long id, DateTime lastModifiedDate, ProjectEntity project, UserEntity user) {
         this.amount = amount;
         this.createdDate = createdDate;
         this.financingRound = financingRound;
         this.id = id;
         this.lastModifiedDate = lastModifiedDate;
         this.project = project;
-        this.user = user;
+        this.creator = user;
     }
 
     /**
@@ -69,13 +66,13 @@ public class PledgeEntity {
      */
     public PledgeEntity add(PledgeEntity other){
         if(other == null) {
-            return new PledgeEntity(amount, null, financingRound, null, null, project, user);
+            return new PledgeEntity(amount, null, financingRound, null, null, project, creator);
         }
 
         PledgeEntity res = new PledgeEntity();
-        res.setAmount(this.amount + other.amount);
-        if(this.user == null || this.user.equals(other.user)) {
-            res.user = other.user;
+        res.setAmount(this.amount.add(other.amount));
+        if(this.creator == null || this.creator.equals(other.creator)) {
+            res.creator = other.creator;
         }
 
         if(this.financingRound == null || this.financingRound.equals(other.financingRound)) {
@@ -85,93 +82,5 @@ public class PledgeEntity {
             res.project = other.project;
         }
         return res;
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public ProjectEntity getProject() {
-        return this.project;
-    }
-
-    public UserEntity getUser() {
-        return this.user;
-    }
-
-    public FinancingRoundEntity getFinancingRound() {
-        return this.financingRound;
-    }
-
-    public int getAmount() {
-        return this.amount;
-    }
-
-    public DateTime getCreatedDate() {
-        return this.createdDate;
-    }
-
-    public DateTime getLastModifiedDate() {
-        return this.lastModifiedDate;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setProject(ProjectEntity project) {
-        this.project = project;
-    }
-
-    public void setUser(UserEntity user) {
-        this.user = user;
-    }
-
-    public void setFinancingRound(FinancingRoundEntity financingRound) {
-        this.financingRound = financingRound;
-    }
-
-    public void setAmount(int amount) {
-        this.amount = amount;
-    }
-
-    public void setCreatedDate(DateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public void setLastModifiedDate(DateTime lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return EqualsBuilder.reflectionEquals(this, o);
-    }
-
-    @Override
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
-
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
-
-    public static class CreationTimeComparator implements Comparator<PledgeEntity> {
-
-        @Override
-        public int compare(PledgeEntity o1, PledgeEntity o2) {
-            if( o1 == o2) {
-               return 0;
-            }
-            if(o1 == null) {
-                return -1;
-            }
-            if (o2 == null) {
-                return 1;
-            }
-            return o1.getCreatedDate().compareTo(o2.getCreatedDate());
-        }
     }
 }

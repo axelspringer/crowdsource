@@ -5,8 +5,8 @@ import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.service.financinground.FinancingRoundPostProcessor;
+import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.repository.FinancingRoundRepository;
 import de.asideas.crowdsource.repository.PledgeRepository;
 import de.asideas.crowdsource.repository.ProjectRepository;
@@ -24,6 +24,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -91,7 +92,7 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
     }
 
     public FinancingRoundEntity mostRecentRoundEntity() {
-        final Page<FinancingRoundEntity> pageMostRecent = financingRoundRepository.financingRounds(new PageRequest(0, 1, Sort.Direction.DESC, "createdDate"));
+        final Page<FinancingRoundEntity> pageMostRecent = financingRoundRepository.findAll(new PageRequest(0, 1, Sort.Direction.DESC, "createdDate"));
         if (pageMostRecent.getNumberOfElements() < 1) {
             throw new ResourceNotFoundException();
         }
@@ -104,10 +105,10 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
 
         // create round
         final FinancingRoundEntity financingRoundEntity = FinancingRoundEntity
-                .newFinancingRound(creationCommand, userEntities.size());
+                .newFinancingRound(userEntities.size(), creationCommand.getEndDate(), creationCommand.getBudget());
 
         // flush user budget and set new budget
-        final int budgetPerUser = financingRoundEntity.getBudgetPerUser();
+        final BigDecimal budgetPerUser = financingRoundEntity.getBudgetPerUser();
         userEntities.forEach(userEntity -> {
             userEntity.setBudget(budgetPerUser);
             userRepository.save(userEntity);
@@ -131,7 +132,7 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
         return userRepository.findAll().stream().filter(user -> !user.isDeleted()).collect(Collectors.toList());
     }
 
-    public FinancingRound stopFinancingRound(String financingRoundId) throws ResourceNotFoundException, InvalidRequestException {
+    public FinancingRound stopFinancingRound(Long financingRoundId) throws ResourceNotFoundException, InvalidRequestException {
         FinancingRoundEntity financingRoundEntity = financingRoundRepository.findOne(financingRoundId);
 
         if (financingRoundEntity == null) {
@@ -156,8 +157,8 @@ public class FinancingRoundService implements ApplicationListener<ContextRefresh
      * @param financingRound the round to be processed after termination
      */
     void schedulePostProcessing(FinancingRoundEntity financingRound) {
-        Assert.hasText(financingRound.getId());
-        final String financingRoundId = financingRound.getId();
+        Assert.notNull(financingRound.getId());
+        final Long financingRoundId = financingRound.getId();
 
         crowdScheduler.schedule(() -> {
             FinancingRoundEntity entity2Process = financingRoundRepository.findOne(financingRoundId);

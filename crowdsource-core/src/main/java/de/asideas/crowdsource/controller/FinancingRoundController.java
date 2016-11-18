@@ -55,7 +55,7 @@ public class FinancingRoundController {
     @Secured(Roles.ROLE_ADMIN)
     @RequestMapping(value = "financingrounds/{id}/cancel", method = RequestMethod.PUT)
     @ResponseStatus(HttpStatus.OK)
-    public FinancingRound stopFinancingRound(@PathVariable String id) {
+    public FinancingRound stopFinancingRound(@PathVariable Long id) {
         return financingRoundService.stopFinancingRound(id);
     }
 

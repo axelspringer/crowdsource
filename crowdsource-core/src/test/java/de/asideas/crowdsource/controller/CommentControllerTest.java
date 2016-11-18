@@ -30,12 +30,8 @@ import java.util.Collections;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,7 +43,7 @@ public class CommentControllerTest {
 
     public static final String EXISTING_USER_MAIL = "test.name@test.de";
     public static final String NON_EXISTING_USER_MAIL = "i_dont_exist@test.de";
-    private final static String EXISTING_PROJECT_ID = "TEST_PROJECT_ID";
+    private final static Long EXISTING_PROJECT_ID = 158L;
     private final static String NON_EXISTING_PROJECT_ID = "I_DONT_EXIST";
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -68,9 +64,9 @@ public class CommentControllerTest {
 
         reset(commentService);
 
-        final UserEntity userEntity = new UserEntity("test.name@test.de", "password");
+        final UserEntity userEntity = new UserEntity("test.name@test.de", "firstname", "lastname");
 
-        aComment = new Comment(new DateTime(), userEntity.fullNameFromEmail(), "some comment");
+        aComment = new Comment(new DateTime(), userEntity.getName(), "some comment");
         when(commentService.loadCommentsByProject(EXISTING_PROJECT_ID)).thenReturn(Collections.singletonList(aComment));
     }
 
@@ -98,7 +94,7 @@ public class CommentControllerTest {
                 .content(mapper.writeValueAsString(comment)))
                 .andExpect(status().isCreated());
 
-        verify(commentService).addComment(comment, EXISTING_PROJECT_ID, EXISTING_USER_MAIL);
+        verify(commentService).addComment(comment, EXISTING_PROJECT_ID);
     }
 
     @Test
@@ -114,7 +110,7 @@ public class CommentControllerTest {
 
         assertThat(mvcResult.getResponse().getContentAsString(), is("{\"errorCode\":\"field_errors\",\"fieldViolations\":{\"comment\":\"may not be empty\"}}"));
 
-        verify(commentService, never()).addComment(any(Comment.class), any(String.class), any(String.class));
+        verify(commentService, never()).addComment(any(Comment.class), anyLong());
     }
 
     @Test
@@ -123,7 +119,7 @@ public class CommentControllerTest {
         Comment comment = new Comment();
         comment.setComment("this is an example comment that respects the length constraint");
 
-        doThrow(new ResourceNotFoundException()).when(commentService).addComment(any(Comment.class), any(String.class), any(String.class));
+        doThrow(new ResourceNotFoundException()).when(commentService).addComment(any(Comment.class), anyLong());
 
         mockMvc.perform(post("/project/" + NON_EXISTING_PROJECT_ID + "/comment")
                 .principal(new UsernamePasswordAuthenticationToken(EXISTING_USER_MAIL, "password"))
@@ -139,7 +135,7 @@ public class CommentControllerTest {
         comment.setComment("this is an example comment that respects the length constraint");
 
         doThrow(new NotAuthorizedException("No user found with email " + NON_EXISTING_USER_MAIL)).when(commentService)
-                .addComment(any(Comment.class), any(String.class), any(String.class));
+                .addComment(any(Comment.class), anyLong());
 
         mockMvc.perform(post("/project/" + EXISTING_PROJECT_ID + "/comment")
                 .principal(new UsernamePasswordAuthenticationToken(NON_EXISTING_USER_MAIL, "password"))

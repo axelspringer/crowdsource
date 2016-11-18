@@ -1,38 +1,38 @@
 package de.asideas.crowdsource.repository;
 
-import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
-import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
 
 public class ProjectRepositoryImpl implements ProjectRepositoryCustom {
 
-    private final MongoTemplate mongoTemplate;
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Autowired
-    public ProjectRepositoryImpl(MongoTemplate mongoTemplate) {
-        this.mongoTemplate = mongoTemplate;
+    public ProjectRepositoryImpl(EntityManager entityManager) {
+        this.entityManager = entityManager;
     }
 
     @Override
     public List<BarChartStatisticsResult> sumProjectsGroupedByStatus() {
-        AggregationResults<ProjectPerStatusResult> aggregationResults = mongoTemplate.aggregate(
-                newAggregation(
-                        ProjectEntity.class,
-                        group("status").count().as("count")
-                ), ProjectPerStatusResult.class);
 
-        return aggregationResults.getMappedResults().stream()
-                .map(res -> new BarChartStatisticsResult(res.getId().name(), res.getId().getDisplayName(), res.getCount()))
-                .collect(Collectors.toList());
+        return Collections.emptyList();
+        // fixme
+//        AggregationResults<ProjectPerStatusResult> aggregationResults = mongoTemplate.aggregate(
+//                newAggregation(
+//                        ProjectEntity.class,
+//                        group("status").count().as("count")
+//                ), ProjectPerStatusResult.class);
+//
+//        return aggregationResults.getMappedResults().stream()
+//                .map(res -> new BarChartStatisticsResult(res.getId().name(), res.getId().getDisplayName(), res.getCount()))
+//                .collect(Collectors.toList());
     }
 
     static class ProjectPerStatusResult {

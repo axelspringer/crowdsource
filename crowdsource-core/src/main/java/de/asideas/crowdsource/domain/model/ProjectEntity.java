@@ -4,76 +4,60 @@ import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import de.asideas.crowdsource.presentation.Pledge;
-import de.asideas.crowdsource.presentation.project.Attachment;
-import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.security.Roles;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import lombok.Data;
 import org.joda.time.DateTime;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.util.Assert;
 
-import java.util.ArrayList;
+import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
+import static java.math.BigDecimal.*;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
 
-// needed for serialization
-@Document(collection = "projects")
+@Data
+@Entity
 public class ProjectEntity {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private Long id;
+    @Column
+    private String title;
+    @Column
+    private String shortDescription;
+    @Column
+    private String description;
+    @Column
+    private ProjectStatus status;
+    @Column
+    private BigDecimal pledgeGoal;
 
-    @DBRef
-    private UserEntity creator;
-
-    @DBRef
+    @ManyToOne
     private FinancingRoundEntity financingRound;
 
-    private List<AttachmentValue> attachments;
-
-    private String title;
-    private String shortDescription;
-    private String description;
-    private ProjectStatus status;
-
-    private int pledgeGoal;
-
-    @Indexed // since we order by this field
     @CreatedDate
     private DateTime createdDate;
-
     @LastModifiedDate
     private DateTime lastModifiedDate;
+    @CreatedBy
+    private UserEntity creator;
 
-    public ProjectEntity(UserEntity creator, Project project, FinancingRoundEntity financingRound) {
-        this.creator = creator;
-        this.financingRound = financingRound;
-        this.title = project.getTitle();
-        this.shortDescription = project.getShortDescription();
-        this.description = project.getDescription();
-        this.pledgeGoal = project.getPledgeGoal();
-        this.status = ProjectStatus.PROPOSED;
-        this.attachments = new ArrayList<>();
+    public ProjectEntity() {
     }
 
-    @Deprecated
-    /**
-     * @deprecated DO NOT use this one, due to this causes problems in ATs, violating this model's constraints!
-     */
-    public ProjectEntity() {
-        this.attachments = new ArrayList<>();
+    public ProjectEntity(String title, String shortDescription, String description, BigDecimal pledgeGoal, FinancingRoundEntity financingRound) {
+        this.financingRound = financingRound;
+        this.title = title;
+        this.shortDescription = shortDescription;
+        this.description = description;
+        this.pledgeGoal = pledgeGoal;
         this.status = ProjectStatus.PROPOSED;
     }
 
@@ -82,12 +66,12 @@ public class ProjectEntity {
      * Moreover negative pledges are supported by reducing investment for the project in which case the amount
      * is credited the <code>pledginUser</code>'s budget (only as much posssible as originally pledged by her).
      *
-     * @param pledge             The amount to (positively or negatively) pledge <code>this</code>
+     * @param amount             The amount to (positively or negatively) pledge <code>this</code>
      * @param pledgingUser       the user that wants to invest and whose balance is affected
      * @param pledgesAlreadyDone all investements that have been done so far for <code>this</code>
      * @return the value describing the [reduced] investment done
      */
-    public PledgeEntity pledge(Pledge pledge, UserEntity pledgingUser, List<PledgeEntity> pledgesAlreadyDone) {
+    public PledgeEntity pledge(BigDecimal amount, UserEntity pledgingUser, List<PledgeEntity> pledgesAlreadyDone) {
 
         if (this.financingRound == null || !this.financingRound.active()) {
             throw InvalidRequestException.noFinancingRoundCurrentlyActive();
@@ -98,28 +82,28 @@ public class ProjectEntity {
         if (this.status != ProjectStatus.PUBLISHED) {
             throw InvalidRequestException.projectNotPublished();
         }
-        if (pledge.getAmount() == 0) {
+        if (amount.compareTo(ZERO) == 0) {
             throw InvalidRequestException.zeroPledgeNotValid();
         }
-        if (pledge.getAmount() > pledgingUser.getBudget()) {
+        if (amount.compareTo(pledgingUser.getBudget()) > 0) {
             throw InvalidRequestException.userBudgetExceeded();
         }
-        if (pledgedAmountOfUser(pledgesAlreadyDone, pledgingUser) + pledge.getAmount() < 0) {
+        if (pledgedAmountOfUser(pledgesAlreadyDone, pledgingUser).add(amount).compareTo(ZERO) < 0) {
             throw InvalidRequestException.reversePledgeExceeded();
         }
 
-        int newPledgedAmount = pledgedAmount(pledgesAlreadyDone) + pledge.getAmount();
-        if (newPledgedAmount > this.pledgeGoal) {
+        final BigDecimal newPledgedAmount = pledgedAmount(pledgesAlreadyDone).add(amount);
+        if (newPledgedAmount.compareTo(this.pledgeGoal) > 0) {
             throw InvalidRequestException.pledgeGoalExceeded();
         }
 
-        if (newPledgedAmount == this.pledgeGoal) {
+        if (newPledgedAmount.compareTo(this.pledgeGoal) == 0) {
             setStatus(ProjectStatus.FULLY_PLEDGED);
         }
 
-        pledgingUser.accountPledge(pledge);
+        pledgingUser.accountPledge(amount);
 
-        return new PledgeEntity(this, pledgingUser, pledge, financingRound);
+        return new PledgeEntity(this, pledgingUser, amount, financingRound);
     }
 
     /**
@@ -127,16 +111,16 @@ public class ProjectEntity {
      * Thus, the user's budget is not debited or credited rather than <code>this</code>' financingRound's remaining budget.
      * Negative pledges are supported as well but only as much as was pledged by admin users on the terminated financing round.
      *
-     * @param pledge                            the amount to [negatively] pledge
+     * @param amount                            the amount to [negatively] pledge
      * @param pledgingUser                      the admin user executing the pledge.
      * @param pledgesAlreadyDone                all investements that have been done so far for <code>this</code>
      * @param postRoundPledgableBudgetAvailable how much budget is available from financing round to be used for investments
      * @return the value describing the [reduced] investment done using budget from <code>this</code>' financing round
      */
-    public PledgeEntity pledgeUsingPostRoundBudget(Pledge pledge, UserEntity pledgingUser, List<PledgeEntity> pledgesAlreadyDone, int postRoundPledgableBudgetAvailable) {
+    public PledgeEntity pledgeUsingPostRoundBudget(BigDecimal amount, UserEntity pledgingUser, List<PledgeEntity> pledgesAlreadyDone, BigDecimal postRoundPledgableBudgetAvailable) {
         Assert.isTrue(pledgingUser.getRoles().contains(Roles.ROLE_ADMIN), "pledgeUsingPostRoundBudget(..) called with non admin user: " + pledgingUser);
-        Assert.notNull(this.financingRound, "FinancingRound must not be null; Project was: " + this);
-        Assert.isTrue(this.financingRound.terminated(), "pledgeUsingPostRoundBudget(..) requires its financingRound to be terminated; Project was: " + this);
+        Assert.notNull(this.financingRound, "FinancingRound must not be null; ProjectEntity was: " + this);
+        Assert.isTrue(this.financingRound.terminated(), "pledgeUsingPostRoundBudget(..) requires its financingRound to be terminated; ProjectEntity was: " + this);
 
         if (!this.financingRound.getTerminationPostProcessingDone()) {
             throw InvalidRequestException.financingRoundNotPostProcessedYet();
@@ -148,19 +132,19 @@ public class ProjectEntity {
         if (this.status != ProjectStatus.PUBLISHED) {
             throw InvalidRequestException.projectNotPublished();
         }
-        if (pledge.getAmount() == 0) {
+        if (amount.compareTo(ZERO) == 0) {
             throw InvalidRequestException.zeroPledgeNotValid();
         }
-        if (pledge.getAmount() > postRoundPledgableBudgetAvailable) {
+        if (amount.compareTo(postRoundPledgableBudgetAvailable) > 0) {
             throw InvalidRequestException.postRoundBudgetExceeded();
         }
 
-        if (pledgedAmountPostRound(pledgesAlreadyDone) + pledge.getAmount() < 0) {
+        if (pledgedAmountPostRound(pledgesAlreadyDone).add(amount).compareTo(ZERO) < 0) {
             throw InvalidRequestException.reversePledgeExceeded();
         }
 
-        int newPledgedAmount = pledgedAmount(pledgesAlreadyDone) + pledge.getAmount();
-        if (newPledgedAmount > this.pledgeGoal) {
+        final BigDecimal newPledgedAmount = pledgedAmount(pledgesAlreadyDone).add(amount);
+        if (newPledgedAmount.compareTo(this.pledgeGoal) > 0) {
             throw InvalidRequestException.pledgeGoalExceeded();
         }
 
@@ -168,7 +152,7 @@ public class ProjectEntity {
             setStatus(ProjectStatus.FULLY_PLEDGED);
         }
 
-        return new PledgeEntity(this, pledgingUser, pledge, financingRound);
+        return new PledgeEntity(this, pledgingUser, amount, financingRound);
     }
 
     /**
@@ -206,15 +190,15 @@ public class ProjectEntity {
         return true;
     }
 
-    public boolean modifyMasterdata(Project updatedProject, UserEntity requestingUser) {
+    public boolean modifyMasterdata(UserEntity requestingUser, String title, String description, String shortDescription, BigDecimal pledgeGoal) {
         modificationsAllowedByUserAndState(requestingUser);
-        if (!masterdataChanged(updatedProject)) {
+        if (!masterdataChanged(title, description, shortDescription, pledgeGoal)) {
             return false;
         }
-        setTitle(updatedProject.getTitle());
-        setDescription(updatedProject.getDescription());
-        setShortDescription(updatedProject.getShortDescription());
-        setPledgeGoal(updatedProject.getPledgeGoal());
+        setTitle(title);
+        setDescription(description);
+        setShortDescription(shortDescription);
+        setPledgeGoal(pledgeGoal);
         return true;
     }
 
@@ -245,50 +229,44 @@ public class ProjectEntity {
         modificationsAllowedByUserAndState(attachmentCreator);
     }
 
-    public void addAttachment(AttachmentValue attachment) {
-        this.attachments.add(attachment);
-    }
-
-    public void deleteAttachment(AttachmentValue attachment2Delete) {
-        attachments.remove(attachment2Delete);
-    }
+//    public void addAttachment(AttachmentEntity attachment) {
+//        attachmentEntityList.add(attachment);
+//    }
 
     /**
      * Retrieve the attachment file reference entry that allows association of actual binary data.
-     * Currently fetching is only supported by file reference (<code>Attachment.id</code>).
+     * Currently fetching is only supported by file reference (<code>AttachmentEntity.id</code>).
      *
-     * @param attachment the query object
      * @return the attachment value if it exists
      * @throws ResourceNotFoundException in case the attachment couldn't be found
      */
-    public AttachmentValue findAttachmentByReference(Attachment attachment) throws ResourceNotFoundException {
-        Assert.notNull(attachment.getId());
+//    public AttachmentEntity findAttachmentByReference(AttachmentEntity attachment) throws ResourceNotFoundException {
+//        Assert.notNull(attachment.getId());
+//
+//        final Optional<AttachmentEntity> res = this.attachments.stream().filter(a -> a.getFileReference().equals(attachment.getId())).findFirst();
+//
+//        if (!res.isPresent()) {
+//            throw new ResourceNotFoundException();
+//        }
+//        return res.get();
+//    }
 
-        final Optional<AttachmentValue> res = this.attachments.stream().filter(a -> a.getFileReference().equals(attachment.getId())).findFirst();
-
-        if (!res.isPresent()) {
-            throw new ResourceNotFoundException();
-        }
-        return res.get();
-    }
-
-    boolean masterdataChanged(Project updatedProject) {
+    boolean masterdataChanged(String title, String description, String shortDescription, BigDecimal pledgeGoal) {
         boolean changed = false;
-        changed |= !Objects.equals(updatedProject.getTitle(), this.title);
-        changed |= !Objects.equals(updatedProject.getDescription(), this.description);
-        changed |= !Objects.equals(updatedProject.getShortDescription(), this.shortDescription);
-        changed |= updatedProject.getPledgeGoal() != this.pledgeGoal;
+        changed |= !Objects.equals(title, this.title);
+        changed |= !Objects.equals(description, this.description);
+        changed |= !Objects.equals(shortDescription, this.shortDescription);
+        changed |= pledgeGoal.compareTo(this.pledgeGoal) != 0;
         return changed;
     }
 
     /**
      * Upon termination of its financing round the status is adapted accordingly as well as allocation of financing round.
      *
-     * @param financingRound
      * @return whether something actually changed.
      */
+    // // FIXME: 18/11/16 a project can only join ONE finance round
     public boolean onFinancingRoundTerminated(FinancingRoundEntity financingRound) {
-        Assert.notNull(financingRound);
         if (this.financingRound == null || !this.financingRound.getId().equals(financingRound.getId())) {
             return false;
         }
@@ -305,38 +283,36 @@ public class ProjectEntity {
         return this.status == ProjectStatus.FULLY_PLEDGED;
     }
 
-    public int pledgedAmount(List<PledgeEntity> pledges) {
-        return pledges.stream().mapToInt(PledgeEntity::getAmount).sum();
+    public BigDecimal pledgedAmount(List<PledgeEntity> pledges) {
+        return pledges.stream().map(PledgeEntity::getAmount).reduce(ZERO, BigDecimal::add);
     }
 
     public long countBackers(List<PledgeEntity> pledges) {
-        Optional<Integer> backers = pledges.stream()
-                .collect(groupingBy(PledgeEntity::getUser, reducing(new PledgeEntity(), PledgeEntity::add)))
+        return pledges.stream()
+                .collect(groupingBy(PledgeEntity::getCreator, reducing(new PledgeEntity(), PledgeEntity::add)))
                 .entrySet().stream()
-                .map(pledgeSumByUser -> (pledgeSumByUser.getValue().getAmount() == 0 ? 0 : 1)).reduce((a, b) -> a + b);
-
-        return backers.orElse(0);
+                .mapToInt(pledgeSumByUser -> (pledgeSumByUser.getValue().getAmount().compareTo(ZERO) == 0 ? 0 : 1)).sum();
     }
 
-    public int pledgedAmountOfUser(List<PledgeEntity> pledges, UserEntity requestingUser) {
+    public BigDecimal pledgedAmountOfUser(List<PledgeEntity> pledges, UserEntity requestingUser) {
         if (requestingUser == null || pledges == null || pledges.isEmpty()) {
-            return 0;
+            return ZERO;
         }
-        return pledges.stream().filter(p -> requestingUser.getId().equals(p.getUser().getId()))
-                .mapToInt(PledgeEntity::getAmount).sum();
+        return pledges.stream().filter(p -> requestingUser.getId().equals(p.getCreator().getId()))
+                .map(PledgeEntity::getAmount).reduce(ZERO, BigDecimal::add);
     }
 
-    public int pledgedAmountPostRound(List<PledgeEntity> pledges) {
+    public BigDecimal pledgedAmountPostRound(List<PledgeEntity> pledges) {
         if (pledges == null || pledges.isEmpty() || this.financingRound == null || !this.financingRound.terminated()) {
-            return 0;
+            return ZERO;
         }
         return pledges.stream()
                 .filter(p -> p.getCreatedDate() != null && p.getCreatedDate().isAfter(financingRound.getEndDate()))
-                .mapToInt(PledgeEntity::getAmount)
-                .sum();
+                .map(PledgeEntity::getAmount)
+                .reduce(ZERO, BigDecimal::add);
     }
 
-    private void modificationsAllowedByUserAndState(UserEntity requestingUser) throws NotAuthorizedException, InvalidRequestException {
+    private void modificationsAllowedByUserAndState(UserEntity requestingUser) {
         if (!requestingUser.getRoles().contains(Roles.ROLE_ADMIN) && !requestingUser.equals(this.creator)) {
             throw new NotAuthorizedException("You are neither admin nor creator of that project");
         }
@@ -344,109 +320,4 @@ public class ProjectEntity {
             throw InvalidRequestException.masterdataChangeNotAllowed();
         }
     }
-
-
-    public String getId() {
-        return this.id;
-    }
-
-    public UserEntity getCreator() {
-        return this.creator;
-    }
-
-    public FinancingRoundEntity getFinancingRound() {
-        return this.financingRound;
-    }
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public String getShortDescription() {
-        return this.shortDescription;
-    }
-
-    public String getDescription() {
-        return this.description;
-    }
-
-    public ProjectStatus getStatus() {
-        return this.status;
-    }
-
-    public int getPledgeGoal() {
-        return this.pledgeGoal;
-    }
-
-    public DateTime getCreatedDate() {
-        return this.createdDate;
-    }
-
-    public DateTime getLastModifiedDate() {
-        return this.lastModifiedDate;
-    }
-
-    public List<AttachmentValue> getAttachments() {
-        return attachments;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setCreator(UserEntity creator) {
-        this.creator = creator;
-    }
-
-    public void setFinancingRound(FinancingRoundEntity financingRound) {
-        this.financingRound = financingRound;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setShortDescription(String shortDescription) {
-        this.shortDescription = shortDescription;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setStatus(ProjectStatus status) {
-        this.status = status;
-    }
-
-    public void setPledgeGoal(int pledgeGoal) {
-        this.pledgeGoal = pledgeGoal;
-    }
-
-    public void setCreatedDate(DateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public void setLastModifiedDate(DateTime lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
-
-    public void setAttachments(List<AttachmentValue> attachments) {
-        this.attachments = attachments;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return EqualsBuilder.reflectionEquals(this, o);
-    }
-
-    @Override
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
-
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
-    }
-
 }

@@ -5,21 +5,21 @@ import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.PledgeEntity;
 import de.asideas.crowdsource.presentation.project.PublicFinancingRoundInformationView;
 import de.asideas.crowdsource.util.validation.financinground.FinancingRoundNotColliding;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import lombok.Data;
 import org.joda.time.DateTime;
 
 import javax.validation.constraints.Future;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.List;
 
+@Data
 @FinancingRoundNotColliding
 public class FinancingRound {
 
     @JsonView(PublicFinancingRoundInformationView.class)
-    private String id;
+    private Long id;
 
     @JsonView(PublicFinancingRoundInformationView.class)
     private DateTime startDate = new DateTime();
@@ -31,13 +31,13 @@ public class FinancingRound {
 
     @NotNull
     @Min(value = 1l, message = "at-least-one-dollar")
-    private Integer budget;
+    private BigDecimal budget;
 
     @JsonView(PublicFinancingRoundInformationView.class)
-    private Integer postRoundBudget;
+    private BigDecimal postRoundBudget;
 
     @JsonView(PublicFinancingRoundInformationView.class)
-    private Integer postRoundBudgetRemaining;
+    private BigDecimal postRoundBudgetRemaining;
 
     @JsonView(PublicFinancingRoundInformationView.class)
     private boolean active;
@@ -58,84 +58,5 @@ public class FinancingRound {
     }
 
     public FinancingRound() {
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public DateTime getStartDate() {
-        return this.startDate;
-    }
-
-    public DateTime getEndDate() {
-        return this.endDate;
-    }
-
-    public Integer getBudget() {
-        return this.budget;
-    }
-
-    public boolean isActive() {
-        return this.active;
-    }
-
-    public Integer getPostRoundBudget() {
-        return postRoundBudget;
-    }
-
-    public Integer getPostRoundBudgetRemaining() {
-        return postRoundBudgetRemaining;
-    }
-
-    public boolean isPostRoundBudgetDistributable() {
-        return postRoundBudgetDistributable;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setStartDate(DateTime startDate) {
-        this.startDate = startDate;
-    }
-
-    public void setEndDate(DateTime endDate) {
-        this.endDate = endDate;
-    }
-
-    public void setBudget(Integer budget) {
-        this.budget = budget;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public void setPostRoundBudget(Integer postRoundBudget) {
-        this.postRoundBudget = postRoundBudget;
-    }
-
-    public void setPostRoundBudgetRemaining(Integer postRoundBudgetRemaining) {
-        this.postRoundBudgetRemaining = postRoundBudgetRemaining;
-    }
-
-    public void setPostRoundBudgetDistributable(boolean postRoundBudgetDistributable) {
-        this.postRoundBudgetDistributable = postRoundBudgetDistributable;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return EqualsBuilder.reflectionEquals(this, o);
-    }
-
-    @Override
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
-
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
     }
 }

@@ -108,7 +108,7 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForPublished() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.PUBLISHED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.PUBLISHED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -128,7 +128,7 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForRejected() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.REJECTED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.REJECTED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -147,7 +147,7 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForDeferred() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.DEFERRED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.DEFERRED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -166,7 +166,7 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForPublishedDeferred() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.PUBLISHED_DEFERRED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.PUBLISHED_DEFERRED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -185,7 +185,7 @@ public class UserNotificationServiceTest {
     public void testSendUserNotificationMailForFallback() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyCreatorOnProjectStatusUpdate(project("proj3ctId", ProjectStatus.PROPOSED, user, "My Super Project"));
+        userNotificationService.notifyCreatorOnProjectStatusUpdate(project(1L, ProjectStatus.PROPOSED, user, "My Super Project"));
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -198,7 +198,7 @@ public class UserNotificationServiceTest {
     public void testNotifyAdminOnProjectCreation() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyAdminOnProjectCreation(project("proj3ctId", ProjectStatus.PUBLISHED, user, "My Super Project"), ADMIN_EMAIL);
+        userNotificationService.notifyAdminOnProjectCreation(project(1L, ProjectStatus.PUBLISHED, user, "My Super Project"), ADMIN_EMAIL);
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -215,10 +215,10 @@ public class UserNotificationServiceTest {
     @Test
     public void notifyCreatorAndAdminOnProjectModification() {
         final UserEntity creator = aProjectCreator();
-        final UserEntity modifier = aUser("test_id_modifier");
-        final UserEntity admin = aUser("test_id_admin_0", "admin.0@email.com");
+        final UserEntity modifier = aUser(1L);
+        final UserEntity admin = aUser(2L, "admin.0@email.com");
         final List<UserEntity> admins = Arrays.asList(admin);
-        final ProjectEntity project = project("proj3ctId", ProjectStatus.PUBLISHED, creator, "My Super Project");
+        final ProjectEntity project = project(1L, ProjectStatus.PUBLISHED, creator, "My Super Project");
 
         when(userRepository.findAllAdminUsers()).thenReturn(admins);
         userNotificationService.notifyCreatorAndAdminOnProjectModification(project, modifier);
@@ -237,10 +237,10 @@ public class UserNotificationServiceTest {
     @Test
     public void notifyCreatorAndAdminOnProjectModification_NoOneGetsNotifiedTwiceBeeingAlsoAdmin() {
         final UserEntity creator = aProjectCreator();
-        final UserEntity modifier = aUser("test_id_modifier");
-        final UserEntity admin = aUser("test_id_admin_0", "admin.0@email.com");
+        final UserEntity modifier = aUser(1L);
+        final UserEntity admin = aUser(2L, "admin.0@email.com");
         final List<UserEntity> admins = Arrays.asList(admin, modifier, creator);
-        final ProjectEntity project = project("proj3ctId", ProjectStatus.PUBLISHED, creator, "My Super Project");
+        final ProjectEntity project = project(3L, ProjectStatus.PUBLISHED, creator, "My Super Project");
 
         when(userRepository.findAllAdminUsers()).thenReturn(admins);
         userNotificationService.notifyCreatorAndAdminOnProjectModification(project, modifier);
@@ -259,11 +259,11 @@ public class UserNotificationServiceTest {
     @Test
     public void notifyCreatorOnComment_mailShouldContainAbridgedCommentAndItsCreatorName() {
         final UserEntity creator = aProjectCreator();
-        final UserEntity commentingUser = aUser("test_id_modifier");
-        final ProjectEntity project = project("proj3ctId", ProjectStatus.PUBLISHED, creator, "My Super Project");
+        final UserEntity commentingUser = aUser(1L);
+        final ProjectEntity project = project(3L, ProjectStatus.PUBLISHED, creator, "My Super Project");
         final String projectLink = "https://crowd.asideas.de#/project/proj3ctId";
         final String testComment = aTestComment(UserNotificationService.COMMENT_EXCERPT_LENGTH + 5);
-        final CommentEntity comment = new CommentEntity(project, commentingUser, testComment);
+        final CommentEntity comment = new CommentEntity(project, testComment);
         final String expMessage = "Hallo %s,\n\n" +
                 "zu Deinem Projekt \"%s\" wurde ein Kommentar von %s hinzugefügt:\n\n" +
                 "\"%s\"\n\n" +
@@ -276,7 +276,7 @@ public class UserNotificationServiceTest {
         final SimpleMailMessage capturedMessage = getMessageFromMailSender();
 
         assertThat(capturedMessage.getText(), is(String.format(expMessage,
-                project.getCreator().fullNameFromEmail(), project.getTitle(), commentingUser.fullNameFromEmail(),
+                project.getCreator().getName(), project.getTitle(), commentingUser.getName(),
                 testComment.substring(0, UserNotificationService.COMMENT_EXCERPT_LENGTH) + " ...", projectLink)));
 
         assertThat(capturedMessage.getFrom(), is(UserNotificationService.FROM_ADDRESS));
@@ -286,10 +286,10 @@ public class UserNotificationServiceTest {
     @Test
     public void notifyCreatorOnComment_commentingProjectCreatorDoesntReceiveMail() {
         final UserEntity creator = aProjectCreator();
-        final ProjectEntity project = project("proj3ctId", ProjectStatus.PUBLISHED, creator, "My Super Project");
+        final ProjectEntity project = project(3L, ProjectStatus.PUBLISHED, creator, "My Super Project");
         final String projectLink = "https://crowd.asideas.de#/project/proj3ctId";
         final String testComment = aTestComment(UserNotificationService.COMMENT_EXCERPT_LENGTH + 5);
-        final CommentEntity comment = new CommentEntity(project, creator, testComment);
+        final CommentEntity comment = new CommentEntity(project, testComment);
 
         userNotificationService.notifyCreatorOnComment(comment);
 
@@ -308,9 +308,9 @@ public class UserNotificationServiceTest {
         final SimpleMailMessage modifierMail = capturedMessages.stream().filter(m -> m.getTo()[0].equals(modifier.getEmail())).findFirst().get();
         final SimpleMailMessage adminMail = capturedMessages.stream().filter(m -> m.getTo()[0].equals(admin.getEmail())).findFirst().get();
 
-        assertThat(creatorMail.getText(), is(String.format(expMessage, creator.fullNameFromEmail(), modifier.fullNameFromEmail(), projectLink)));
-        assertThat(modifierMail.getText(), is(String.format(expMessage, modifier.fullNameFromEmail(), modifier.fullNameFromEmail(), projectLink)));
-        assertThat(adminMail.getText(), is(String.format(expMessage, admin.fullNameFromEmail(), modifier.fullNameFromEmail(), projectLink)));
+        assertThat(creatorMail.getText(), is(String.format(expMessage, creator.getName(), modifier.getName(), projectLink)));
+        assertThat(modifierMail.getText(), is(String.format(expMessage, modifier.getName(), modifier.getName(), projectLink)));
+        assertThat(adminMail.getText(), is(String.format(expMessage, admin.getName(), modifier.getName(), projectLink)));
     }
 
     private SimpleMailMessage getMessageFromMailSender() {
@@ -328,7 +328,7 @@ public class UserNotificationServiceTest {
         return messageCaptor.getAllValues();
     }
 
-    private ProjectEntity project(String id, ProjectStatus status, UserEntity user, String title) {
+    private ProjectEntity project(Long id, ProjectStatus status, UserEntity user, String title) {
         final ProjectEntity project = new ProjectEntity();
         project.setId(id);
         project.setCreator(user);
@@ -346,17 +346,17 @@ public class UserNotificationServiceTest {
     }
 
     private UserEntity aProjectCreator() {
-        return aUser("test_id_Creator", "some.creator@email.com");
+        return aUser(1L, "some.creator@email.com");
     }
 
-    private UserEntity aUser(String userId) {
-        final UserEntity res = new UserEntity("some.one@email.com");
+    private UserEntity aUser(Long userId) {
+        final UserEntity res = new UserEntity("some.one@email.com", "firstname", "lastname");
         res.setId(userId);
         return res;
     }
 
-    private UserEntity aUser(String userId, String email) {
-        final UserEntity res = new UserEntity(email);
+    private UserEntity aUser(Long userId, String email) {
+        final UserEntity res = new UserEntity(email, "firstname", "lastname");
         res.setId(userId);
         return res;
     }

@@ -1,8 +1,9 @@
 package de.asideas.crowdsource.domain.model;
 
-import de.asideas.crowdsource.presentation.Pledge;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.math.BigDecimal;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -14,25 +15,25 @@ public class UserEntityTest {
     @Before
     public void setUp() {
         userEntity = new UserEntity();
-        userEntity.setBudget(10);
+        userEntity.setBudget(BigDecimal.valueOf(10));
     }
 
     @Test
     public void accountPledge() throws Exception {
-        userEntity.accountPledge(new Pledge(10));
-        assertThat(userEntity.getBudget(), is(0));
+        userEntity.accountPledge(BigDecimal.valueOf(10));
+        assertThat(userEntity.getBudget(), is(BigDecimal.ZERO));
 
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void accountPledge_exceed() throws Exception {
-        userEntity.accountPledge(new Pledge(11));
-        assertThat(userEntity.getBudget(), is(10));
+        userEntity.accountPledge(BigDecimal.valueOf(11));
+        assertThat(userEntity.getBudget(), is(BigDecimal.valueOf(10)));
     }
 
     @Test
     public void accountPledge_takeBack() throws Exception {
-        userEntity.accountPledge(new Pledge(-11));
-        assertThat(userEntity.getBudget(), is(21));
+        userEntity.accountPledge(BigDecimal.valueOf(-11));
+        assertThat(userEntity.getBudget(), is(BigDecimal.valueOf(21)));
     }
 }

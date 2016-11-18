@@ -4,9 +4,9 @@ import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.presentation.Comment;
 import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.repository.CommentRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,15 +20,13 @@ import java.util.List;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommentServiceTest {
 
     public static final String EXISTING_USER_MAIL = "test.name@test.de";
-    private final static String EXISTING_PROJECT_ID = "TEST_PROJECT_ID";
+    private final static Long EXISTING_PROJECT_ID = 123L;
 
     private ProjectEntity projectEntity;
     private UserEntity userEntity;
@@ -49,13 +47,13 @@ public class CommentServiceTest {
     @Mock
     private UserService userService;
 
-
     @Before
     public void init(){
         reset(projectService, userService, commentRepository);
-        projectEntity = new ProjectEntity(userEntity, new Project(), new FinancingRoundEntity());
-        userEntity = new UserEntity("test.name@test.de", "password");
-        aComment = new CommentEntity(projectEntity, userEntity, "some comment");
+        Project project = new Project();
+        projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), new FinancingRoundEntity());
+        userEntity = new UserEntity("test.name@test.de", "firstname", "lastname");
+        aComment = new CommentEntity(projectEntity, "some comment");
     }
 
     @Test
@@ -65,9 +63,9 @@ public class CommentServiceTest {
         prepareProjectServiceMock();
         prepareUserServiceMock();
 
-        commentService.addComment(comment, EXISTING_PROJECT_ID, EXISTING_USER_MAIL);
+        commentService.addComment(comment, EXISTING_PROJECT_ID);
 
-        final CommentEntity expectedComment2BPersisted = new CommentEntity(projectEntity, userEntity, comment.getComment());
+        final CommentEntity expectedComment2BPersisted = new CommentEntity(projectEntity, comment.getComment());
         verify(commentRepository).save(expectedComment2BPersisted);
         verify(userNotificationService).notifyCreatorOnComment(expectedComment2BPersisted);
     }

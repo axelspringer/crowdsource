@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.math.BigDecimal;
+
 /**
  * A post processing domain service that executes any action necessary to
  * synchronize depending entities upon termination of a {@link FinancingRoundEntity}.
@@ -58,7 +60,7 @@ public class FinancingRoundPostProcessor {
     }
 
     void notifyProjectsOfTerminatedFinancingRound(final FinancingRoundEntity financingRound) {
-        projectRepository.findByFinancingRound(financingRound).stream()
+        projectRepository.findByFinancingRound(financingRound)
                 .forEach(project -> {
                     if (project.onFinancingRoundTerminated(financingRound)) {
                         projectRepository.save(project);
@@ -74,9 +76,8 @@ public class FinancingRoundPostProcessor {
      * @return the <code>financingRound</code> provided
      */
     void assignUnpledgedBudgetToFinancingRound(final FinancingRoundEntity financingRound) {
-        final int pledgedTotalOfRound = pledgeRepository.findByFinancingRound(financingRound).stream()
-                .mapToInt(PledgeEntity::getAmount)
-                .sum();
+        final BigDecimal pledgedTotalOfRound = pledgeRepository.findByFinancingRound(financingRound).stream()
+                .map(PledgeEntity::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         financingRound.initPostRoundBudget(pledgedTotalOfRound);
     }
 

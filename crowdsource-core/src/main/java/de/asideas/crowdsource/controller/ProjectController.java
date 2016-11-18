@@ -2,7 +2,6 @@ package de.asideas.crowdsource.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.exception.ForbiddenException;
-import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.Pledge;
@@ -25,26 +24,17 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static de.asideas.crowdsource.domain.shared.ProjectStatus.FULLY_PLEDGED;
-import static de.asideas.crowdsource.domain.shared.ProjectStatus.PUBLISHED;
-import static de.asideas.crowdsource.domain.shared.ProjectStatus.PUBLISHED_DEFERRED;
+import static de.asideas.crowdsource.domain.shared.ProjectStatus.*;
 
 @RestController
 public class ProjectController {
@@ -73,7 +63,7 @@ public class ProjectController {
 
     @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
     @RequestMapping(value = "/project/{projectId}", method = RequestMethod.GET)
-    public Project getProject(@PathVariable String projectId, Authentication auth) {
+    public Project getProject(@PathVariable Long projectId, Authentication auth) {
         UserEntity userEntity = userFromAuthentication(auth);
 
         final Project project = projectService.getProject(projectId, userEntity);
@@ -94,35 +84,35 @@ public class ProjectController {
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(value = "/project/{projectId}/pledges", method = RequestMethod.POST)
-    public void pledgeProject(@PathVariable String projectId, @RequestBody @Valid Pledge pledge, Principal principal) {
+    public void pledgeProject(@PathVariable Long projectId, @RequestBody @Valid Pledge pledge, Principal principal) {
         projectService.pledge(projectId, userByPrincipal(principal), pledge);
     }
 
     @Secured(Roles.ROLE_ADMIN)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/project/{projectId}/status", method = RequestMethod.PATCH)
-    public Project modifyProjectStatus(@PathVariable("projectId") String projectId, @RequestBody @Valid @NotNull ProjectStatusUpdate newStatus, Principal principal) {
+    public Project modifyProjectStatus(@PathVariable("projectId") Long projectId, @RequestBody @Valid @NotNull ProjectStatusUpdate newStatus, Principal principal) {
         return projectService.modifyProjectStatus(projectId, newStatus.status, userByPrincipal(principal));
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/project/{projectId}", method = RequestMethod.PUT)
-    public Project modifyProjectMasterdata(@PathVariable("projectId") String projectId, @RequestBody @Valid @NotNull Project modifiedProject, Principal principal) {
+    public Project modifyProjectMasterdata(@PathVariable("projectId") Long projectId, @RequestBody @Valid @NotNull Project modifiedProject, Principal principal) {
         return projectService.modifyProjectMasterdata(projectId, modifiedProject, userByPrincipal(principal));
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/projects/{projectId}/likes", method = RequestMethod.POST)
-    public void likeProject(@PathVariable("projectId") String projectId, Principal principal) {
+    public void likeProject(@PathVariable("projectId") Long projectId, Principal principal) {
         projectService.likeProject(projectId, userByPrincipal(principal));
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/projects/{projectId}/likes", method = RequestMethod.DELETE)
-    public void unlikeProject(@PathVariable("projectId") String projectId, Principal principal) {
+    public void unlikeProject(@PathVariable("projectId") Long projectId, Principal principal) {
         projectService.unlikeProject(projectId, userByPrincipal(principal));
     }
 
@@ -130,40 +120,48 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/projects/{projectId}/attachments", method = RequestMethod.POST)
     public Attachment addProjectAttachment(@PathVariable("projectId") String projectId, @RequestParam("file") MultipartFile file, Principal principal) {
-        if (file.isEmpty()) {
-            throw InvalidRequestException.fileMustNotBeEmpty();
-        }
-        if (!contentTypeAllowed(file.getContentType())) {
-            throw InvalidRequestException.filetypeNotAllowed();
-        }
+        // FIXME: 18/11/16
+        return null;
 
-        try ( InputStream inputStream = file.getInputStream() ) {
-            Attachment attachment = Attachment.asCreationCommand(file.getOriginalFilename(), file.getContentType(), inputStream);
-
-            return projectService.addProjectAttachment(projectId, attachment, userByPrincipal(principal));
-
-        } catch (IOException e) {
-            log.warn("Couldn' process file input, due to stream threw IOException; ProjectId: {}", projectId, e);
-            throw new RuntimeException("Internal error, couldn't process file stream", e);
-        }
+//        if (file.isEmpty()) {
+//            throw InvalidRequestException.fileMustNotBeEmpty();
+//        }
+//        if (!contentTypeAllowed(file.getContentType())) {
+//            throw InvalidRequestException.filetypeNotAllowed();
+//        }
+//
+//        try ( InputStream inputStream = file.getInputStream() ) {
+//            Attachment attachment = Attachment.asCreationCommand(file.getOriginalFilename(), file.getContentType(), inputStream);
+//
+//            return projectService.addProjectAttachment(projectId, attachment, userByPrincipal(principal));
+//
+//        } catch (IOException e) {
+//            log.warn("Couldn' process file input, due to stream threw IOException; ProjectId: {}", projectId, e);
+//            throw new RuntimeException("Internal error, couldn't process file stream", e);
+//        }
     }
 
     @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference) throws IOException {
-        final Attachment attachment = projectService.loadProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference));
 
-        return ResponseEntity.ok()
-                .contentLength(attachment.getSize())
-                .contentType(MediaType.valueOf(attachment.getType()))
-                .body(new InputStreamResource(attachment.getPayload()));
+        // FIXME: 18/11/16
+        return null;
+
+//        final Attachment attachment = projectService.loadProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference));
+//
+//        return ResponseEntity.ok()
+//                .contentLength(attachment.getSize())
+//                .contentType(MediaType.valueOf(attachment.getType()))
+//                .body(new InputStreamResource(attachment.getPayload()));
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.DELETE)
     public void deleteProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference, Principal principal) {
-        projectService.deleteProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference), userByPrincipal(principal));
+        // FIXME: 18/11/16
+//        projectService.deleteProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference), userByPrincipal(principal));
     }
 
     private boolean contentTypeAllowed(String contentType) {

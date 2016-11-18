@@ -4,33 +4,28 @@ import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 
 import javax.persistence.*;
 
 @Data
 @Entity
-public class CommentEntity {
+public class AttachmentEntity {
 
     @Id
     @GeneratedValue
     private Long id;
     @Column
-    private String comment;
+    private String fileReference;
+    @Column
+    private String filename;
+    @Column
+    private long size;
+    @Column
+    private String contentType;
     @ManyToOne
     private ProjectEntity project;
     @CreatedDate
-    private DateTime createdDate;
-    @LastModifiedDate
-    private DateTime lastModifiedDate;
+    private DateTime created;
     @CreatedBy
     private UserEntity creator;
-
-    public CommentEntity() {
-    }
-
-    public CommentEntity(ProjectEntity project, String comment) {
-        this.project = project;
-        this.comment = comment;
-    }
 }

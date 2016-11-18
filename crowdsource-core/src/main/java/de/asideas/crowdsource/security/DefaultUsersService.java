@@ -45,7 +45,7 @@ public class DefaultUsersService {
             List<UserEntity> users = objectMapper.readValue(defaultUserFixtures.getInputStream(), new TypeReference<List<UserEntity>>() {
             });
 
-            users.stream().forEach(this::createUser);
+            users.forEach(this::createUser);
 
             LOG.info("Finished creating or updating {} users without errors.", users.size());
 

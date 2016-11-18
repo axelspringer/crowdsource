@@ -28,31 +28,26 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextConfiguration(classes = FinancingRoundControllerMockMvcTest.Config.class)
 public class FinancingRoundControllerMockMvcTest {
+
+    protected static final String FIRSTNAME = "firstname";
+    protected static final String LASTNAME = "lastname";
 
     @Autowired
     private FinancingRoundService financingRoundService;
@@ -83,8 +78,8 @@ public class FinancingRoundControllerMockMvcTest {
         when(financingRoundRepository.findAll()).thenReturn(financingRoundEntities);
 
         List<UserEntity> userEntities = new ArrayList<>();
-        userEntities.add(new UserEntity("test1@mail.com"));
-        userEntities.add(new UserEntity("test2@mail.com"));
+        userEntities.add(new UserEntity("test1@mail.com", FIRSTNAME, LASTNAME));
+        userEntities.add(new UserEntity("test2@mail.com", FIRSTNAME, LASTNAME));
 
         mapper.registerModule(new JodaModule());
     }
@@ -145,7 +140,7 @@ public class FinancingRoundControllerMockMvcTest {
     public void startFinancingRound() throws Exception {
 
         // create round
-        final FinancingRound financingRoundCreationCmd = financingRound(new DateTime().plusDays(1), 99);
+        final FinancingRound financingRoundCreationCmd = financingRound(new DateTime().plusDays(1), BigDecimal.valueOf(99));
         final FinancingRound expectedFinancingRound = anExpectedFinancingRound();
 
         ArgumentCaptor<FinancingRound> cmdCaptor = ArgumentCaptor.forClass(FinancingRound.class);
@@ -170,7 +165,7 @@ public class FinancingRoundControllerMockMvcTest {
         // attempt to start a round that ends in the past
         final MvcResult mvcResult = mockMvc.perform(post("/financingrounds")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(financingRound(new DateTime(), 99))))
+                .content(mapper.writeValueAsString(financingRound(new DateTime(), BigDecimal.valueOf(99)))))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -186,7 +181,7 @@ public class FinancingRoundControllerMockMvcTest {
         // attempt to create round with 0-budget
         final MvcResult mvcResult = mockMvc.perform(post("/financingrounds")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(financingRound(new DateTime().plusDays(1), 0))))
+                .content(mapper.writeValueAsString(financingRound(new DateTime().plusDays(1), BigDecimal.valueOf(99)))))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -204,7 +199,7 @@ public class FinancingRoundControllerMockMvcTest {
         // attempt to create a new (otherwise valid) one
         final MvcResult mvcResult = mockMvc.perform(post("/financingrounds")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(financingRound(new DateTime().plusDays(1), 99))))
+                .content(mapper.writeValueAsString(financingRound(new DateTime().plusDays(1), BigDecimal.valueOf(99)))))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -216,7 +211,7 @@ public class FinancingRoundControllerMockMvcTest {
 
     @Test
     public void stopFinancingRound() throws Exception {
-        final String roundId = "4711";
+        final Long roundId = 4711L;
 
         FinancingRound expectedFinancingRound = anExpectedFinancingRound();
         when(financingRoundService.stopFinancingRound(roundId)).thenReturn(expectedFinancingRound);
@@ -232,7 +227,7 @@ public class FinancingRoundControllerMockMvcTest {
 
     @Test
     public void stopFinancingRoundMissingRound() throws Exception {
-        doThrow(ResourceNotFoundException.class).when(financingRoundService).stopFinancingRound("4711");
+        doThrow(ResourceNotFoundException.class).when(financingRoundService).stopFinancingRound(4711L);
 
         // stop round
         mockMvc.perform(put("/financingrounds/4711/cancel"))
@@ -242,7 +237,7 @@ public class FinancingRoundControllerMockMvcTest {
 
     @Test
     public void stopFinancingRoundAlreadyStoppedRound() throws Exception {
-        when(financingRoundService.stopFinancingRound("4711")).thenAnswer(i -> {
+        when(financingRoundService.stopFinancingRound(4711L)).thenAnswer(i -> {
             throw InvalidRequestException.financingRoundAlreadyStopped();
         });
 
@@ -254,7 +249,7 @@ public class FinancingRoundControllerMockMvcTest {
         assertThat(mvcResult.getResponse().getContentAsString(), is("{\"errorCode\":\"financing_round_already_stopped\",\"fieldViolations\":{}}"));
     }
 
-    private FinancingRound financingRound(DateTime end, Integer budget) {
+    private FinancingRound financingRound(DateTime end, BigDecimal budget) {
         FinancingRound financingRound = new FinancingRound();
         financingRound.setEndDate(end);
         financingRound.setBudget(budget);
@@ -262,10 +257,10 @@ public class FinancingRoundControllerMockMvcTest {
     }
 
     private FinancingRound anExpectedFinancingRound() {
-        return anExpectedFinancingRound("test_id");
+        return anExpectedFinancingRound(123L);
     }
-    private FinancingRound anExpectedFinancingRound(String id) {
-        final FinancingRound res = financingRound(new DateTime().plusDays(1), 99);
+    private FinancingRound anExpectedFinancingRound(Long id) {
+        final FinancingRound res = financingRound(new DateTime().plusDays(1), BigDecimal.valueOf(99));
         res.setActive(true);
         res.setId(id);
         res.setStartDate(new DateTime());

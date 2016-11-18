@@ -6,15 +6,9 @@ import de.asideas.crowdsource.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -27,14 +21,14 @@ public class CommentController {
 
 
     @RequestMapping(value = "/comments", method = RequestMethod.GET)
-    public List<Comment> comments(@PathVariable String projectId) {
+    public List<Comment> comments(@PathVariable Long projectId) {
         return commentService.loadCommentsByProject(projectId);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(value = "/comment", method = RequestMethod.POST)
-    public void storeComment(@PathVariable String projectId, Principal principal, @Valid @RequestBody Comment comment) {
-        commentService.addComment(comment, projectId, principal.getName());
+    public void storeComment(@PathVariable Long projectId, @Valid @RequestBody Comment comment) {
+        commentService.addComment(comment, projectId);
     }
 
 }

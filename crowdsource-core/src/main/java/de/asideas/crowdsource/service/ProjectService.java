@@ -3,22 +3,12 @@ package de.asideas.crowdsource.service;
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.*;
-import de.asideas.crowdsource.domain.model.AttachmentValue;
-import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
-import de.asideas.crowdsource.domain.model.PledgeEntity;
-import de.asideas.crowdsource.domain.model.ProjectEntity;
-import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.domain.shared.LikeStatus;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.repository.FinancingRoundRepository;
-import de.asideas.crowdsource.repository.PledgeRepository;
-import de.asideas.crowdsource.repository.ProjectAttachmentRepository;
-import de.asideas.crowdsource.repository.ProjectRepository;
-import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
 import org.joda.time.DateTime;
@@ -28,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.io.InputStream;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,7 +31,7 @@ public class ProjectService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectService.class);
 
-    private final ProjectAttachmentRepository projectAttachmentRepository;
+    private final AttachmentEntityRepository attachmentEntityRepository;
     private final ProjectRepository projectRepository;
     private final PledgeRepository pledgeRepository;
     private final UserRepository userRepository;
@@ -60,7 +50,7 @@ public class ProjectService {
                           UserNotificationService userNotificationService,
                           FinancingRoundService financingRoundService,
                           LikeRepository likeRepository,
-                          ProjectAttachmentRepository projectAttachmentRepository) {
+                          AttachmentEntityRepository attachmentEntityRepository) {
 
         this.projectRepository = projectRepository;
         this.pledgeRepository = pledgeRepository;
@@ -68,13 +58,13 @@ public class ProjectService {
         this.financingRoundRepository = financingRoundRepository;
         this.userNotificationService = userNotificationService;
         this.financingRoundService = financingRoundService;
-        this.projectAttachmentRepository = projectAttachmentRepository;
+        this.attachmentEntityRepository = attachmentEntityRepository;
         this.likeRepository = likeRepository;
         this.thisInstance = this;
 
     }
 
-    public Project getProject(String projectId, UserEntity requestingUser) {
+    public Project getProject(Long projectId, UserEntity requestingUser) {
         return project(loadProjectEntity(projectId), requestingUser);
     }
 
@@ -88,7 +78,7 @@ public class ProjectService {
         Assert.notNull(project);
         Assert.notNull(creator);
 
-        ProjectEntity projectEntity = new ProjectEntity(creator, project, currentFinancingRound());
+        ProjectEntity projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), currentFinancingRound());
         projectEntity = projectRepository.save(projectEntity);
 
         notifyAdminsOnNewProject(projectEntity);
@@ -97,7 +87,7 @@ public class ProjectService {
         return project(projectEntity, creator);
     }
 
-    public Project modifyProjectStatus(String projectId, ProjectStatus newStatusToApply, UserEntity requestingUser) {
+    public Project modifyProjectStatus(Long projectId, ProjectStatus newStatusToApply, UserEntity requestingUser) {
         ProjectEntity projectEntity = loadProjectEntity(projectId);
 
         if (projectEntity.modifyStatus(newStatusToApply)) {
@@ -108,10 +98,10 @@ public class ProjectService {
         return project(projectEntity, requestingUser);
     }
 
-    public Project modifyProjectMasterdata(String projectId, Project modifiedProject, UserEntity requestingUser) {
+    public Project modifyProjectMasterdata(Long projectId, Project modifiedProject, UserEntity requestingUser) {
         ProjectEntity projectEntity = loadProjectEntity(projectId);
 
-        if (projectEntity.modifyMasterdata(modifiedProject, requestingUser)) {
+        if (projectEntity.modifyMasterdata(requestingUser, modifiedProject.getTitle(), modifiedProject.getDescription(), modifiedProject.getShortDescription(), modifiedProject.getPledgeGoal())) {
             projectEntity = projectRepository.save(projectEntity);
             userNotificationService.notifyCreatorAndAdminOnProjectModification(projectEntity, requestingUser);
             LOG.debug("Project updated: {}", projectEntity);
@@ -120,7 +110,7 @@ public class ProjectService {
         return project(projectEntity, requestingUser);
     }
 
-    public void pledge(String projectId, UserEntity userEntity, Pledge pledge) {
+    public void pledge(Long projectId, UserEntity userEntity, Pledge pledge) {
 
         ProjectEntity projectEntity = loadProjectEntity(projectId);
 
@@ -140,49 +130,57 @@ public class ProjectService {
     }
 
     public Attachment addProjectAttachment(String projectId, Attachment attachment, UserEntity savingUser) {
-        ProjectEntity projectEntity = loadProjectEntity(projectId);
+        // FIXME: 18/11/16
+        return null;
 
-        projectEntity.addAttachmentAllowed(savingUser);
-
-        AttachmentValue attachmentStored = new AttachmentValue(attachment.getName(), attachment.getType());
-        attachmentStored = projectAttachmentRepository.storeAttachment(attachmentStored, attachment.getPayload());
-        projectEntity.addAttachment(attachmentStored);
-        projectRepository.save(projectEntity);
-        return Attachment.asResponseWithoutPayload(attachmentStored, projectEntity);
+//        ProjectEntity projectEntity = loadProjectEntity(projectId);
+//
+//        projectEntity.addAttachmentAllowed(savingUser);
+//
+//        AttachmentValue attachmentStored = new AttachmentValue(attachment.getName(), attachment.getType());
+//        attachmentStored = attachmentEntityRepository.storeAttachment(attachmentStored, attachment.getPayload());
+//        projectEntity.addAttachment(attachmentStored);
+//        projectRepository.save(projectEntity);
+//        return Attachment.asResponseWithoutPayload(attachmentStored, projectEntity);
     }
 
     public Attachment loadProjectAttachment(String projectId, Attachment attachmentRequest) {
-        final ProjectEntity project = loadProjectEntity(projectId);
 
-        final AttachmentValue attachment2Serve = project.findAttachmentByReference(attachmentRequest);
-        final InputStream payload = projectAttachmentRepository.loadAttachment(attachment2Serve);
-
-        if (payload == null) {
-            LOG.error("A project's attachment file entry's actual binary data couldn't be found: " +
-                    "projectId:{}; fileAttachmentMissing: {}", projectId, attachment2Serve);
-            throw new ResourceNotFoundException();
-        }
-
-        return Attachment.asResponse(attachment2Serve, project, payload);
+        // FIXME: 18/11/16
+        return null;
+//        final ProjectEntity project = loadProjectEntity(projectId);
+//
+//        final AttachmentValue attachment2Serve = project.findAttachmentByReference(attachmentRequest);
+//        final InputStream payload = attachmentEntityRepository.loadAttachment(attachment2Serve);
+//
+//        if (payload == null) {
+//            LOG.error("A project's attachment file entry's actual binary data couldn't be found: " +
+//                    "projectId:{}; fileAttachmentMissing: {}", projectId, attachment2Serve);
+//            throw new ResourceNotFoundException();
+//        }
+//
+//        return Attachment.asResponse(attachment2Serve, project, payload);
     }
 
     public void deleteProjectAttachment(String projectId, Attachment attachmentRequest, UserEntity deletingUser) {
-        final ProjectEntity project = loadProjectEntity(projectId);
-        final AttachmentValue attachment2Delete = project.findAttachmentByReference(attachmentRequest);
+        // FIXME: 18/11/16
 
-        project.deleteAttachmentAllowed(deletingUser);
-
-        projectAttachmentRepository.deleteAttachment(attachment2Delete);
-        project.deleteAttachment(attachment2Delete);
-        projectRepository.save(project);
+//        final ProjectEntity project = loadProjectEntity(projectId);
+//        final AttachmentValue attachment2Delete = project.findAttachmentByReference(attachmentRequest);
+//
+//        project.deleteAttachmentAllowed(deletingUser);
+//
+//        attachmentEntityRepository.deleteAttachment(attachment2Delete);
+//        project.deleteAttachment(attachment2Delete);
+//        projectRepository.save(project);
     }
 
-    public void likeProject(String projectId, UserEntity user) {
+    public void likeProject(Long projectId, UserEntity user) {
         final ProjectEntity project = projectRepository.findOne(projectId);
         toggleStatus(project, user, LIKE);
     }
 
-    public void unlikeProject(String projectId, UserEntity user) {
+    public void unlikeProject(Long projectId, UserEntity user) {
         final ProjectEntity project = projectRepository.findOne(projectId);
         toggleStatus(project, user, UNLIKE);
     }
@@ -193,7 +191,7 @@ public class ProjectService {
 
         // potential problem: race condition. Two simultaneous requests could lead to "over-pledging"
         PledgeEntity pledgeEntity = projectEntity.pledge(
-                pledge, userEntity, pledgesSoFar);
+                pledge.getAmount(), userEntity, pledgesSoFar);
 
         // potential problem: no transaction -> no rollback -- Possible Solution -> sort of mini event sourcing?
         if (projectEntity.pledgeGoalAchieved()) {
@@ -211,13 +209,13 @@ public class ProjectService {
         List<PledgeEntity> postRoundPledges = pledgeRepository.findByFinancingRoundAndCreatedDateGreaterThan(
                 financingRound, financingRound.getEndDate());
 
-        int postRoundPledgableBudget = financingRound.postRoundPledgableBudgetRemaining(postRoundPledges);
+        BigDecimal postRoundPledgableBudget = financingRound.postRoundPledgableBudgetRemaining(postRoundPledges);
 
         List<PledgeEntity> pledgesSoFar = pledgeRepository.findByProjectAndFinancingRound(
                 projectEntity, projectEntity.getFinancingRound());
 
         PledgeEntity pledgeResult = projectEntity.pledgeUsingPostRoundBudget(
-                pledge, userEntity, pledgesSoFar, postRoundPledgableBudget);
+                pledge.getAmount(), userEntity, pledgesSoFar, postRoundPledgableBudget);
 
         if (projectEntity.pledgeGoalAchieved()) {
             projectRepository.save(projectEntity);
@@ -228,7 +226,7 @@ public class ProjectService {
         LOG.debug("Project pledged using post round budget: {}", pledgeResult);
     }
 
-    protected ProjectEntity loadProjectEntity(String projectId) {
+    protected ProjectEntity loadProjectEntity(Long projectId) {
         ProjectEntity projectEntity = projectRepository.findOne(projectId);
         if (projectEntity == null) {
             throw new ResourceNotFoundException();
@@ -260,7 +258,7 @@ public class ProjectService {
             likeEntity.setStatus(status);
             likeRepository.save(likeEntity);
         } else {
-            final LikeEntity likeEntity = new LikeEntity(status, project, user);
+            final LikeEntity likeEntity = new LikeEntity(status, project);
             likeRepository.save(likeEntity);
         }
     }

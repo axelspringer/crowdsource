@@ -18,14 +18,12 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.Arrays;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,7 +46,7 @@ public class UserMetricsControllerTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         reset(userRepository);
 
-        when(userRepository.findAll()).thenReturn(Arrays.asList(userEntity(21), userEntity(5), userEntity(7)));
+        when(userRepository.findAll()).thenReturn(Arrays.asList(userEntity(BigDecimal.valueOf(21)), userEntity(BigDecimal.valueOf(5)), userEntity(BigDecimal.valueOf(7))));
     }
 
     @Test
@@ -61,7 +59,7 @@ public class UserMetricsControllerTest {
         verify(userRepository).findAll();
     }
 
-    private UserEntity userEntity(int budget) {
+    private UserEntity userEntity(BigDecimal budget) {
         UserEntity userEntity = new UserEntity();
         userEntity.setBudget(budget);
         return userEntity;

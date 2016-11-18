@@ -1,7 +1,7 @@
 package de.asideas.crowdsource.config;
 
 import de.asideas.crowdsource.security.IPBasedAnonymousAuthenticationFilter;
-import de.asideas.crowdsource.security.MongoUserDetailsService;
+import de.asideas.crowdsource.security.CrowdUserDetailsService;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -32,6 +32,7 @@ import java.io.IOException;
 /**
  * Configuration for Spring Security
  */
+/** Liang **/
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
@@ -39,7 +40,7 @@ import java.io.IOException;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    private MongoUserDetailsService userDetailsService;
+    private CrowdUserDetailsService userDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {

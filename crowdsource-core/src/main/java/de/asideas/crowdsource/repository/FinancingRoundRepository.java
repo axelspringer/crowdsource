@@ -2,16 +2,11 @@ package de.asideas.crowdsource.repository;
 
 import de.asideas.crowdsource.domain.model.FinancingRoundEntity;
 import org.joda.time.DateTime;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
-public interface FinancingRoundRepository extends MongoRepository<FinancingRoundEntity, String> {
+public interface FinancingRoundRepository extends JpaRepository<FinancingRoundEntity, Long> {
 
-    @Query("{ startDate: { $lte: ?0 }, endDate: { $gte: ?0 }}")
+    @Query("select f from FinancingRoundEntity f where f.startDate < :forDate and f.endDate > :forDate ")
     FinancingRoundEntity findActive(DateTime forDate);
-
-    @Query("{}")
-    Page<FinancingRoundEntity> financingRounds(Pageable pageable);
 }

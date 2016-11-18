@@ -1,78 +1,86 @@
 package de.asideas.crowdsource.domain.model;
 
-import de.asideas.crowdsource.presentation.FinancingRound;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import lombok.Data;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.util.Assert;
 
+import javax.persistence.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.List;
 
-// for serialization
-@Document(collection = "financerounds")
+import static java.math.BigDecimal.ZERO;
+
+@Data
+@Entity
 public class FinancingRoundEntity {
 
     private static final Logger log = LoggerFactory.getLogger(FinancingRoundEntity.class);
 
     @Id
-    private String id;
-
+    @GeneratedValue
+    private Long id;
+    @Column
     private DateTime startDate;
-
+    @Column
     private DateTime endDate;
-
-    /**
-     * The amount of money available in the financing round
-     */
-    private Integer budget;
-
+    @Column
+    private Integer userCount;
+    @Column
+    private BigDecimal budget;
     /**
      * The amount of money left after round has been terminated; thus it is the amount of money users did not spend on
      * pledging projects during official activity of that round. It is set during post processing of financing rounds
      * and is intended to be eventually used for pledging projects by admins. When admin users pledge after termination
      * of the round the pledging amounts are not subtracted from this member.
      */
-    private Integer postRoundBudget;
-
-    private Integer budgetPerUser;
-
-    private Integer userCount;
-
+    @Column
+    private BigDecimal postRoundBudget;
+    @Column
+    private BigDecimal budgetPerUser;
+    @Column
+    private Boolean terminationPostProcessingDone;
+    @ManyToOne
+    private OrganisationUnitEntity organisationUnit;
+    @OneToMany(mappedBy = "financingRound")
+    private List<ProjectEntity> projectEntityList;
+    @OneToMany(mappedBy = "financingRound")
+    private List<PledgeEntity> pledgeEntityList;
     @CreatedDate
     private DateTime createdDate;
-
     @LastModifiedDate
     private DateTime lastModifiedDate;
 
-    private Boolean terminationPostProcessingDone = false;
-
-    public FinancingRoundEntity() {
-    }
-
+    @CreatedBy
+    private UserEntity creator;
 
     /**
      * Factory for a new financing round that immediately will be in active state
      *
-     * @param creationCmd
      * @return
      */
-    public static FinancingRoundEntity newFinancingRound(FinancingRound creationCmd, int userCount) {
+    public static FinancingRoundEntity newFinancingRound(int userCount, DateTime endDate, BigDecimal budget) {
         FinancingRoundEntity res = new FinancingRoundEntity();
         res.setStartDate(new DateTime());
-        res.setEndDate(creationCmd.getEndDate());
-        res.setBudget(creationCmd.getBudget());
+        res.setEndDate(endDate);
+        res.setBudget(budget);
         res.setUserCount(userCount);
         res.setBudgetPerUser(res.calculateBudgetPerUser());
         return res;
+    }
+
+    public boolean idenitityEquals(FinancingRoundEntity other) {
+        if (other == null) {
+            return false;
+        }
+        return this.getId().equals(other.getId());
     }
 
     public boolean projectEligibleForRound(ProjectEntity project) {
@@ -88,16 +96,14 @@ public class FinancingRoundEntity {
      * @return Whether <code>this</code> is currently active
      */
     public boolean active() {
-        long now = DateTime.now().getMillis();
-        return startDate.getMillis() < now && endDate.getMillis() > now;
+        return startDate.isBeforeNow() && endDate.isAfterNow();
     }
 
     /**
      * @return whether <code>this</code> is terminated.
      */
     public boolean terminated() {
-        long now = DateTime.now().getMillis();
-        return endDate.getMillis() <= now;
+        return endDate.isBeforeNow();
     }
 
     public boolean terminationPostProcessingRequiredNow() {
@@ -109,19 +115,19 @@ public class FinancingRoundEntity {
      *                         after the round finished
      * @return how much money is left to be invested using money from this round based on <code>postRoundBudget</code>
      */
-    public Integer postRoundPledgableBudgetRemaining(List<PledgeEntity> postRoundPledges) {
+    public BigDecimal postRoundPledgableBudgetRemaining(List<PledgeEntity> postRoundPledges) {
         if (!terminationPostProcessingDone) {
-            return 0;
+            return ZERO;
         }
         if (postRoundPledges == null || postRoundPledges.isEmpty()) {
             return this.postRoundBudget;
         }
-        Collections.sort(postRoundPledges, new PledgeEntity.CreationTimeComparator() );
+        Collections.sort(postRoundPledges, (p1, p2) -> p1.getCreatedDate().compareTo(p2.getCreatedDate()) );
         Assert.isTrue(postRoundPledges.get(0).getCreatedDate().getMillis() > this.endDate.getMillis(),
                 "Method must not be called with pledgeEntities from active financing round! One entry was: " + postRoundPledges.get(0));
 
-        int postRoundPledgeAmount = postRoundPledges.stream().mapToInt(PledgeEntity::getAmount).sum();
-        return this.postRoundBudget - postRoundPledgeAmount;
+        final BigDecimal postRoundPledgeAmount = postRoundPledges.stream().map(PledgeEntity::getAmount).reduce(ZERO, BigDecimal::add);
+        return postRoundBudget.subtract( postRoundPledgeAmount );
     }
 
     /**
@@ -129,128 +135,23 @@ public class FinancingRoundEntity {
      *
      * @param pledgeAmountByUsers the total amount pledged by users during active financing round
      */
-    public void initPostRoundBudget(int pledgeAmountByUsers) {
+    public void initPostRoundBudget(BigDecimal pledgeAmountByUsers) {
         if (!this.terminated()) {
             throw new IllegalStateException("Cannot initialize remaining budget on not yet terminated financing round: " + this);
         }
         if (this.postRoundBudget != null) {
             throw new IllegalStateException("PostRoundBudget must not be initialized more than once!");
         }
-        int budgetRemainingAfterRound = getBudget() - pledgeAmountByUsers;
-        if (budgetRemainingAfterRound < 0) {
+        BigDecimal budgetRemainingAfterRound = getBudget().subtract(pledgeAmountByUsers);
+        if (budgetRemainingAfterRound.compareTo(ZERO) < 0) {
             log.warn("It seems, within this financing round there were more pledges done than budget available; Setting remaining budget to 0; " +
                     "The pledge amount above budget is: {}; FinancingRound was: {}", budgetRemainingAfterRound, this);
-            budgetRemainingAfterRound = 0;
+            budgetRemainingAfterRound = ZERO;
         }
         setPostRoundBudget(budgetRemainingAfterRound);
     }
 
-    Integer calculateBudgetPerUser() {
-        Assert.notNull(this.userCount);
-        Assert.notNull(this.budget);
-        return this.userCount < 1 ? 0 : Math.floorDiv(this.budget, this.userCount);
-    }
-
-
-    public String getId() {
-        return this.id;
-    }
-
-    public DateTime getStartDate() {
-        return this.startDate;
-    }
-
-    public DateTime getEndDate() {
-        return this.endDate;
-    }
-
-    public Integer getBudget() {
-        return this.budget;
-    }
-
-    public Integer getBudgetPerUser() {
-        return this.budgetPerUser;
-    }
-
-    public Integer getUserCount() {
-        return this.userCount;
-    }
-
-    public DateTime getCreatedDate() {
-        return this.createdDate;
-    }
-
-    public DateTime getLastModifiedDate() {
-        return this.lastModifiedDate;
-    }
-
-    public Boolean getTerminationPostProcessingDone() {
-        return terminationPostProcessingDone;
-    }
-
-    public Integer getPostRoundBudget() {
-        return postRoundBudget;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setStartDate(DateTime startDate) {
-        this.startDate = startDate;
-    }
-
-    public void setEndDate(DateTime endDate) {
-        this.endDate = endDate;
-    }
-
-    public void setBudget(Integer budget) {
-        this.budget = budget;
-    }
-
-    public void setBudgetPerUser(Integer budgetPerUser) {
-        this.budgetPerUser = budgetPerUser;
-    }
-
-    public void setUserCount(Integer userCount) {
-        this.userCount = userCount;
-    }
-
-    public void setCreatedDate(DateTime createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public void setLastModifiedDate(DateTime lastModifiedDate) {
-        this.lastModifiedDate = lastModifiedDate;
-    }
-
-    public void setTerminationPostProcessingDone(Boolean terminationPostProcessingDone) {
-        this.terminationPostProcessingDone = terminationPostProcessingDone;
-    }
-
-    public void setPostRoundBudget(Integer postRoundBudget) {
-        this.postRoundBudget = postRoundBudget;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        return EqualsBuilder.reflectionEquals(this, o);
-    }
-
-    public boolean idenitityEquals(FinancingRoundEntity other) {
-        if (other == null) {
-            return false;
-        }
-        return this.getId().equals(other.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return HashCodeBuilder.reflectionHashCode(this);
-    }
-
-    @Override
-    public String toString() {
-        return ToStringBuilder.reflectionToString(this);
+    private BigDecimal calculateBudgetPerUser() {
+        return this.userCount < 1 ? ZERO : budget.divide(BigDecimal.valueOf(userCount), 0, RoundingMode.FLOOR);
     }
 }

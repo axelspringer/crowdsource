@@ -29,12 +29,11 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
@@ -43,6 +42,8 @@ public abstract class AbstractUserControllerTest {
 
     protected static final String NEW_USER_MAIL_ADDRESS = "new@crowd.source.de";
     protected static final String EXISTING_BUT_NOT_YET_ACTIVATED_USER_MAIL_ADDRESS = "existing.not.yet.activated@crowd.source.de";
+    protected static final String FIRSTNAME = "firstname";
+    protected static final String LASTNAME = "lastname";
     protected static final String ACTIVATED_USER_MAIL_ADDRESS = "existing.and.activated@crowd.source.de";
     protected static final String INVALID_USER_MAIL_ADDRESS = "test@test.de";
     protected static final String ENCODED_PASSWORD = "3nc0d3d";
@@ -77,15 +78,15 @@ public abstract class AbstractUserControllerTest {
 
         when(userRepository.findByEmail(eq(NEW_USER_MAIL_ADDRESS))).thenReturn(null);
 
-        existingButNotYetActivatedUser = new UserEntity(EXISTING_BUT_NOT_YET_ACTIVATED_USER_MAIL_ADDRESS);
-        existingButNotYetActivatedUser.setId("some-database-generated-id");
+        existingButNotYetActivatedUser = new UserEntity(EXISTING_BUT_NOT_YET_ACTIVATED_USER_MAIL_ADDRESS, FIRSTNAME, LASTNAME);
+        existingButNotYetActivatedUser.setId(0L);
         existingButNotYetActivatedUser.setActivationToken("activationToken");
         when(userRepository.findByEmail(eq(EXISTING_BUT_NOT_YET_ACTIVATED_USER_MAIL_ADDRESS))).thenReturn(existingButNotYetActivatedUser);
 
-        activatedUser = new UserEntity(ACTIVATED_USER_MAIL_ADDRESS);
+        activatedUser = new UserEntity(ACTIVATED_USER_MAIL_ADDRESS, FIRSTNAME, LASTNAME);
         activatedUser.setActivated(true);
         activatedUser.setActivationToken("");
-        activatedUser.setBudget(500);
+        activatedUser.setBudget(BigDecimal.valueOf(500));
         when(userRepository.findByEmail(eq(ACTIVATED_USER_MAIL_ADDRESS))).thenReturn(activatedUser);
 
         reset(passwordEncoder);

@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import javax.validation.Validation;
 import javax.validation.Validator;
+import java.math.BigDecimal;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -17,7 +18,7 @@ public class ProjectValidationTest {
         Project project = new Project();
         project.setTitle("title");
         project.setShortDescription("shortDescription");
-        project.setPledgeGoal(1);
+        project.setPledgeGoal(BigDecimal.ONE);
         project.setDescription("description");
 
         assertThat(validator.validate(project).size(), is(0));
@@ -34,7 +35,7 @@ public class ProjectValidationTest {
         Project project = new Project();
         project.setTitle("");
         project.setShortDescription("");
-        project.setPledgeGoal(0);
+        project.setPledgeGoal(BigDecimal.ZERO);
         project.setDescription("");
         assertThat(validator.validate(project).size(), is(4));
     }
