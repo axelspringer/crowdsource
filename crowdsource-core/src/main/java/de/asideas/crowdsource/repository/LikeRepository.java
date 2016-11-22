@@ -10,6 +10,6 @@ import java.util.Optional;
 
 public interface LikeRepository extends JpaRepository<LikeEntity, Long> {
 
-    Optional<LikeEntity> findOneByProjectAndUser(ProjectEntity project, UserEntity user);
+    Optional<LikeEntity> findOneByProjectAndCreator(ProjectEntity project, UserEntity user);
     long countByProjectAndStatus(ProjectEntity project, LikeStatus status);
 }

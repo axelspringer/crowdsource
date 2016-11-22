@@ -5,6 +5,7 @@ import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -14,28 +15,21 @@ import static java.util.Arrays.asList;
 
 @Data
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class UserEntity {
 
     @Id
     @GeneratedValue
     private Long id;
-    @Column
     private String email;
-    @Column
     private String firstname;
-    @Column
     private String lastname;
-    @Column
     private String password;
-    @Column
     private String activationToken;
-    @Column
+    @ElementCollection
     private List<String> roles = asList(Roles.ROLE_USER);
-    @Column
     private boolean activated;
-    @Column
     private boolean deleted;
-    @Column
     private BigDecimal budget = BigDecimal.ZERO;
     @ManyToMany(mappedBy = "members")
     private List<OrganisationUnitEntity> organisationUnits;

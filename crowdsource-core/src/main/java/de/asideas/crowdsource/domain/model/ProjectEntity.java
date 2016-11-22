@@ -7,9 +7,9 @@ import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.security.Roles;
 import lombok.Data;
 import org.joda.time.DateTime;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.util.Assert;
 
 import javax.persistence.*;
@@ -17,48 +17,45 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 
-import static java.math.BigDecimal.*;
+import static java.math.BigDecimal.ZERO;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.reducing;
 
 @Data
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class ProjectEntity {
 
     @Id
     @GeneratedValue
     private Long id;
-    @Column
     private String title;
-    @Column
     private String shortDescription;
-    @Column
     private String description;
-    @Column
     private ProjectStatus status;
-    @Column
     private BigDecimal pledgeGoal = ZERO;
 
     @ManyToOne
     private FinancingRoundEntity financingRound;
+    @ManyToOne
+    private UserEntity creator;
 
     @CreatedDate
     private DateTime createdDate;
     @LastModifiedDate
     private DateTime lastModifiedDate;
-    @CreatedBy
-    private UserEntity creator;
 
     public ProjectEntity() {
     }
 
-    public ProjectEntity(String title, String shortDescription, String description, BigDecimal pledgeGoal, FinancingRoundEntity financingRound) {
+    public ProjectEntity(String title, String shortDescription, String description, BigDecimal pledgeGoal, FinancingRoundEntity financingRound, UserEntity creator) {
         this.financingRound = financingRound;
         this.title = title;
         this.shortDescription = shortDescription;
         this.description = description;
         this.pledgeGoal = pledgeGoal;
         this.status = ProjectStatus.PROPOSED;
+        this.creator = creator;
     }
 
     /**

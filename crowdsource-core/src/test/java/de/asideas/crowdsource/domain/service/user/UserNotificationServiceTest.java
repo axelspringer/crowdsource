@@ -263,7 +263,7 @@ public class UserNotificationServiceTest {
         final ProjectEntity project = project(3L, ProjectStatus.PUBLISHED, creator, "My Super Project");
         final String projectLink = "https://crowd.asideas.de#/project/3";
         final String testComment = aTestComment(UserNotificationService.COMMENT_EXCERPT_LENGTH + 5);
-        final CommentEntity comment = new CommentEntity(project, testComment);
+        final CommentEntity comment = new CommentEntity(project, testComment, aProjectCreator());
         comment.setCreator(commentingUser);
         final String expMessage = "Hallo %s,\n\n" +
                 "zu Deinem Projekt \"%s\" wurde ein Kommentar von %s hinzugefügt:\n\n" +
@@ -290,7 +290,7 @@ public class UserNotificationServiceTest {
         final ProjectEntity project = project(3L, ProjectStatus.PUBLISHED, creator, "My Super Project");
         final String projectLink = "https://crowd.asideas.de#/project/3";
         final String testComment = aTestComment(UserNotificationService.COMMENT_EXCERPT_LENGTH + 5);
-        final CommentEntity comment = new CommentEntity(project, testComment);
+        final CommentEntity comment = new CommentEntity(project, testComment, aProjectCreator());
         comment.setCreator(creator);
 
         userNotificationService.notifyCreatorOnComment(comment);

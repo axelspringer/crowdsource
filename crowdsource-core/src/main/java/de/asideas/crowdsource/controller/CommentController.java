@@ -9,6 +9,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -27,8 +28,8 @@ public class CommentController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(value = "/comment", method = RequestMethod.POST)
-    public void storeComment(@PathVariable Long projectId, @Valid @RequestBody Comment comment) {
-        commentService.addComment(comment, projectId);
+    public void storeComment(@PathVariable Long projectId, Principal principal, @Valid @RequestBody Comment comment) {
+        commentService.addComment(comment, projectId, principal.getName());
     }
 
 }

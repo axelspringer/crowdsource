@@ -2,6 +2,7 @@ package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
+import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.presentation.Comment;
 import de.asideas.crowdsource.repository.CommentRepository;
@@ -14,20 +15,23 @@ import java.util.stream.Collectors;
 @Service
 public class CommentService {
 
-    private CommentRepository commentRepository;
-    private ProjectService projectService;
-    private UserNotificationService userNotificationService;
+    private final CommentRepository commentRepository;
+    private final ProjectService projectService;
+    private final UserService userService;
+    private final UserNotificationService userNotificationService;
 
     @Autowired
-    public CommentService(CommentRepository commentRepository, ProjectService projectService, UserNotificationService userNotificationService) {
+    public CommentService(CommentRepository commentRepository, ProjectService projectService, UserService userService, UserNotificationService userNotificationService) {
         this.commentRepository = commentRepository;
         this.projectService = projectService;
+        this.userService = userService;
         this.userNotificationService = userNotificationService;
     }
 
-    public void addComment(Comment comment, Long projectId) {
+    public void addComment(Comment comment, Long projectId, String commentingUserEmail) {
         final ProjectEntity project = projectService.loadProjectEntity(projectId);
-        CommentEntity commentEntity = new CommentEntity(project, comment.getComment());
+        final UserEntity creator = userService.getUserByEmail(commentingUserEmail);
+        CommentEntity commentEntity = new CommentEntity(project, comment.getComment(), creator);
         commentRepository.save(commentEntity);
 
         userNotificationService.notifyCreatorOnComment(commentEntity);

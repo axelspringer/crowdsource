@@ -2,7 +2,6 @@ package de.asideas.crowdsource.domain.model;
 
 import lombok.Data;
 import org.joda.time.DateTime;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -20,19 +19,17 @@ public class PledgeEntity {
     private ProjectEntity project;
     @ManyToOne
     private FinancingRoundEntity financingRound;
-    @Column
     private BigDecimal amount = BigDecimal.ZERO;
 
     @CreatedDate
     private DateTime createdDate;
     @LastModifiedDate
     private DateTime lastModifiedDate;
-    @CreatedBy
+    @ManyToOne
     private UserEntity creator;
 
     public PledgeEntity() {
     }
-    // // FIXME: 18/11/16 user should be automatically added
     public PledgeEntity(ProjectEntity projectEntity, UserEntity userEntity, BigDecimal amount, FinancingRoundEntity financingRoundEntity) {
         this.project = projectEntity;
         this.creator = userEntity;

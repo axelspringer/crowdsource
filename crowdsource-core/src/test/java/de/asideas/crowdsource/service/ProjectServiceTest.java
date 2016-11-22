@@ -89,7 +89,7 @@ public class ProjectServiceTest {
         when(userRepository.findAllAdminUsers()).thenReturn(Arrays.asList(admin(ADMIN1_EMAIL), admin(ADMIN2_EMAIL)));
         when(projectRepository.save(any(ProjectEntity.class))).thenAnswer(invocation -> invocation.getArguments()[0]);
         when(likeRepository.countByProjectAndStatus(any(ProjectEntity.class), eq(LIKE))).thenReturn(0L);
-        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
+        when(likeRepository.findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
     }
 
     @Test
@@ -450,8 +450,7 @@ public class ProjectServiceTest {
        final Long projectId = 123L;
         final UserEntity user = user(USER_EMAIL);
         final Project projectCmd = project("title", "descr", "descrShort", BigDecimal.valueOf(17), ProjectStatus.PROPOSED);
-        final ProjectEntity project = new ProjectEntity(projectCmd.getTitle(), projectCmd.getShortDescription(), projectCmd.getDescription(), projectCmd.getPledgeGoal(), null);
-        project.setCreator(user);
+        final ProjectEntity project = new ProjectEntity(projectCmd.getTitle(), projectCmd.getShortDescription(), projectCmd.getDescription(), projectCmd.getPledgeGoal(), null, user);
 
         when(projectRepository.findOne(projectId)).thenReturn(project);
         projectService.modifyProjectMasterdata(projectId, projectCmd, user);
@@ -624,7 +623,7 @@ public class ProjectServiceTest {
         final UserEntity projectCreator = user(USER_EMAIL);
         final ProjectEntity projectEntity = projectEntity(1L, ProjectStatus.PROPOSED, projectCreator);
         when(projectRepository.findOne(anyLong())).thenReturn(projectEntity);
-        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
+        when(likeRepository.findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
         final Project project = projectService.getProject(1L, projectCreator);
 
         assertThat(project, hasProperty("likeCount", equalTo(0L)));
@@ -648,13 +647,13 @@ public class ProjectServiceTest {
 
     @Test
     public void likeProject_shouldCreateLikeEntityIfNotExists() throws Exception {
-        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
+        when(likeRepository.findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
 
         projectService.likeProject(1L, any(UserEntity.class));
 
         final ArgumentCaptor<LikeEntity> captor = ArgumentCaptor.forClass(LikeEntity.class);
 
-        verify(likeRepository, times(1)).findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class));
+        verify(likeRepository, times(1)).findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class));
         verify(likeRepository, times(1)).save(captor.capture());
 
         assertThat(captor.getValue().getStatus(), is(LIKE));
@@ -662,13 +661,13 @@ public class ProjectServiceTest {
 
     @Test
     public void likeProject_shouldCreateLikeEntityIfExists() throws Exception {
-        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
+        when(likeRepository.findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
 
         projectService.likeProject(1L, any(UserEntity.class));
 
         final ArgumentCaptor<LikeEntity> captor = ArgumentCaptor.forClass(LikeEntity.class);
 
-        verify(likeRepository, times(1)).findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class));
+        verify(likeRepository, times(1)).findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class));
         verify(likeRepository, times(1)).save(captor.capture());
 
         assertThat(captor.getValue().getStatus(), is(LIKE));
@@ -676,13 +675,13 @@ public class ProjectServiceTest {
 
     @Test
     public void unlikeProject_shouldCreateLikeEntityIfNotExists() throws Exception {
-        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
+        when(likeRepository.findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.empty());
 
         projectService.unlikeProject(1L, any(UserEntity.class));
 
         final ArgumentCaptor<LikeEntity> captor = ArgumentCaptor.forClass(LikeEntity.class);
 
-        verify(likeRepository, times(1)).findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class));
+        verify(likeRepository, times(1)).findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class));
         verify(likeRepository, times(1)).save(captor.capture());
 
         assertThat(captor.getValue().getStatus(), is(UNLIKE));
@@ -690,13 +689,13 @@ public class ProjectServiceTest {
 
     @Test
     public void unlikeProject_shouldCreateLikeEntityIfExists() throws Exception {
-        when(likeRepository.findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
+        when(likeRepository.findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class))).thenReturn(Optional.of(new LikeEntity()));
 
         projectService.unlikeProject(1L, any(UserEntity.class));
 
         final ArgumentCaptor<LikeEntity> captor = ArgumentCaptor.forClass(LikeEntity.class);
 
-        verify(likeRepository, times(1)).findOneByProjectAndUser(any(ProjectEntity.class), any(UserEntity.class));
+        verify(likeRepository, times(1)).findOneByProjectAndCreator(any(ProjectEntity.class), any(UserEntity.class));
         verify(likeRepository, times(1)).save(captor.capture());
 
         assertThat(captor.getValue().getStatus(), is(UNLIKE));

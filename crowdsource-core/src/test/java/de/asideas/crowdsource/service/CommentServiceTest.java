@@ -51,10 +51,9 @@ public class CommentServiceTest {
     public void init(){
         reset(projectService, userService, commentRepository);
         Project project = new Project();
-        projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), new FinancingRoundEntity());
+        projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), new FinancingRoundEntity(), userEntity);
         userEntity = new UserEntity("test.name@test.de", "firstname", "lastname");
-        aComment = new CommentEntity(projectEntity, "some comment");
-        aComment.setCreator(userEntity);
+        aComment = new CommentEntity(projectEntity, "some comment", userEntity);
     }
 
     @Test
@@ -64,9 +63,11 @@ public class CommentServiceTest {
         prepareProjectServiceMock();
         prepareUserServiceMock();
 
-        commentService.addComment(comment, EXISTING_PROJECT_ID);
+        userEntity = new UserEntity("test.name@test.de", "firstname", "lastname");
 
-        final CommentEntity expectedComment2BPersisted = new CommentEntity(projectEntity, comment.getComment());
+        commentService.addComment(comment, EXISTING_PROJECT_ID, "test.name@test.de");
+
+        final CommentEntity expectedComment2BPersisted = new CommentEntity(projectEntity, comment.getComment(), userEntity);
         verify(commentRepository).save(expectedComment2BPersisted);
         verify(userNotificationService).notifyCreatorOnComment(expectedComment2BPersisted);
     }

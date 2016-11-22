@@ -5,12 +5,14 @@ import lombok.Data;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.util.Assert;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
@@ -27,13 +29,9 @@ public class FinancingRoundEntity {
     @Id
     @GeneratedValue
     private Long id;
-    @Column
     private DateTime startDate;
-    @Column
     private DateTime endDate;
-    @Column
     private Integer userCount;
-    @Column
     private BigDecimal budget;
     /**
      * The amount of money left after round has been terminated; thus it is the amount of money users did not spend on
@@ -41,25 +39,15 @@ public class FinancingRoundEntity {
      * and is intended to be eventually used for pledging projects by admins. When admin users pledge after termination
      * of the round the pledging amounts are not subtracted from this member.
      */
-    @Column
     private BigDecimal postRoundBudget;
-    @Column
     private BigDecimal budgetPerUser;
-    @Column
     private Boolean terminationPostProcessingDone = false;
     @ManyToOne
     private OrganisationUnitEntity organisationUnit;
-    @OneToMany(mappedBy = "financingRound")
-    private List<ProjectEntity> projectEntityList;
-    @OneToMany(mappedBy = "financingRound")
-    private List<PledgeEntity> pledgeEntityList;
     @CreatedDate
     private DateTime createdDate;
     @LastModifiedDate
     private DateTime lastModifiedDate;
-
-    @CreatedBy
-    private UserEntity creator;
 
     /**
      * Factory for a new financing round that immediately will be in active state

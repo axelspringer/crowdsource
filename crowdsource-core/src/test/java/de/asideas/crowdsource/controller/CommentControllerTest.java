@@ -94,7 +94,7 @@ public class CommentControllerTest {
                 .content(mapper.writeValueAsString(comment)))
                 .andExpect(status().isCreated());
 
-        verify(commentService).addComment(comment, EXISTING_PROJECT_ID);
+        verify(commentService).addComment(comment, EXISTING_PROJECT_ID, EXISTING_USER_MAIL);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class CommentControllerTest {
 
         assertThat(mvcResult.getResponse().getContentAsString(), is("{\"errorCode\":\"field_errors\",\"fieldViolations\":{\"comment\":\"may not be empty\"}}"));
 
-        verify(commentService, never()).addComment(any(Comment.class), anyLong());
+        verify(commentService, never()).addComment(any(Comment.class), anyLong(), anyString());
     }
 
     @Test
@@ -119,7 +119,7 @@ public class CommentControllerTest {
         Comment comment = new Comment();
         comment.setComment("this is an example comment that respects the length constraint");
 
-        doThrow(new ResourceNotFoundException()).when(commentService).addComment(any(Comment.class), anyLong());
+        doThrow(new ResourceNotFoundException()).when(commentService).addComment(any(Comment.class), anyLong(), anyString());
 
         mockMvc.perform(post("/project/" + NON_EXISTING_PROJECT_ID + "/comment")
                 .principal(new UsernamePasswordAuthenticationToken(EXISTING_USER_MAIL, "password"))
@@ -135,7 +135,7 @@ public class CommentControllerTest {
         comment.setComment("this is an example comment that respects the length constraint");
 
         doThrow(new NotAuthorizedException("No user found with email " + NON_EXISTING_USER_MAIL)).when(commentService)
-                .addComment(any(Comment.class), anyLong());
+                .addComment(any(Comment.class), anyLong(), anyString());
 
         mockMvc.perform(post("/project/" + EXISTING_PROJECT_ID + "/comment")
                 .principal(new UsernamePasswordAuthenticationToken(NON_EXISTING_USER_MAIL, "password"))

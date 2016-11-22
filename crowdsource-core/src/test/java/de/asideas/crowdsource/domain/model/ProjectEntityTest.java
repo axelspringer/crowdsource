@@ -56,9 +56,8 @@ public class ProjectEntityTest {
         projectCreator.setId(103L);
 
         Project project = new Project();
-        projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), anActiveFinancingRound());
+        projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), anActiveFinancingRound(), projectCreator);
         projectEntity.setPledgeGoal(PLEDGE_GOAL);
-        projectEntity.setCreator(projectCreator);
     }
 
     /**

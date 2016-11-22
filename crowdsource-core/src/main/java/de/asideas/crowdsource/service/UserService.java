@@ -48,7 +48,6 @@ public class UserService {
         saveUser(userEntity);
     }
 
-
     private String generateActivationToken() {
         return RandomStringUtils.randomAlphanumeric(ACTIVATION_TOKEN_LENGTH);
     }

@@ -5,6 +5,7 @@ import de.asideas.crowdsource.repository.UserRepository;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -51,10 +52,10 @@ public class CrowdUserDetailsService implements UserDetailsService {
         }
 
         if (!user.isActivated()) {
-            throw new UsernameNotFoundException("UserEntity with username [" + username + "] is not activated yet");
+            throw new DisabledException("UserEntity with username [" + username + "] is not activated yet");
         }
 
-        return new org.springframework.security.core.userdetails.User(
+        return new CrowdsourceUser(
                 user.getEmail(),
                 user.getPassword(),
                 user.getRoles().stream().map(SimpleGrantedAuthority::new).collect(toList())

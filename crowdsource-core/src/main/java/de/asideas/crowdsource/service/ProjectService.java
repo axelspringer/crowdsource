@@ -78,7 +78,7 @@ public class ProjectService {
         Assert.notNull(project);
         Assert.notNull(creator);
 
-        ProjectEntity projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), currentFinancingRound());
+        ProjectEntity projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), currentFinancingRound(), creator);
         projectEntity = projectRepository.save(projectEntity);
 
         notifyAdminsOnNewProject(projectEntity);
@@ -236,7 +236,7 @@ public class ProjectService {
 
     private Project project(ProjectEntity projectEntity, UserEntity requestingUser) {
         List<PledgeEntity> pledges = pledgeRepository.findByProjectAndFinancingRound(projectEntity, projectEntity.getFinancingRound());
-        final Optional<LikeEntity> likeEntity = likeRepository.findOneByProjectAndUser(projectEntity, requestingUser);
+        final Optional<LikeEntity> likeEntity = likeRepository.findOneByProjectAndCreator(projectEntity, requestingUser);
         final long likeCount = likeRepository.countByProjectAndStatus(projectEntity, LIKE);
         return new Project(projectEntity, pledges, requestingUser, likeCount, likeEntity.map(LikeEntity::getStatus).orElse(UNLIKE));
     }
@@ -252,13 +252,13 @@ public class ProjectService {
     }
 
     private void toggleStatus(ProjectEntity project, UserEntity user, LikeStatus status) {
-        final Optional<LikeEntity> likeEntityOptional = likeRepository.findOneByProjectAndUser(project, user);
+        final Optional<LikeEntity> likeEntityOptional = likeRepository.findOneByProjectAndCreator(project, user);
         if (likeEntityOptional.isPresent()) {
             final LikeEntity likeEntity = likeEntityOptional.get();
             likeEntity.setStatus(status);
             likeRepository.save(likeEntity);
         } else {
-            final LikeEntity likeEntity = new LikeEntity(status, project);
+            final LikeEntity likeEntity = new LikeEntity(status, project, user);
             likeRepository.save(likeEntity);
         }
     }

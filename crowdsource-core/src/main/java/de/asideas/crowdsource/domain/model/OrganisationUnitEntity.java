@@ -1,9 +1,7 @@
 package de.asideas.crowdsource.domain.model;
 
-import de.asideas.crowdsource.presentation.FinancingRound;
 import lombok.Data;
 import org.joda.time.DateTime;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -17,11 +15,7 @@ public class OrganisationUnitEntity {
     @Id
     @GeneratedValue
     private Long id;
-    @Column
     private String name;
-
-    @OneToMany(mappedBy = "organisationUnit")
-    private List<FinancingRound> financingRoundList;
     @ManyToMany
     @JoinTable(
             name = "ORG_USER",
@@ -35,6 +29,4 @@ public class OrganisationUnitEntity {
     private DateTime createdDate;
     @LastModifiedDate
     private DateTime lastModifiedDate;
-    @CreatedBy
-    private UserEntity creator;
 }
