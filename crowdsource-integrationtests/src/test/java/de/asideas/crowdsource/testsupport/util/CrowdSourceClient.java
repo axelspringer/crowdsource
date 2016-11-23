@@ -39,6 +39,8 @@ public class CrowdSourceClient {
     private static final RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
 
     public static final String DEFAULT_USER_EMAIL = "crowdsource@crowd.source.de";
+    public static final String DEFAULT_USER_FIRSTNAME = "firstname";
+    public static final String DEFAULT_USER_LASTNAME = "lastname";
     public static final String DEFAULT_USER_PASS = "einEselGehtZumBaecker!";
     public static final String DEFAULT_ADMIN_EMAIL = "cs_admin@crowd.source.de";
     public static final String DEFAULT_ADMIN_PASS = "einAdminGehtZumBaecker!";
@@ -116,7 +118,7 @@ public class CrowdSourceClient {
         }
     }
 
-    public ResponseEntity<FinancingRound> stopFinancingRound(String id, AuthToken authToken) {
+    public ResponseEntity<FinancingRound> stopFinancingRound(Long id, AuthToken authToken) {
         HttpEntity requestEntity = createRequestEntity(authToken);
         return restTemplate.exchange(urlProvider.applicationUrl() + "/financingrounds/{id}/cancel", HttpMethod.PUT, requestEntity, FinancingRound.class, id);
     }
@@ -178,7 +180,7 @@ public class CrowdSourceClient {
         assertEquals(HttpStatus.OK, exchange.getStatusCode());
     }
 
-    private void modifyProjectStatus(String projectId, ProjectStatus status, AuthToken token) {
+    private void modifyProjectStatus(Long projectId, ProjectStatus status, AuthToken token) {
         final ResponseEntity<Project> exchange = restTemplate.exchange(
                 urlProvider.applicationUrl() + "/project/" + projectId + "/status",
                 HttpMethod.PATCH,

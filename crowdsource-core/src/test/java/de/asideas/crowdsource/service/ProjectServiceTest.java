@@ -104,9 +104,9 @@ public class ProjectServiceTest {
         });
         prepareActiveFinanzingRound(null);
 
-        Project res = projectService.addProject(project, user(USER_EMAIL));
+        Project res = projectService.addProject(project, USER_EMAIL);
         assertThat(res, is(new Project(projectEntity.getValue(), new ArrayList<>(), null, 0, LIKE)));
-        verify(userNotificationService, atLeastOnce()).notifyAdminOnProjectCreation(eq(projectEntity.getValue()), anyString());
+        verify(userNotificationService, atLeastOnce()).notifyAdminOnProjectCreation(eq(new Project(projectEntity.getValue())), anyString());
     }
 
     @Test
@@ -121,9 +121,9 @@ public class ProjectServiceTest {
             return answer;
         });
 
-        Project res = projectService.addProject(project, user(USER_EMAIL));
+        Project res = projectService.addProject(project, USER_EMAIL);
         assertThat(res, is(new Project(projectEntity.getValue(), new ArrayList<>(), null, 0, LIKE)));
-        verify(userNotificationService, atLeastOnce()).notifyAdminOnProjectCreation(eq(projectEntity.getValue()), anyString());
+        verify(userNotificationService, atLeastOnce()).notifyAdminOnProjectCreation(eq(new Project(projectEntity.getValue())), anyString());
     }
 
     @Test
@@ -136,11 +136,11 @@ public class ProjectServiceTest {
             return answer;
         });
 
-        projectService.addProject(newProject, user("some@mail.com"));
+        projectService.addProject(newProject, "some@mail.com");
 
-        verify(userNotificationService).notifyAdminOnProjectCreation(any(ProjectEntity.class), eq(ADMIN1_EMAIL));
-        verify(userNotificationService).notifyAdminOnProjectCreation(any(ProjectEntity.class), eq(ADMIN2_EMAIL));
-        verify(userNotificationService, times(2)).notifyAdminOnProjectCreation(any(ProjectEntity.class), anyString());
+        verify(userNotificationService).notifyAdminOnProjectCreation(any(Project.class), eq(ADMIN1_EMAIL));
+        verify(userNotificationService).notifyAdminOnProjectCreation(any(Project.class), eq(ADMIN2_EMAIL));
+        verify(userNotificationService, times(2)).notifyAdminOnProjectCreation(any(Project.class), anyString());
     }
 
     @Test
@@ -723,7 +723,7 @@ public class ProjectServiceTest {
         when(pledgeRepository.findByProjectAndFinancingRound(eq(project), any()))
                 .thenReturn(Collections.singletonList(new PledgeEntity(project, user, amount, new FinancingRoundEntity())));
 
-        if (project.getPledgeGoal() == amount) {
+        if (project.getPledgeGoal().compareTo(amount) == 0) {
             project.setStatus(ProjectStatus.FULLY_PLEDGED);
         }
     }

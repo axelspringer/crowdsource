@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -74,14 +75,18 @@ public class ProjectService {
         return projects.stream().map(p -> project(p, requestingUser)).collect(toList());
     }
 
-    public Project addProject(Project project, UserEntity creator) {
+    @Transactional
+    public Project addProject(Project project, String userEmail) {
         Assert.notNull(project);
+
+        final UserEntity creator = userRepository.findByEmail(userEmail);
+
         Assert.notNull(creator);
 
         ProjectEntity projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), currentFinancingRound(), creator);
         projectEntity = projectRepository.save(projectEntity);
 
-        notifyAdminsOnNewProject(projectEntity);
+        notifyAdminsOnNewProject(new Project(projectEntity));
 
         LOG.debug("Project added: {}", projectEntity);
         return project(projectEntity, creator);
@@ -245,10 +250,10 @@ public class ProjectService {
         return financingRoundRepository.findActive(DateTime.now());
     }
 
-    private void notifyAdminsOnNewProject(final ProjectEntity projectEntity) {
+    private void notifyAdminsOnNewProject(final Project project) {
         userRepository.findAllAdminUsers().stream()
                 .map(UserEntity::getEmail)
-                .forEach(emailAddress -> userNotificationService.notifyAdminOnProjectCreation(projectEntity, emailAddress));
+                .forEach(emailAddress -> userNotificationService.notifyAdminOnProjectCreation(project, emailAddress));
     }
 
     private void toggleStatus(ProjectEntity project, UserEntity user, LikeStatus status) {

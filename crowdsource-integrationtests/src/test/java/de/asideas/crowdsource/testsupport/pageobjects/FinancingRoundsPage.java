@@ -14,6 +14,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static com.google.common.collect.Iterables.getOnlyElement;
@@ -101,7 +102,7 @@ public class FinancingRoundsPage {
         final DateTimeFormatter formatter = DateTimeFormat.forPattern("dd.MM.yy HH:mm");
 
         FinancingRound financingRound = new FinancingRound();
-        financingRound.setId(financingRoundElement.getAttribute("fr_id"));
+        financingRound.setId(Long.valueOf(financingRoundElement.getAttribute("fr_id")));
 
         final String startDateString = financingRoundElement.findElement(By.className("startdate")).getText();
         financingRound.setStartDate(DateTime.parse(startDateString, formatter));
@@ -110,7 +111,7 @@ public class FinancingRoundsPage {
         financingRound.setEndDate(DateTime.parse(endDateString, formatter));
 
         final String budgetText = financingRoundElement.findElement(By.className("budget")).getText();
-        financingRound.setBudget(ElementUtils.parseNumber(budgetText));
+        financingRound.setBudget(BigDecimal.valueOf(ElementUtils.parseNumber(budgetText)));
 
         boolean active = financingRoundElement.findElements(By.className("stop-button")).size() == 1;
         financingRound.setActive(active);

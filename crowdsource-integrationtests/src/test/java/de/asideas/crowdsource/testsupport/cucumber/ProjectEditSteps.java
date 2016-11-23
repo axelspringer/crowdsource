@@ -22,6 +22,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -112,7 +113,7 @@ public class ProjectEditSteps {
         editedProject.setTitle(oldProject.getTitle() + "_EDITED");
         editedProject.setDescription(PROJECT_DESCRIPTION_EDITED_MARKDOWN);
         editedProject.setShortDescription(oldProject.getShortDescription() + "_EDITED");
-        editedProject.setPledgeGoal(1337);
+        editedProject.setPledgeGoal(BigDecimal.valueOf(1337));
 
         projectAddAndModificationPage.setTitle(editedProject.getTitle());
         projectAddAndModificationPage.setDescription(editedProject.getDescription());

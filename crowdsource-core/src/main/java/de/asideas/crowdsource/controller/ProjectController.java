@@ -77,8 +77,7 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(value = "/project", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE)
     public Project addProject(@RequestBody @Valid Project project, Principal principal) {
-        UserEntity userEntity = userByPrincipal(principal);
-        return projectService.addProject(project, userEntity);
+        return projectService.addProject(project, principal.getName());
     }
 
     @Secured(Roles.ROLE_USER)

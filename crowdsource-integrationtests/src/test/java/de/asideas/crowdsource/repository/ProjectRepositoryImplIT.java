@@ -1,35 +1,26 @@
 package de.asideas.crowdsource.repository;
 
-import de.asideas.crowdsource.config.MongoDBConfig;
+import de.asideas.crowdsource.AbstractIT;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
-import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.math.BigDecimal;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import static de.asideas.crowdsource.domain.shared.ProjectStatus.FULLY_PLEDGED;
-import static de.asideas.crowdsource.domain.shared.ProjectStatus.PROPOSED;
-import static de.asideas.crowdsource.domain.shared.ProjectStatus.PUBLISHED;
+import static de.asideas.crowdsource.domain.shared.ProjectStatus.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {MongoDBConfig.class, CrowdSourceTestConfig.class})
-@IntegrationTest
-public class ProjectRepositoryImplIT {
+public class ProjectRepositoryImplIT extends AbstractIT {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectRepositoryImplIT.class);
     @Autowired
@@ -47,7 +38,7 @@ public class ProjectRepositoryImplIT {
             if (! allUsers.isEmpty()) {
                 projectCreator = allUsers.get(0);
             } else {
-                projectCreator = userRepository.save(new UserEntity("test@crowdsource.de"));
+                projectCreator = userRepository.save(new UserEntity("test@crowdsource.de", "firstname", "lastname"));
             }
         }
     }
@@ -116,7 +107,7 @@ public class ProjectRepositoryImplIT {
             project.setCreator(projectCreator);
             project.setTitle("project from ProjectRepositoryImplIT idx" + i);
             project.setDescription("project from ProjectRepositoryImplIT idx" + i);
-            project.setPledgeGoal(1000);
+            project.setPledgeGoal(BigDecimal.valueOf(1000));
             project.setStatus(desiredStatus);
 
             projectRepository.save(project);

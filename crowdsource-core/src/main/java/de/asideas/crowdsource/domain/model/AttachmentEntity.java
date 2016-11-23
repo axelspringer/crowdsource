@@ -11,8 +11,7 @@ import javax.persistence.*;
 public class AttachmentEntity {
 
     @Id
-    @GeneratedValue(generator = "table", strategy=GenerationType.TABLE)
-    @TableGenerator(name = "table", allocationSize = 10)
+    @GeneratedValue
     private Long id;
     private String fileReference;
     private String filename;

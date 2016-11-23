@@ -74,8 +74,8 @@ public class Project {
     private LikeStatus likeStatusOfRequestUser;
 
 //    private List<Attachment> attachments;
-// FIXME: 18/11/16 what is requesting user?
-    public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser) {
+
+    public Project(ProjectEntity projectEntity) {
         this.id = projectEntity.getId();
         this.status = projectEntity.getStatus();
         this.title = projectEntity.getTitle();
@@ -84,12 +84,19 @@ public class Project {
         this.pledgeGoal = projectEntity.getPledgeGoal();
         this.lastModifiedDate = projectEntity.getLastModifiedDate() != null ? projectEntity.getLastModifiedDate().toDate() : null;
 
+        this.creator = new ProjectCreator(projectEntity.getCreator());
+
+//        this.attachments = projectEntity.getAttachments().stream().map(a -> Attachment.asResponseWithoutPayload(a, projectEntity)).collect(Collectors.toList());
+    }
+
+    public Project(ProjectEntity projectEntity, List<PledgeEntity> pledges, UserEntity requestingUser) {
+        this(projectEntity);
+
         this.pledgedAmount = projectEntity.pledgedAmount(pledges);
         this.backers = projectEntity.countBackers(pledges);
         this.pledgedAmountByRequestingUser = projectEntity.pledgedAmountOfUser(pledges, requestingUser);
         this.pledgedAmountByPostRoundBudget = projectEntity.pledgedAmountPostRound(pledges);
 
-        this.creator = new ProjectCreator(projectEntity.getCreator());
 
 //        this.attachments = projectEntity.getAttachments().stream().map(a -> Attachment.asResponseWithoutPayload(a, projectEntity)).collect(Collectors.toList());
     }

@@ -1,10 +1,9 @@
 package de.asideas.crowdsource.repository;
 
+import de.asideas.crowdsource.AbstractIT;
+
 // FIXME: 18/11/16
-//@RunWith(SpringJUnit4ClassRunner.class)
-//@SpringApplicationConfiguration(classes = {MongoDBConfig.class, CrowdSourceTestConfig.class})
-//@IntegrationTest
-public class ProjectAttachmentRepositoryIT {
+public class ProjectAttachmentRepositoryIT extends AbstractIT {
 //
 //    @Autowired
 //    AttachmentEntityRepository attachmentEntityRepository;

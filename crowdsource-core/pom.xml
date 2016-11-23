@@ -137,7 +137,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!--TODO: change it after build in postgres-->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>

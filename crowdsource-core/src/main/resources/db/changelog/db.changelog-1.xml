@@ -120,7 +120,7 @@
             <column name="activation_token" type="VARCHAR(255)"/>
             <column name="budget" type="numeric(19, 2)"/>
             <column name="created_date" type="BYTEA"/>
-            <column name="deleted" type="BOOLEAN">
+            <column name="deleted" type="BOOLEAN" defaultValueBoolean="false">
                 <constraints nullable="false"/>
             </column>
             <column name="email" type="VARCHAR(255)"/>

@@ -1,29 +1,23 @@
 package de.asideas.crowdsource.resource;
 
-import de.asideas.crowdsource.CrowdSourceExample;
+import de.asideas.crowdsource.AbstractIT;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import de.asideas.crowdsource.testsupport.util.UrlProvider;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+
+import java.math.BigDecimal;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@WebIntegrationTest
-@SpringApplicationConfiguration(classes = {CrowdSourceExample.class, CrowdSourceTestConfig.class})
-public class ProjectIT {
+public class ProjectIT extends AbstractIT {
 
     @Autowired
     private UrlProvider urlProvider;
@@ -35,7 +29,7 @@ public class ProjectIT {
         Project project = new Project();
         project.setTitle("title");
         project.setShortDescription("short description");
-        project.setPledgeGoal(1);
+        project.setPledgeGoal(BigDecimal.ONE);
         project.setDescription("description");
 
         try {
@@ -62,7 +56,7 @@ public class ProjectIT {
     public void pledgeProject_accessDenied() {
         RestTemplate restTemplate = new RestTemplate(new HttpComponentsClientHttpRequestFactory());
 
-        Pledge pledge = new Pledge(1);
+        Pledge pledge = new Pledge(BigDecimal.ONE);
 
         try {
             restTemplate.postForObject(urlProvider.applicationUrl() + "/project/{projectId}/pledges", pledge, Void.class, "some-project-id");

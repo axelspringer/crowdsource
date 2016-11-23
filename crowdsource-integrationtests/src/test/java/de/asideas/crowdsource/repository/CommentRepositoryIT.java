@@ -1,35 +1,27 @@
 package de.asideas.crowdsource.repository;
 
-import de.asideas.crowdsource.config.MongoDBConfig;
+import de.asideas.crowdsource.AbstractIT;
 import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
 import de.asideas.crowdsource.service.statistics.StatisticsActionUtil;
-import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = {MongoDBConfig.class, CrowdSourceTestConfig.class})
-@IntegrationTest
-public class CommentRepositoryIT {
+public class CommentRepositoryIT extends AbstractIT {
 
     @Autowired
     private ProjectRepository projectRepository;
@@ -40,8 +32,8 @@ public class CommentRepositoryIT {
     @Autowired
     private CommentRepository commentRepository;
 
-    @Autowired
-    private MongoTemplate mongoTemplate;
+    @PersistenceContext
+    private EntityManager entityManager;
 
     private UserEntity commentedBy;
     private ProjectEntity commentCreatedFor;
@@ -54,7 +46,7 @@ public class CommentRepositoryIT {
             if (! allUsers.isEmpty()) {
                 commentedBy = allUsers.get(0);
             } else {
-                commentedBy = userRepository.save(new UserEntity("test@crowdsource.de"));
+                commentedBy = userRepository.save(new UserEntity("test@crowdsource.de", "firstname", "lastname"));
             }
         }
         if (commentCreatedFor == null) {
@@ -64,7 +56,7 @@ public class CommentRepositoryIT {
             } else {
                 ProjectEntity projectEntity = new ProjectEntity();
                 projectEntity.setCreator(commentedBy);
-                projectEntity.setPledgeGoal(100);
+                projectEntity.setPledgeGoal(BigDecimal.valueOf(100));
                 projectEntity.setDescription("abc");
                 projectEntity.setTitle("abc");
                 commentCreatedFor = projectRepository.save(projectEntity);
@@ -137,7 +129,7 @@ public class CommentRepositoryIT {
             CommentEntity entity = new CommentEntity();
             entity.setComment("HELLO");
             entity.setProject(commentCreatedFor);
-            entity.setUser(commentedBy);
+            entity.setCreator(commentedBy);
             CommentEntity saved = commentRepository.save(entity);
             // Explicitly overcome auditing enabled for dates
             saved.setCreatedDate(dateTime);
@@ -148,9 +140,7 @@ public class CommentRepositoryIT {
     private long getCountCommentsAtDayOf(DateTime date) {
         DateTime start = date.withTimeAtStartOfDay();
         DateTime end = date.plusDays(1).withTimeAtStartOfDay();
-        Query dayCreatedQuery = Query.query(Criteria.where("createdDate").gte(start).lte(end));
-
-        return mongoTemplate.count(dayCreatedQuery, CommentEntity.class);
+        return entityManager.createQuery("COUNT(c.id) from CommentEntity c where c.createdDate > ?1 AND c.createDate < ?2", Long.class).setParameter(1, start).setParameter(2, end).getSingleResult();
     }
 
 }

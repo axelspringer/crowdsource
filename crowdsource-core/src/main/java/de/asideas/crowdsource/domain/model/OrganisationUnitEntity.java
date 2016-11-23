@@ -13,8 +13,7 @@ import java.util.List;
 public class OrganisationUnitEntity {
 
     @Id
-    @GeneratedValue(generator = "table", strategy=GenerationType.TABLE)
-    @TableGenerator(name = "table", allocationSize = 10)
+    @GeneratedValue
     private Long id;
     private String name;
     @ManyToMany

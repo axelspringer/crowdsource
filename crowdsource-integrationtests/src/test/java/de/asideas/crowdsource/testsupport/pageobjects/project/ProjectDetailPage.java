@@ -55,11 +55,11 @@ public class ProjectDetailPage {
     @Autowired
     private ProjectStatusWidget projectStatusWidget;
 
-    public void openWithoutWaiting(String projectId) {
+    public void openWithoutWaiting(Long projectId) {
         webDriverProvider.provideDriver().get(urlProvider.applicationUrl() + "#/project/" + projectId);
     }
 
-    public void open(String projectId) {
+    public void open(Long projectId) {
         openWithoutWaiting(projectId);
         waitForDetailsToBeLoaded();
     }

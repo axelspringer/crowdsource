@@ -5,6 +5,7 @@ import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.repository.UserRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -198,7 +199,7 @@ public class UserNotificationServiceTest {
     public void testNotifyAdminOnProjectCreation() {
         UserEntity user = aProjectCreator();
 
-        userNotificationService.notifyAdminOnProjectCreation(project(3L, ProjectStatus.PUBLISHED, user, "My Super Project"), ADMIN_EMAIL);
+        userNotificationService.notifyAdminOnProjectCreation(new Project(project(3L, ProjectStatus.PUBLISHED, user, "My Super Project")), ADMIN_EMAIL);
 
         SimpleMailMessage mail = getMessageFromMailSender();
         assertThat(mail.getFrom(), is(UserNotificationService.FROM_ADDRESS));

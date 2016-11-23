@@ -13,8 +13,7 @@ import javax.persistence.*;
 public class LikeEntity {
 
     @Id
-    @GeneratedValue(generator = "table", strategy=GenerationType.TABLE)
-    @TableGenerator(name = "table", allocationSize = 10)
+    @GeneratedValue
     private Long id;
     private LikeStatus status = LikeStatus.LIKE;
     @ManyToOne

@@ -52,7 +52,7 @@ public class ProjectAddAndModificationForm {
     @Autowired
     private UrlProvider urlProvider;
 
-    public void openInEditMode(String projectId) {
+    public void openInEditMode(Long projectId) {
         webDriverProvider.provideDriver().get(editUrl(projectId));
         waitForPageLoadEditProject();
     }
@@ -144,7 +144,7 @@ public class ProjectAddAndModificationForm {
         }
     }
 
-    public String editUrl(String projectId){
+    public String editUrl(Long projectId){
         return urlProvider.applicationUrl() + "/#/project/" + projectId + "/edit";
     }
 }

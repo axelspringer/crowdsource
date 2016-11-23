@@ -1,22 +1,18 @@
 package de.asideas.crowdsource;
 
 import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import de.asideas.crowdsource.testsupport.util.CrowdSourceClient;
 import de.asideas.crowdsource.testsupport.util.UrlProvider;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.boot.test.WebIntegrationTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -24,10 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@WebIntegrationTest
-@SpringApplicationConfiguration(classes = {CrowdSourceExample.class, CrowdSourceTestConfig.class})
-public class AuthenticationIT {
+public class AuthenticationIT extends AbstractIT {
 
     @Autowired
     private UrlProvider urlProvider;
@@ -81,7 +74,7 @@ public class AuthenticationIT {
 
     private Project getPreparedProject() {
         final Project project = new Project();
-        project.setPledgeGoal(1000);
+        project.setPledgeGoal(BigDecimal.valueOf(1000));
         project.setTitle("myTitle");
         project.setShortDescription("shortDescription");
         project.setDescription("myDescription");

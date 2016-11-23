@@ -1,0 +1,41 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="lshi" id="changelog-2-1">
+        <insert tableName="user_entity">
+            <column name="id" type="BIGINT" valueNumeric="1"/>
+            <column name="email" type="varchar(255)" value="crowdsource@crowd.source.de"/>
+            <column name="firstname" type="varchar(255)" value="user"/>
+            <column name="lastname" type="varchar(255)" value="crowdsource"/>
+            <column name="password" type="varchar(255)" value="$2a$04$PXxz4BHQzEeNwx4yE9bcTONPAOOBXnAo9HjZnXl4xi7TkC2H87QDK"/>
+            <column name="activated" type="BOOLEAN" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+    <changeSet author="lshi" id="changelog-2-2">
+        <insert tableName="user_entity">
+            <column name="id" type="BIGINT" valueNumeric="2"/>
+            <column name="email" type="varchar(255)" value="cs_admin@crowd.source.de"/>
+            <column name="firstname" type="varchar(255)" value="admin"/>
+            <column name="lastname" type="varchar(255)" value="crowdsource"/>
+            <column name="password" type="varchar(255)" value="$2a$04$Z.9c2nZZhzNEWZRIuJqXbOwXPY/bC/pyWJ7EdMAGkv0fkG4Az2sfC"/>
+            <column name="activated" type="BOOLEAN" valueBoolean="true"/>
+        </insert>
+    </changeSet>
+    <changeSet author="lshi" id="changelog-2-3">
+        <insert tableName="user_entity_roles">
+            <column name="user_entity_id" valueNumeric="1"/>
+            <column name="roles" value="ROLE_USER"/>
+        </insert>
+    </changeSet>
+    <changeSet author="lshi" id="changelog-2-4">
+        <insert tableName="user_entity_roles">
+            <column name="user_entity_id" valueNumeric="2"/>
+            <column name="roles" value="ROLE_USER"/>
+        </insert>
+    </changeSet>
+    <changeSet author="lshi" id="changelog-2-5">
+        <insert tableName="user_entity_roles">
+            <column name="user_entity_id" valueNumeric="2"/>
+            <column name="roles" value="ROLE_ADMIN"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

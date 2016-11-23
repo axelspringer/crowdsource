@@ -25,6 +25,8 @@ import org.openqa.selenium.support.PageFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.math.BigDecimal;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
@@ -33,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 @ContextConfiguration(classes = CrowdSourceTestConfig.class)
 public class ProjectDetailSteps {
 
-    public static final int PLEDGED_AMOUNT = 10;
+    public static final BigDecimal PLEDGED_AMOUNT = BigDecimal.TEN;
     public static final String PROJECT_DESCRIPTION_MARKDOWN = "# This is the project description text.\n\n Due to it is rendered using markdown we can emphasize `code like that`!";
     public static final String PROJECT_DESCRIPTION_RENDERED = "<h3>This is the project description text.</h3><p>Due to it is rendered using markdown we can emphasize <code>code like that</code>!</p>";
 
@@ -71,17 +73,17 @@ public class ProjectDetailSteps {
 
     @Given("^a project is available$")
     public void a_project_is_available() throws Throwable {
-        a_project_with_a_pledge_goal_of_is_available(25);
+        a_project_with_a_pledge_goal_of_is_available(BigDecimal.valueOf(25));
     }
 
     @Given("^a project is published")
     public void a_project_is_published() throws Throwable {
-        a_project_with_a_pledge_goal_of_is_published(25);
+        a_project_with_a_pledge_goal_of_is_published(BigDecimal.valueOf(25));
         an_admin_publishs_the_created_project();
     }
 
     @Given("^a project with a pledge goal of (\\d+) is available")
-    public void a_project_with_a_pledge_goal_of_is_available(int pledgeGoal) throws Throwable {
+    public void a_project_with_a_pledge_goal_of_is_available(BigDecimal pledgeGoal) throws Throwable {
         createdProject = new Project();
         createdProject.setTitle("T" + RandomStringUtils.randomAlphanumeric(6));
         createdProject.setShortDescription("Short description " + RandomStringUtils.randomAlphanumeric(16));
@@ -93,14 +95,14 @@ public class ProjectDetailSteps {
     }
 
     @Given("^a project with a pledge goal of (\\d+) is published$")
-    public void a_project_with_a_pledge_goal_of_is_published(int pledgeGoal) throws Throwable {
+    public void a_project_with_a_pledge_goal_of_is_published(BigDecimal pledgeGoal) throws Throwable {
         a_project_with_a_pledge_goal_of_is_available(pledgeGoal);
         an_admin_publishs_the_created_project();
     }
 
     @And("^a published and partially pledged project is available$")
     public void a_published_and_partially_pledged_project_is_available() throws Throwable {
-        a_project_with_a_pledge_goal_of_is_published(25);
+        a_project_with_a_pledge_goal_of_is_published(BigDecimal.valueOf(25));
         an_admin_publishs_the_created_project();
 
         CrowdSourceClient.AuthToken authToken = crowdSourceClient.authorizeWithDefaultUser();
@@ -148,7 +150,7 @@ public class ProjectDetailSteps {
         projectDetailPage.waitForDetailsToBeLoaded();
 
         ProjectStatusWidget projectStatusWidget = projectDetailPage.getProjectStatusWidget();
-        assertThat(projectStatusWidget.getPledgedAmount(), is(Integer.toString(PLEDGED_AMOUNT)));
+        assertThat(projectStatusWidget.getPledgedAmount(), is(PLEDGED_AMOUNT.toString()));
     }
 
     @Then("^the pledged amount is zero$")
@@ -161,7 +163,7 @@ public class ProjectDetailSteps {
 
     @Given("^the user requests the project detail page with a non existant project id$")
     public void the_user_requests_the_project_detail_page_with_a_non_existant_project_id() throws Throwable {
-        projectDetailPage.openWithoutWaiting("i-dont-exist-project-id");
+        projectDetailPage.openWithoutWaiting(123L);
     }
 
     @Given("^the user is on a project detail page$")

@@ -18,6 +18,8 @@ import org.openqa.selenium.support.PageFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 
+import java.math.BigDecimal;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
@@ -26,7 +28,7 @@ import static org.hamcrest.Matchers.lessThan;
 @ContextConfiguration(classes = CrowdSourceTestConfig.class)
 public class ProjectPledgingSteps {
 
-    public static final int ROUND_BUDGET = 100000;
+    public static final BigDecimal ROUND_BUDGET = BigDecimal.valueOf(100000);
 
     @Autowired
     private WebDriverProvider webDriverProvider;
@@ -174,7 +176,7 @@ public class ProjectPledgingSteps {
     }
 
     @And("^there is (a|no) financing round active with a budget of (\\d+)$")
-    public void there_is_a_financing_round_active(String active, int budget) throws Throwable {
+    public void there_is_a_financing_round_active(String active, BigDecimal budget) throws Throwable {
         boolean requireActiveFinancingRound = "a".equals(active);
         prepareFinancingRound(requireActiveFinancingRound, Duration.standardHours(2).toStandardSeconds().getSeconds(), budget);
     }
@@ -201,7 +203,7 @@ public class ProjectPledgingSteps {
     }
 
     @And("^another user pledges the same project with (\\d+) in the meantime$")
-    public void another_user_pledges_the_project_with_in_the_meantime(int pledgeAmount) throws Throwable {
+    public void another_user_pledges_the_project_with_in_the_meantime(BigDecimal pledgeAmount) throws Throwable {
         pledgeProjectViaApi(pledgeAmount, true);
     }
 
@@ -220,7 +222,7 @@ public class ProjectPledgingSteps {
         prepareFinancingRound(requireActiveFinancingRound, activeForSeconds, ROUND_BUDGET);
     }
 
-    private void prepareFinancingRound(boolean requireActiveFinancingRound, int activeForSeconds, int budget) {
+    private void prepareFinancingRound(boolean requireActiveFinancingRound, int activeForSeconds, BigDecimal budget) {
         CrowdSourceClient.AuthToken authToken = crowdSourceClient.authorizeWithAdminUser();
 
         FinancingRound activeFinanceRound = crowdSourceClient.getActiveFinanceRound();
@@ -236,7 +238,7 @@ public class ProjectPledgingSteps {
         }
     }
 
-    private void pledgeProjectViaApi(int pledgeAmount, boolean asAdmin) {
+    private void pledgeProjectViaApi(BigDecimal pledgeAmount, boolean asAdmin) {
         CrowdSourceClient.AuthToken authToken =
                 asAdmin ?
                         crowdSourceClient.authorizeWithAdminUser() :

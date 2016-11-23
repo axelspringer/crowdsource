@@ -3,12 +3,16 @@ package de.asideas.crowdsource.service;
 import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
+import de.asideas.crowdsource.presentation.user.UserMetrics;
 import de.asideas.crowdsource.repository.UserRepository;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -24,6 +28,8 @@ public class UserService {
         this.userRepository = userRepository;
         this.userNotificationService = userNotificationService;
     }
+
+
 
     public UserEntity getUserByEmail(String email) {
 
@@ -46,6 +52,12 @@ public class UserService {
         userEntity.setActivationToken(generateActivationToken());
         userNotificationService.sendPasswordRecoveryMail(userEntity);
         saveUser(userEntity);
+    }
+
+    @Transactional
+    public UserMetrics getUserMetrics() {
+        final List<UserEntity> all = userRepository.findAll();
+        return new UserMetrics(all);
     }
 
     private String generateActivationToken() {

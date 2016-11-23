@@ -13,8 +13,7 @@ import java.math.BigDecimal;
 public class PledgeEntity {
 
     @Id
-    @GeneratedValue(generator = "table", strategy=GenerationType.TABLE)
-    @TableGenerator(name = "table", allocationSize = 10)
+    @GeneratedValue
     private Long id;
     @ManyToOne
     private ProjectEntity project;

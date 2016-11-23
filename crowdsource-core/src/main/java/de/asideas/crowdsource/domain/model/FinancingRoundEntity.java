@@ -24,8 +24,7 @@ public class FinancingRoundEntity {
     private static final Logger log = LoggerFactory.getLogger(FinancingRoundEntity.class);
 
     @Id
-    @GeneratedValue(generator = "table", strategy= GenerationType.TABLE)
-    @TableGenerator(name = "table", allocationSize = 10)
+    @GeneratedValue
     private Long id;
     private DateTime startDate;
     private DateTime endDate;

@@ -94,7 +94,7 @@ public class ProjectControllerTest {
         final UserEntity user = userEntity(email, Roles.ROLE_USER);
         final Project project = project("myTitle", "theFullDescription", "theShortDescription", BigDecimal.valueOf(50), ProjectStatus.PROPOSED);
         final Project expFullProjcet = toCreatedProject(project, user);
-        when(projectService.addProject(project, user)).thenReturn(expFullProjcet);
+        when(projectService.addProject(project, user.getEmail())).thenReturn(expFullProjcet);
 
         MvcResult mvcResult = mockMvc.perform(post("/project")
                 .principal(authentication(user))

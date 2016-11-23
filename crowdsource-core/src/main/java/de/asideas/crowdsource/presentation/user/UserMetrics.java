@@ -17,7 +17,7 @@ public class UserMetrics {
         count = users.size();
 
         remainingBudget = users.stream()
-                .map(UserEntity::getBudget)
+                .map(user -> user.getBudget() == null ? BigDecimal.ZERO : user.getBudget())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

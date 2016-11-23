@@ -1,7 +1,6 @@
 package de.asideas.crowdsource.repository;
 
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.security.Roles;
 import org.joda.time.DateTime;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +11,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     UserEntity findByEmail(String email);
 
-    @Query("SELECT u FROM UserEntity u INNER JOIN u.roles ur WHERE ur = " + Roles.ROLE_ADMIN)
+    @Query("select u from UserEntity u where 'ROLE_ADMIN' member of u.roles")
     List<UserEntity> findAllAdminUsers();
 
     List<UserEntity> findByCreatedDateBetween(DateTime startDate, DateTime endDate);

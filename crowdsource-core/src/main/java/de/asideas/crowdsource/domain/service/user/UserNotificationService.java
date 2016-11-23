@@ -3,6 +3,7 @@ package de.asideas.crowdsource.domain.service.user;
 import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,7 +182,7 @@ public class UserNotificationService {
         sendMails(mails);
     }
 
-    public void notifyAdminOnProjectCreation(ProjectEntity project, String emailAddress) {
+    public void notifyAdminOnProjectCreation(Project project, String emailAddress) {
 
         final String projectLink = getProjectLink(project.getId());
 
