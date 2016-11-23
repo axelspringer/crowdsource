@@ -12,7 +12,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     UserEntity findByEmail(String email);
 
-    @Query("select u from UserEntity u where " + Roles.ROLE_ADMIN + " member of u.roles")
+    @Query("SELECT u FROM UserEntity u INNER JOIN u.roles ur WHERE ur = " + Roles.ROLE_ADMIN)
     List<UserEntity> findAllAdminUsers();
 
     List<UserEntity> findByCreatedDateBetween(DateTime startDate, DateTime endDate);

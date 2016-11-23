@@ -5,17 +5,15 @@ import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 @Data
 @Entity
 public class CommentEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "table", strategy=GenerationType.TABLE)
+    @TableGenerator(name = "table", allocationSize = 10)
     private Long id;
     private String comment;
     @ManyToOne

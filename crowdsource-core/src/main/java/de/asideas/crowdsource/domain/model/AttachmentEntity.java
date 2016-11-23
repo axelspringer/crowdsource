@@ -4,17 +4,15 @@ import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 
 @Data
 @Entity
 public class AttachmentEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "table", strategy=GenerationType.TABLE)
+    @TableGenerator(name = "table", allocationSize = 10)
     private Long id;
     private String fileReference;
     private String filename;

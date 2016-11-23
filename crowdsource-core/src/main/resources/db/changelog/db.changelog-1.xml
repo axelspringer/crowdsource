@@ -1,0 +1,210 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="lshi (generated)" id="1479830396636-1">
+        <createSequence sequenceName="hibernate_sequence"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-2">
+        <createTable tableName="attachment_entity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_type" type="VARCHAR(255)"/>
+            <column name="created" type="BYTEA"/>
+            <column name="file_reference" type="VARCHAR(255)"/>
+            <column name="filename" type="VARCHAR(255)"/>
+            <column name="size" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="creator_id" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-3">
+        <createTable tableName="comment_entity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="comment" type="VARCHAR(255)"/>
+            <column name="created_date" type="BYTEA"/>
+            <column name="last_modified_date" type="BYTEA"/>
+            <column name="creator_id" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-4">
+        <createTable tableName="financing_round_entity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="budget" type="numeric(19, 2)"/>
+            <column name="budget_per_user" type="numeric(19, 2)"/>
+            <column name="created_date" type="BYTEA"/>
+            <column name="end_date" type="BYTEA"/>
+            <column name="last_modified_date" type="BYTEA"/>
+            <column name="post_round_budget" type="numeric(19, 2)"/>
+            <column name="start_date" type="BYTEA"/>
+            <column name="termination_post_processing_done" type="BOOLEAN"/>
+            <column name="user_count" type="INT"/>
+            <column name="organisation_unit_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-5">
+        <createTable tableName="like_entity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="BYTEA"/>
+            <column name="last_modified_date" type="BYTEA"/>
+            <column name="status" type="INT"/>
+            <column name="creator_id" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-6">
+        <createTable tableName="org_user">
+            <column name="org_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-7">
+        <createTable tableName="organisation_unit_entity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="BYTEA"/>
+            <column name="last_modified_date" type="BYTEA"/>
+            <column name="name" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-8">
+        <createTable tableName="pledge_entity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="numeric(19, 2)"/>
+            <column name="created_date" type="BYTEA"/>
+            <column name="last_modified_date" type="BYTEA"/>
+            <column name="creator_id" type="BIGINT"/>
+            <column name="financing_round_id" type="BIGINT"/>
+            <column name="project_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-9">
+        <createTable tableName="project_entity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="BYTEA"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="last_modified_date" type="BYTEA"/>
+            <column name="pledge_goal" type="numeric(19, 2)"/>
+            <column name="short_description" type="VARCHAR(255)"/>
+            <column name="status" type="INT"/>
+            <column name="title" type="VARCHAR(255)"/>
+            <column name="creator_id" type="BIGINT"/>
+            <column name="financing_round_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-10">
+        <createTable tableName="user_entity">
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activated" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activation_token" type="VARCHAR(255)"/>
+            <column name="budget" type="numeric(19, 2)"/>
+            <column name="created_date" type="BYTEA"/>
+            <column name="deleted" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="firstname" type="VARCHAR(255)"/>
+            <column name="last_modified_date" type="BYTEA"/>
+            <column name="lastname" type="VARCHAR(255)"/>
+            <column name="password" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-11">
+        <createTable tableName="user_entity_roles">
+            <column name="user_entity_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="roles" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-12">
+        <addPrimaryKey columnNames="id" constraintName="attachment_entity_pkey" tableName="attachment_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-13">
+        <addPrimaryKey columnNames="id" constraintName="comment_entity_pkey" tableName="comment_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-14">
+        <addPrimaryKey columnNames="id" constraintName="financing_round_entity_pkey" tableName="financing_round_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-15">
+        <addPrimaryKey columnNames="id" constraintName="like_entity_pkey" tableName="like_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-16">
+        <addPrimaryKey columnNames="id" constraintName="organisation_unit_entity_pkey" tableName="organisation_unit_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-17">
+        <addPrimaryKey columnNames="id" constraintName="pledge_entity_pkey" tableName="pledge_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-18">
+        <addPrimaryKey columnNames="id" constraintName="project_entity_pkey" tableName="project_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-19">
+        <addPrimaryKey columnNames="id" constraintName="user_entity_pkey" tableName="user_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-20">
+        <addForeignKeyConstraint baseColumnNames="creator_id" baseTableName="comment_entity" constraintName="fk1qxiv0abrmq4ptsmgscb7a5u2" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="user_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-21">
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="attachment_entity" constraintName="fk54xt2070iimnh1b7e06k1t3w9" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-22">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="org_user" constraintName="fk5oioj1xvjf9vgfny8df72w5lx" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="user_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-23">
+        <addForeignKeyConstraint baseColumnNames="creator_id" baseTableName="like_entity" constraintName="fk81hfmql9htwberl21a0tjikvd" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="user_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-24">
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="pledge_entity" constraintName="fk89ue4gdnnehwni8jjy12khvs1" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-25">
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="like_entity" constraintName="fk9hsah378x7y7tjdbrqwqt1iow" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-26">
+        <addForeignKeyConstraint baseColumnNames="organisation_unit_id" baseTableName="financing_round_entity" constraintName="fka848e0hhmwjhrrxtwomuapqya" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="organisation_unit_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-27">
+        <addForeignKeyConstraint baseColumnNames="project_id" baseTableName="comment_entity" constraintName="fkdkn379bjx4v53ffok4tshkhme" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-28">
+        <addForeignKeyConstraint baseColumnNames="financing_round_id" baseTableName="pledge_entity" constraintName="fkdlh6w1cdjpyiaf056pbm5p01o" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="financing_round_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-29">
+        <addForeignKeyConstraint baseColumnNames="financing_round_id" baseTableName="project_entity" constraintName="fkdmsgi43qbugj0c0blnn6hdrbl" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="financing_round_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-30">
+        <addForeignKeyConstraint baseColumnNames="creator_id" baseTableName="attachment_entity" constraintName="fkjunlyqcsupx46ducyhhddgycp" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="user_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-31">
+        <addForeignKeyConstraint baseColumnNames="user_entity_id" baseTableName="user_entity_roles" constraintName="fkjvvinok3stf32dvgie3vr73s0" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="user_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-32">
+        <addForeignKeyConstraint baseColumnNames="creator_id" baseTableName="pledge_entity" constraintName="fko2j7su98jkfwlg3eja0rnou6e" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="user_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-33">
+        <addForeignKeyConstraint baseColumnNames="org_id" baseTableName="org_user" constraintName="fks8678k2mbeaxuk3024gk4s054" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="organisation_unit_entity"/>
+    </changeSet>
+    <changeSet author="lshi (generated)" id="1479830396636-34">
+        <addForeignKeyConstraint baseColumnNames="creator_id" baseTableName="project_entity" constraintName="fktb08us1yss2bamrafsyk39jau" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="user_entity"/>
+    </changeSet>
+</databaseChangeLog>

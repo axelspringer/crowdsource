@@ -19,7 +19,8 @@ import static java.util.Arrays.asList;
 public class UserEntity {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "table", strategy=GenerationType.TABLE)
+    @TableGenerator(name = "table", allocationSize = 10)
     private Long id;
     private String email;
     private String firstname;

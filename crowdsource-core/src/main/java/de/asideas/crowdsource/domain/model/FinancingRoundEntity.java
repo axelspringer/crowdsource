@@ -9,10 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.util.Assert;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
@@ -27,7 +24,8 @@ public class FinancingRoundEntity {
     private static final Logger log = LoggerFactory.getLogger(FinancingRoundEntity.class);
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(generator = "table", strategy= GenerationType.TABLE)
+    @TableGenerator(name = "table", allocationSize = 10)
     private Long id;
     private DateTime startDate;
     private DateTime endDate;
