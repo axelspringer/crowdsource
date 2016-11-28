@@ -8,6 +8,7 @@
             <column name="id" type="BIGINT">
                 <constraints nullable="false"/>
             </column>
+            <column name="content" type="OID"/>
             <column name="content_type" type="VARCHAR(255)"/>
             <column name="created" type="BYTEA"/>
             <column name="file_reference" type="VARCHAR(255)"/>

@@ -19,8 +19,8 @@ import de.asideas.crowdsource.repository.UserRepository;
 import de.asideas.crowdsource.security.Roles;
 import de.asideas.crowdsource.service.ProjectService;
 import de.asideas.crowdsource.service.UserService;
+import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +44,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -56,8 +57,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
@@ -107,17 +107,6 @@ public class ProjectControllerTest {
     }
 
     @Test
-    public void addProject_shouldRespondWith401IfUserWasNotFound() throws Exception {
-        final Project project = project("myTitle", "theFullDescription", "theShortDescription", BigDecimal.valueOf(50), ProjectStatus.PROPOSED);
-
-        mockMvc.perform(post("/project")
-                .principal(new UsernamePasswordAuthenticationToken("foo@bar.de", "somepassword"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(project)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
     public void addProject_shouldRespondWith400IfRequestWasInvalid() throws Exception {
         final Project project = new Project();
         final String email = "some@mail.com";
@@ -143,8 +132,12 @@ public class ProjectControllerTest {
 
     @Test
     public void getProject_shouldRespondWith404OnInvalidProjectId() throws Exception {
-        when(projectService.getProject(anyLong(), any(UserEntity.class))).thenThrow(new ResourceNotFoundException());
-        mockMvc.perform(get("/project/{projectId}", 123L))
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER);
+
+        when(projectService.getProject(anyLong(), anyString())).thenThrow(new ResourceNotFoundException());
+        mockMvc.perform(get("/project/{projectId}", 123L)
+                .principal(authentication(user)))
                 .andExpect(status().isNotFound());
     }
 
@@ -154,7 +147,7 @@ public class ProjectControllerTest {
         final UserEntity creator = userEntity("creator@mail.com", Roles.ROLE_USER);
 
         final Long projectId = 4711L;
-        when(projectService.getProject(eq(projectId), eq(userEntity)))
+        when(projectService.getProject(eq(projectId), eq("some@mail.com")))
                 .thenReturn(toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PROPOSED), creator));
 
         mockMvc.perform(get("/project/{projectId}", projectId)
@@ -169,7 +162,7 @@ public class ProjectControllerTest {
         final Long projectId = 4711L;
         final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PUBLISHED), creator);
 
-        when(projectService.getProject(eq(projectId), eq(userEntity))).thenReturn(expProjcet);
+        when(projectService.getProject(eq(projectId), eq("some@mail.com"))).thenReturn(expProjcet);
 
         MvcResult mvcResult = mockMvc.perform(get("/project/{projectId}", projectId)
                 .principal(authentication(userEntity)))
@@ -185,7 +178,7 @@ public class ProjectControllerTest {
         final long projectId = 4711L;
         final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PUBLISHED), creator);
 
-        when(projectService.getProject(eq(projectId), eq(null))).thenReturn(expProjcet);
+        when(projectService.getProject(eq(projectId), anyString())).thenReturn(expProjcet);
 
         MvcResult mvcResult = mockMvc.perform(get("/project/{projectId}", projectId)
                 .principal(anonymousAuthentication()))
@@ -201,7 +194,7 @@ public class ProjectControllerTest {
         final long projectId = 4711L;
         final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PUBLISHED), creator);
 
-        when(projectService.getProject(eq(projectId), eq(null))).thenReturn(expProjcet);
+        when(projectService.getProject(eq(projectId), anyString())).thenReturn(expProjcet);
 
         mockMvc.perform(get("/project/{projectId}", projectId)
                 .principal(anonymousAuthentication()))
@@ -219,7 +212,7 @@ public class ProjectControllerTest {
         final Project expProjcet_0 = toCreatedProject(project("title0", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PUBLISHED), creator);
         final Project unexpProjcet = toCreatedProject(project("title1", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PROPOSED), creator);
         final Project expProjcet_1 = toCreatedProject(project("title2", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PUBLISHED_DEFERRED), creator);
-        when(projectService.getProjects(user)).thenReturn(Arrays.asList(expProjcet_0, unexpProjcet, expProjcet_1));
+        when(projectService.getProjects(user.getEmail())).thenReturn(Arrays.asList(expProjcet_0, unexpProjcet, expProjcet_1));
 
         MvcResult mvcResult = mockMvc.perform(get("/projects", projectId)
                 .principal(authentication(user)))
@@ -240,7 +233,7 @@ public class ProjectControllerTest {
         final String projectId = "existingProjectId";
         final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PUBLISHED), creator);
         final Project unexpProjcet = toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PROPOSED), creator);
-        when(projectService.getProjects(null)).thenReturn(Arrays.asList(expProjcet, unexpProjcet));
+        when(projectService.getProjects(anyString())).thenReturn(Arrays.asList(expProjcet, unexpProjcet));
 
         MvcResult mvcResult = mockMvc.perform(get("/projects", projectId)
                 .principal(anonymousAuthentication()))
@@ -259,7 +252,7 @@ public class ProjectControllerTest {
 
         final String projectId = "existingProjectId";
         final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PROPOSED), creator);
-        when(projectService.getProjects(user)).thenReturn(Collections.singletonList(expProjcet));
+        when(projectService.getProjects(user.getEmail())).thenReturn(Collections.singletonList(expProjcet));
 
         MvcResult mvcResult = mockMvc.perform(get("/projects", projectId)
                 .principal(authentication(user)))
@@ -276,7 +269,7 @@ public class ProjectControllerTest {
         final UserEntity creator = userEntity("creator@mail.com", Roles.ROLE_USER);
         final String projectId = "existingProjectId";
         final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PROPOSED), creator);
-        when(projectService.getProjects(user)).thenReturn(Collections.singletonList(expProjcet));
+        when(projectService.getProjects(user.getEmail())).thenReturn(Collections.singletonList(expProjcet));
 
         MvcResult mvcResult = mockMvc.perform(get("/projects", projectId)
                 .principal(authentication(user)))
@@ -294,7 +287,7 @@ public class ProjectControllerTest {
         final String projectId = "existingProjectId";
         final Project expProjcet = toCreatedProject(project("title", "descr", "shortDescr", BigDecimal.valueOf(50), ProjectStatus.PROPOSED), creator);
         final Project nonExpProjcet = toCreatedProject(project("title2", "descr2", "shortDescr2", BigDecimal.valueOf(45), ProjectStatus.PROPOSED), anotherCreator);
-        when(projectService.getProjects(creator)).thenReturn(Arrays.asList(expProjcet, nonExpProjcet));
+        when(projectService.getProjects(creator.getEmail())).thenReturn(Arrays.asList(expProjcet, nonExpProjcet));
 
         MvcResult mvcResult = mockMvc.perform(get("/projects", projectId)
                 .principal(authentication(creator)))
@@ -320,33 +313,7 @@ public class ProjectControllerTest {
                 .content(mapper.writeValueAsString(pledge)))
                 .andExpect(status().isCreated());
 
-        verify(projectService).pledge(projectId, user, pledge);
-    }
-
-    @Test
-    public void pledgeProject_shouldRespondWith401IfTheUserWasNotFound() throws Exception {
-
-        mockMvc.perform(post("/project/{projectId}/pledges", 123L)
-                .principal(new UsernamePasswordAuthenticationToken("foo@bar.com", "somepassword"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(new Pledge(BigDecimal.valueOf(1)))))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
-    public void pledgeProject_shouldRespondWith404IfTheProjectWasNotFound() throws Exception {
-
-        final String email = "some@mail.com";
-        final long projectId = 4711L;
-        final Pledge pledge = new Pledge(BigDecimal.valueOf(1));
-        final UserEntity user = userEntity(email, Roles.ROLE_USER);
-        doThrow(ResourceNotFoundException.class).when(projectService).pledge(projectId, user, pledge);
-
-        mockMvc.perform(post("/project/{projectId}/pledges", projectId)
-                .principal(authentication(user))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(pledge)))
-                .andExpect(status().isNotFound());
+        verify(projectService).pledge(projectId, user.getEmail(), pledge);
     }
 
     @Test
@@ -366,7 +333,7 @@ public class ProjectControllerTest {
     public void pledgeProject_shouldRespondWith400WhenProjectServiceThrowsInvalidRequestEx() throws Exception {
         final String email = "some@mail.com";
         final UserEntity user = userEntity(email, Roles.ROLE_USER);
-        doThrow(InvalidRequestException.pledgeGoalExceeded()).when(projectService).pledge(anyLong(), eq(user), any(Pledge.class));
+        doThrow(InvalidRequestException.pledgeGoalExceeded()).when(projectService).pledge(anyLong(), eq(user.getEmail()), any(Pledge.class));
 
         MvcResult mvcResult = mockMvc.perform(post("/project/{projectId}/pledges", 123L)
                 .principal(authentication(user))
@@ -385,7 +352,7 @@ public class ProjectControllerTest {
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
         final Project expProject = toCreatedProject(project("title2", "descr2", "shortDescr2", BigDecimal.valueOf(45), ProjectStatus.PROPOSED), user);
 
-        when(projectService.modifyProjectStatus(anyLong(), eq(expProject.getStatus()), eq(user))).thenReturn(expProject);
+        when(projectService.modifyProjectStatus(anyLong(), eq(expProject.getStatus()), eq(email))).thenReturn(expProject);
 
         MvcResult mvcResult = mockMvc.perform(patch("/project/{projectId}/status", 123L)
                 .principal(authentication(user))
@@ -403,7 +370,7 @@ public class ProjectControllerTest {
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
         final Project expProject = toCreatedProject(project("title2", "descr2", "shortDescr2", BigDecimal.valueOf(45), ProjectStatus.PROPOSED), user);
 
-        when(projectService.modifyProjectStatus(anyLong(), eq(expProject.getStatus()), eq(user))).thenReturn(expProject);
+        when(projectService.modifyProjectStatus(anyLong(), eq(expProject.getStatus()), eq(email))).thenReturn(expProject);
 
         mockMvc.perform(patch("/project/{projectId}/status", 123L)
                 .principal(authentication(user))
@@ -433,7 +400,7 @@ public class ProjectControllerTest {
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
         final Project expProject = toCreatedProject(project("title2", "descr2", "shortDescr2", BigDecimal.valueOf(45), ProjectStatus.PROPOSED), user);
 
-        when(projectService.modifyProjectMasterdata(anyLong(), eq(expProject), eq(user))).thenReturn(expProject);
+        when(projectService.modifyProjectMasterdata(anyLong(), eq(expProject), eq(email))).thenReturn(expProject);
 
         MvcResult mvcResult = mockMvc.perform(put("/project/{projectId}", 123L)
                 .principal(authentication(user))
@@ -451,7 +418,7 @@ public class ProjectControllerTest {
         final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
         final Project expProject = toCreatedProject(project(null, "", "shortDescr2", BigDecimal.valueOf(45), ProjectStatus.PROPOSED), user);
 
-        when(projectService.modifyProjectMasterdata(anyLong(), eq(expProject), eq(user))).thenReturn(expProject);
+        when(projectService.modifyProjectMasterdata(anyLong(), eq(expProject), eq(email))).thenReturn(expProject);
 
         MvcResult mvcResult = mockMvc.perform(put("/project/{projectId}", 123L)
                 .principal(authentication(user))
@@ -480,57 +447,54 @@ public class ProjectControllerTest {
 
     }
 
-    @Ignore // FIXME: 18/11/16
     @Test
     public void addProjectAttachment_shouldDelegateToProjectService() throws Exception {
-//        final String email = "some@mail.com";
-//        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
-//        final Attachment expectedAttachment = anExpectedAttachment(aPersistedProjectEntity());
-//
-//        MockMultipartFile content = mockedMultipart("somecontent", "test_filename", "text/plain");
-//        MediaType mediaType = mediaType();
-//
-//        when(projectService.addProjectAttachment(eq(123L), eq(Attachment.asCreationCommand("test_filename", "text/plain", content.getInputStream())), eq(user)))
-//                .thenReturn(expectedAttachment);
-//
-//        MvcResult mvcRes = mockMvc.perform(fileUpload("/projects/{projectId}/attachments", 123L)
-//                .file(content)
-//                .principal(authentication(user))
-//                .contentType(mediaType))
-//                .andExpect(status().isOk())
-//                .andReturn();
-//
-//        Attachment res = mapper.readValue(mvcRes.getResponse().getContentAsString(), Attachment.class);
-//        assertAttachmentsEqual(expectedAttachment, res);
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        final Attachment expectedAttachment = anExpectedAttachment();
+
+        MockMultipartFile content = mockedMultipart("somecontent", "test_filename", "text/plain");
+        MediaType mediaType = mediaType();
+
+        when(projectService.addProjectAttachment(eq(123L), eq(Attachment.asCreationCommand("test_filename", "text/plain", content.getInputStream())), eq(email)))
+                .thenReturn(expectedAttachment);
+
+        MvcResult mvcRes = mockMvc.perform(fileUpload("/projects/{projectId}/attachments", 123L)
+                .file(content)
+                .principal(authentication(user))
+                .contentType(mediaType))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Attachment res = mapper.readValue(mvcRes.getResponse().getContentAsString(), Attachment.class);
+        assertAttachmentsEqual(expectedAttachment, res);
     }
 
-    @Ignore // FIXME: 18/11/16
     @Test
     public void addProjectAttachment_shouldCloseInputStream() throws Exception {
-//        final String email = "some@mail.com";
-//        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
-//        final Attachment expectedAttachment = anExpectedAttachment(aPersistedProjectEntity());
-//
-//        MockMultipartFile content = new MockedInputStreamMultipartFile("file", "test_filename", "text/plain");
-//        final InputStream mockedInputStream = content.getInputStream();
-//        MediaType mediaType = mediaType();
-//
-//        when(projectService.addProjectAttachment(eq(123L), eq(Attachment.asCreationCommand("test_filename", "text/plain", content.getInputStream())), eq(user)))
-//                .thenReturn(expectedAttachment);
-//
-//        MvcResult mvcRes = mockMvc.perform(fileUpload("/projects/{projectId}/attachments", 123L)
-//                .file(content)
-//                .principal(authentication(user))
-//                .contentType(mediaType))
-//                .andExpect(status().isOk())
-//                .andReturn();
-//
-//        Attachment res = mapper.readValue(mvcRes.getResponse().getContentAsString(), Attachment.class);
-//        assertAttachmentsEqual(expectedAttachment, res);
-//        verify(mockedInputStream).close();
+        final String email = "some@mail.com";
+        final UserEntity user = userEntity(email, Roles.ROLE_USER, Roles.ROLE_ADMIN);
+        final Attachment expectedAttachment = anExpectedAttachment();
+
+        MockMultipartFile content = new MockedInputStreamMultipartFile("file", "test_filename", "text/plain");
+        final InputStream mockedInputStream = content.getInputStream();
+        MediaType mediaType = mediaType();
+
+        when(projectService.addProjectAttachment(eq(123L), eq(Attachment.asCreationCommand("test_filename", "text/plain", content.getInputStream())), eq(email)))
+                .thenReturn(expectedAttachment);
+
+        MvcResult mvcRes = mockMvc.perform(fileUpload("/projects/{projectId}/attachments", 123L)
+                .file(content)
+                .principal(authentication(user))
+                .contentType(mediaType))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        Attachment res = mapper.readValue(mvcRes.getResponse().getContentAsString(), Attachment.class);
+        assertAttachmentsEqual(expectedAttachment, res);
+        verify(mockedInputStream).close();
     }
 
-    @Ignore // FIXME: 18/11/16
     @Test
     public void addProjectAttachment_shouldThrowBadRequestOnEmptyFile() throws Exception {
         final String email = "some@mail.com";
@@ -547,7 +511,6 @@ public class ProjectControllerTest {
                 .andReturn();
     }
 
-    @Ignore // FIXME: 18/11/16
     @Test
     public void addProjectAttachment_shouldThrowBadRequestOnUnsupportedMediaType() throws Exception {
         final String email = "some@mail.com";
@@ -582,41 +545,39 @@ public class ProjectControllerTest {
                 .andReturn();
     }
 
-    @Ignore // FIXME: 18/11/16
     @Test
     public void serveProjectAttachment_ReturnsResponseWithCorrectMediaType() throws Exception {
-//        final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
-//        final String expContent = "someContent";
-//        final ProjectEntity project = aPersistedProjectEntity();
-//        final Attachment expectedAttachment = anExpectedAttachmentWithPayload(project, Optional.of(expContent));
-//
-//        when(projectService.loadProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(expectedAttachment.getId())))
-//                .thenReturn(expectedAttachment);
-//
-//        mockMvc.perform(get("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
-//                .principal(authentication(user)))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(expectedAttachment.getType()))
-//                .andExpect(header().longValue("Content-Length", expectedAttachment.getSize()))
-//                .andExpect(content().string(expContent))
-//                .andReturn();
+        final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
+        final String expContent = "someContent";
+        final ProjectEntity project = aPersistedProjectEntity();
+        final Attachment expectedAttachment = anExpectedAttachmentWithPayload(Optional.of(expContent));
+
+        when(projectService.loadProjectAttachment(Attachment.asLookupByIdCommand(expectedAttachment.getId())))
+                .thenReturn(expectedAttachment);
+
+        mockMvc.perform(get("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
+                .principal(authentication(user)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(expectedAttachment.getType()))
+                .andExpect(header().longValue("Content-Length", expectedAttachment.getSize()))
+                .andExpect(content().string(expContent))
+                .andReturn();
 
     }
 
-    @Ignore // FIXME: 18/11/16
     @Test
     public void deleteAttachment_callsProjectServiceAndReturnsNoContent() throws Exception {
-//        final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
-//        final String expContent = "someContent";
-//        final ProjectEntity project = aPersistedProjectEntity();
-//        final Attachment expectedAttachment = anExpectedAttachmentWithPayload(project, Optional.of(expContent));
-//
-//        mockMvc.perform(delete("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
-//                .principal(authentication(user)))
-//                .andExpect(status().isNoContent())
-//                .andReturn();
-//
-//        verify(projectService).deleteProjectAttachment(project.getId(), Attachment.asLookupByIdCommand(expectedAttachment.getId()), user);
+        final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
+        final String expContent = "someContent";
+        final ProjectEntity project = aPersistedProjectEntity();
+        final Attachment expectedAttachment = anExpectedAttachmentWithPayload(Optional.of(expContent));
+
+        mockMvc.perform(delete("/projects/{projectId}/attachments/{fileRef}", project.getId(), expectedAttachment.getId())
+                .principal(authentication(user)))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        verify(projectService).deleteProjectAttachment(Attachment.asLookupByIdCommand(expectedAttachment.getId()));
     }
 
     private void givenControllerSupportsMediaTypes(List<MediaType> mediaTypes) {
@@ -624,12 +585,11 @@ public class ProjectControllerTest {
     }
 
     private void assertAttachmentsEqual(Attachment expected, Attachment actual) {
-//        assertThat(actual.getName(), is(expected.getName()));
-//        assertThat(actual.getType(), is(expected.getType()));
-//        assertThat(actual.getId(), is(expected.getId()));
-//        assertThat(actual.getCreated().getMillis(), is(expected.getCreated().getMillis()));
-//        assertThat(actual.getLinkToFile(), is(expected.getLinkToFile()));
-//        assertThat(actual.getSize(), is(expected.getSize()));
+        assertThat(actual.getName(), is(expected.getName()));
+        assertThat(actual.getType(), is(expected.getType()));
+        assertThat(actual.getId(), is(expected.getId()));
+        assertThat(actual.getCreated().getMillis(), is(expected.getCreated().getMillis()));
+        assertThat(actual.getSize(), is(expected.getSize()));
     }
 
     private MediaType mediaType() {
@@ -653,7 +613,7 @@ public class ProjectControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        verify(projectService, only()).likeProject(eq(4711L), any(UserEntity.class));
+        verify(projectService, only()).likeProject(eq(4711L), anyString());
     }
 
     @Test
@@ -666,7 +626,7 @@ public class ProjectControllerTest {
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
-        verify(projectService, only()).unlikeProject(eq(4711L), any(UserEntity.class));
+        verify(projectService, only()).unlikeProject(eq(4711L), anyString());
     }
 
     private Principal authentication(UserEntity userEntity) {
@@ -734,14 +694,16 @@ public class ProjectControllerTest {
         return res;
     }
 
-    private Attachment anExpectedAttachment(ProjectEntity parentProject) {
-        return anExpectedAttachmentWithPayload(parentProject, Optional.empty());
+    private Attachment anExpectedAttachment() {
+        return anExpectedAttachmentWithPayload(Optional.empty());
     }
 
-    private Attachment anExpectedAttachmentWithPayload(ProjectEntity parentProject, Optional<String> payload) {
-//        return Attachment.asResponse(new AttachmentValue("a_fileRef", "text/plain", "a_filename", 17, DateTime.now()), parentProject,
-//                payload.isPresent() ? new ByteArrayInputStream(payload.get().getBytes()) : null);
-        return null;
+    private Attachment anExpectedAttachmentWithPayload(Optional<String> payload) {
+        if (payload.isPresent()) {
+            return Attachment.asResponse(1L, "name", 12L, "text/plain", DateTime.now(), new ByteArrayInputStream(payload.get().getBytes()));
+        } else {
+            return Attachment.asResponseWithoutPayload(1L, "name", 12L, "text/plain", DateTime.now());
+        }
     }
 
     @Configuration
@@ -794,22 +756,6 @@ public class ProjectControllerTest {
 
         public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType) {
             super(name, originalFilename, contentType, new byte[]{0, 1, 2, 3});
-        }
-
-        public MockedInputStreamMultipartFile(String name, byte[] content) {
-            super(name, content);
-        }
-
-        public MockedInputStreamMultipartFile(String name, InputStream contentStream) throws IOException {
-            super(name, contentStream);
-        }
-
-        public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType, byte[] content) {
-            super(name, originalFilename, contentType, content);
-        }
-
-        public MockedInputStreamMultipartFile(String name, String originalFilename, String contentType, InputStream contentStream) throws IOException {
-            super(name, originalFilename, contentType, contentStream);
         }
 
         @Override

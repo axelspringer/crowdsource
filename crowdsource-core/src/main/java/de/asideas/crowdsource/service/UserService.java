@@ -29,8 +29,7 @@ public class UserService {
         this.userNotificationService = userNotificationService;
     }
 
-
-
+    @Transactional
     public UserEntity getUserByEmail(String email) {
 
         UserEntity userEntity = userRepository.findByEmail(email.toLowerCase());
@@ -40,6 +39,7 @@ public class UserService {
         return userEntity;
     }
 
+    @Transactional
     public void assignActivationTokenForRegistration(UserEntity userEntity) {
 
         userEntity.setActivationToken(generateActivationToken());
@@ -47,6 +47,7 @@ public class UserService {
         saveUser(userEntity);
     }
 
+    @Transactional
     public void assignActivationTokenForPasswordRecovery(UserEntity userEntity) {
 
         userEntity.setActivationToken(generateActivationToken());

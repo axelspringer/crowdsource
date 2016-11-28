@@ -1,6 +1,7 @@
 package de.asideas.crowdsource.service;
 
 import de.asideas.crowdsource.domain.exception.InvalidRequestException;
+import de.asideas.crowdsource.domain.exception.NotAuthorizedException;
 import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.model.*;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
@@ -11,6 +12,7 @@ import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.repository.*;
 import de.asideas.crowdsource.security.Roles;
+import org.apache.commons.io.IOUtils;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +44,6 @@ public class ProjectService {
     private final FinancingRoundService financingRoundService;
     private final LikeRepository likeRepository;
 
-    private final ProjectService thisInstance;
-
     @Autowired
     public ProjectService(ProjectRepository projectRepository,
                           PledgeRepository pledgeRepository,
@@ -61,15 +62,17 @@ public class ProjectService {
         this.financingRoundService = financingRoundService;
         this.attachmentEntityRepository = attachmentEntityRepository;
         this.likeRepository = likeRepository;
-        this.thisInstance = this;
-
     }
 
-    public Project getProject(Long projectId, UserEntity requestingUser) {
+    @Transactional
+    public Project getProject(Long projectId, String email) {
+        final UserEntity requestingUser = userRepository.findByEmail(email);
         return project(loadProjectEntity(projectId), requestingUser);
     }
 
-    public List<Project> getProjects(UserEntity requestingUser) {
+    @Transactional
+    public List<Project> getProjects(String email) {
+        final UserEntity requestingUser = userRepository.findByEmail(email);
 
         final List<ProjectEntity> projects = projectRepository.findAll();
         return projects.stream().map(p -> project(p, requestingUser)).collect(toList());
@@ -92,22 +95,28 @@ public class ProjectService {
         return project(projectEntity, creator);
     }
 
-    public Project modifyProjectStatus(Long projectId, ProjectStatus newStatusToApply, UserEntity requestingUser) {
-        ProjectEntity projectEntity = loadProjectEntity(projectId);
+    @Transactional
+    public Project modifyProjectStatus(Long projectId, ProjectStatus newStatusToApply, String email) {
+
+        final ProjectEntity projectEntity = loadProjectEntity(projectId);
+        final UserEntity requestingUser = userRepository.findByEmail(email);
 
         if (projectEntity.modifyStatus(newStatusToApply)) {
-            projectEntity = projectRepository.save(projectEntity);
+            projectRepository.save(projectEntity);
             userNotificationService.notifyCreatorOnProjectStatusUpdate(projectEntity);
         }
 
         return project(projectEntity, requestingUser);
     }
 
-    public Project modifyProjectMasterdata(Long projectId, Project modifiedProject, UserEntity requestingUser) {
-        ProjectEntity projectEntity = loadProjectEntity(projectId);
+    @Transactional
+    public Project modifyProjectMasterdata(Long projectId, Project modifiedProject, String email) {
+        final ProjectEntity projectEntity = loadProjectEntity(projectId);
+        final UserEntity requestingUser = userRepository.findByEmail(email);
+
 
         if (projectEntity.modifyMasterdata(requestingUser, modifiedProject.getTitle(), modifiedProject.getDescription(), modifiedProject.getShortDescription(), modifiedProject.getPledgeGoal())) {
-            projectEntity = projectRepository.save(projectEntity);
+            projectRepository.save(projectEntity);
             userNotificationService.notifyCreatorAndAdminOnProjectModification(projectEntity, requestingUser);
             LOG.debug("Project updated: {}", projectEntity);
         }
@@ -115,9 +124,16 @@ public class ProjectService {
         return project(projectEntity, requestingUser);
     }
 
-    public void pledge(Long projectId, UserEntity userEntity, Pledge pledge) {
+    @Transactional
+    public void  pledge(Long projectId, String email, Pledge pledge) {
 
-        ProjectEntity projectEntity = loadProjectEntity(projectId);
+        final ProjectEntity projectEntity = loadProjectEntity(projectId);
+        final UserEntity userEntity = userRepository.findByEmail(email);
+
+        if (userEntity == null) {
+            throw new NotAuthorizedException("user with email: " + email + " cannot be found");
+        }
+
 
         FinancingRoundEntity financingRound = financingRoundService.mostRecentRoundEntity();
         if (financingRound != null &&
@@ -128,66 +144,59 @@ public class ProjectService {
             if (!financingRound.idenitityEquals(projectEntity.getFinancingRound())) {
                 throw InvalidRequestException.projectTookNotPartInLastFinancingRond();
             }
-            thisInstance.pledgeProjectUsingPostRoundBudget(projectEntity, userEntity, pledge);
+            pledgeProjectUsingPostRoundBudget(projectEntity, userEntity, pledge);
         } else {
-            thisInstance.pledgeProjectInFinancingRound(projectEntity, userEntity, pledge);
+            pledgeProjectInFinancingRound(projectEntity, userEntity, pledge);
         }
     }
 
-    public Attachment addProjectAttachment(String projectId, Attachment attachment, UserEntity savingUser) {
-        // FIXME: 18/11/16
-        return null;
+    @Transactional
+    public Attachment addProjectAttachment(Long projectId, Attachment attachment, String email) throws IOException {
 
-//        ProjectEntity projectEntity = loadProjectEntity(projectId);
-//
-//        projectEntity.addAttachmentAllowed(savingUser);
-//
-//        AttachmentValue attachmentStored = new AttachmentValue(attachment.getName(), attachment.getType());
-//        attachmentStored = attachmentEntityRepository.storeAttachment(attachmentStored, attachment.getPayload());
-//        projectEntity.addAttachment(attachmentStored);
-//        projectRepository.save(projectEntity);
-//        return Attachment.asResponseWithoutPayload(attachmentStored, projectEntity);
+        final ProjectEntity projectEntity = loadProjectEntity(projectId);
+        final UserEntity creator = userRepository.findByEmail(email);
+
+        final AttachmentEntity attachmentEntity = new AttachmentEntity(attachment.getName(), IOUtils.toByteArray(attachment.getPayload()), attachment.getType(), projectEntity, creator);
+        attachmentEntityRepository.save(attachmentEntity);
+
+        return Attachment.withoutPayload(attachmentEntity);
     }
 
-    public Attachment loadProjectAttachment(String projectId, Attachment attachmentRequest) {
+    @Transactional
+    public Attachment loadProjectAttachment(Attachment attachment) {
 
-        // FIXME: 18/11/16
-        return null;
-//        final ProjectEntity project = loadProjectEntity(projectId);
-//
-//        final AttachmentValue attachment2Serve = project.findAttachmentByReference(attachmentRequest);
-//        final InputStream payload = attachmentEntityRepository.loadAttachment(attachment2Serve);
-//
-//        if (payload == null) {
-//            LOG.error("A project's attachment file entry's actual binary data couldn't be found: " +
-//                    "projectId:{}; fileAttachmentMissing: {}", projectId, attachment2Serve);
-//            throw new ResourceNotFoundException();
-//        }
-//
-//        return Attachment.asResponse(attachment2Serve, project, payload);
+        final AttachmentEntity attachmentEntity = attachmentEntityRepository.findOne(attachment.getId());
+        return Attachment.withPayload(attachmentEntity);
     }
 
-    public void deleteProjectAttachment(String projectId, Attachment attachmentRequest, UserEntity deletingUser) {
-        // FIXME: 18/11/16
-
-//        final ProjectEntity project = loadProjectEntity(projectId);
-//        final AttachmentValue attachment2Delete = project.findAttachmentByReference(attachmentRequest);
-//
-//        project.deleteAttachmentAllowed(deletingUser);
-//
-//        attachmentEntityRepository.deleteAttachment(attachment2Delete);
-//        project.deleteAttachment(attachment2Delete);
-//        projectRepository.save(project);
+    @Transactional
+    public void deleteProjectAttachment(Attachment attachment) {
+        attachmentEntityRepository.delete(attachment.getId());
     }
 
-    public void likeProject(Long projectId, UserEntity user) {
+    @Transactional
+    public void likeProject(Long projectId, String email) {
+        final UserEntity user = userRepository.findByEmail(email);
+
         final ProjectEntity project = projectRepository.findOne(projectId);
         toggleStatus(project, user, LIKE);
     }
 
-    public void unlikeProject(Long projectId, UserEntity user) {
+    @Transactional
+    public void unlikeProject(Long projectId, String email) {
+        final UserEntity user = userRepository.findByEmail(email);
+
         final ProjectEntity project = projectRepository.findOne(projectId);
         toggleStatus(project, user, UNLIKE);
+    }
+
+    @Transactional
+    public ProjectEntity loadProjectEntity(Long projectId) {
+        ProjectEntity projectEntity = projectRepository.findOne(projectId);
+        if (projectEntity == null) {
+            throw new ResourceNotFoundException();
+        }
+        return projectEntity;
     }
 
     void pledgeProjectInFinancingRound(ProjectEntity projectEntity, UserEntity userEntity, Pledge pledge) {
@@ -229,14 +238,6 @@ public class ProjectService {
         pledgeRepository.save(pledgeResult);
 
         LOG.debug("Project pledged using post round budget: {}", pledgeResult);
-    }
-
-    protected ProjectEntity loadProjectEntity(Long projectId) {
-        ProjectEntity projectEntity = projectRepository.findOne(projectId);
-        if (projectEntity == null) {
-            throw new ResourceNotFoundException();
-        }
-        return projectEntity;
     }
 
     private Project project(ProjectEntity projectEntity, UserEntity requestingUser) {

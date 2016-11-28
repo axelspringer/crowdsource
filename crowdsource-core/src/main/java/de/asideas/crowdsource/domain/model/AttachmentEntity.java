@@ -16,6 +16,8 @@ public class AttachmentEntity {
     private String fileReference;
     private String filename;
     private long size;
+    @Lob
+    private byte[] content;
     private String contentType;
     @ManyToOne
     private ProjectEntity project;
@@ -23,4 +25,15 @@ public class AttachmentEntity {
     private DateTime created;
     @ManyToOne
     private UserEntity creator;
+
+    public AttachmentEntity() {
+    }
+
+    public AttachmentEntity(String filename, byte[] content, String contentType, ProjectEntity project, UserEntity creator) {
+        this.filename = filename;
+        this.content = content;
+        this.contentType = contentType;
+        this.project = project;
+        this.creator = creator;
+    }
 }

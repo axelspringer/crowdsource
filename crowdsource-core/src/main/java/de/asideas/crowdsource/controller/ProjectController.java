@@ -2,7 +2,7 @@ package de.asideas.crowdsource.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import de.asideas.crowdsource.domain.exception.ForbiddenException;
-import de.asideas.crowdsource.domain.model.UserEntity;
+import de.asideas.crowdsource.domain.exception.InvalidRequestException;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.presentation.Pledge;
 import de.asideas.crowdsource.presentation.project.Attachment;
@@ -10,7 +10,6 @@ import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.presentation.project.ProjectStatusUpdate;
 import de.asideas.crowdsource.security.Roles;
 import de.asideas.crowdsource.service.ProjectService;
-import de.asideas.crowdsource.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +22,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,9 +43,6 @@ public class ProjectController {
     @Autowired
     private ProjectService projectService;
 
-    @Autowired
-    private UserService userService;
-
     @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowedmediatypes}')}")
     private List<MediaType> attachmentTypesAllowed;
 
@@ -54,9 +50,8 @@ public class ProjectController {
     @RequestMapping(value = "/projects", method = RequestMethod.GET)
     @JsonView(Project.ProjectSummaryView.class)
     public List<Project> getProjects(Authentication auth) {
-        UserEntity userEntity = userFromAuthentication(auth);
 
-        final List<Project> projects = projectService.getProjects(userEntity);
+        final List<Project> projects = projectService.getProjects(auth.getName());
         // filter projects. only return projects that are published, fully pledged or created by the requesting user (or if requestor is admin)
         return projects.stream().filter(project -> mayViewProjectFilter(project, auth)).collect(Collectors.toList());
     }
@@ -64,9 +59,8 @@ public class ProjectController {
     @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
     @RequestMapping(value = "/project/{projectId}", method = RequestMethod.GET)
     public Project getProject(@PathVariable Long projectId, Authentication auth) {
-        UserEntity userEntity = userFromAuthentication(auth);
 
-        final Project project = projectService.getProject(projectId, userEntity);
+        final Project project = projectService.getProject(projectId, auth.getName());
         if (!mayViewProjectFilter(project, auth)) {
             throw new ForbiddenException();
         }
@@ -84,83 +78,77 @@ public class ProjectController {
     @ResponseStatus(HttpStatus.CREATED)
     @RequestMapping(value = "/project/{projectId}/pledges", method = RequestMethod.POST)
     public void pledgeProject(@PathVariable Long projectId, @RequestBody @Valid Pledge pledge, Principal principal) {
-        projectService.pledge(projectId, userByPrincipal(principal), pledge);
+        projectService.pledge(projectId, principal.getName(), pledge);
     }
 
     @Secured(Roles.ROLE_ADMIN)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/project/{projectId}/status", method = RequestMethod.PATCH)
     public Project modifyProjectStatus(@PathVariable("projectId") Long projectId, @RequestBody @Valid @NotNull ProjectStatusUpdate newStatus, Principal principal) {
-        return projectService.modifyProjectStatus(projectId, newStatus.status, userByPrincipal(principal));
+        return projectService.modifyProjectStatus(projectId, newStatus.status, principal.getName());
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/project/{projectId}", method = RequestMethod.PUT)
     public Project modifyProjectMasterdata(@PathVariable("projectId") Long projectId, @RequestBody @Valid @NotNull Project modifiedProject, Principal principal) {
-        return projectService.modifyProjectMasterdata(projectId, modifiedProject, userByPrincipal(principal));
+        return projectService.modifyProjectMasterdata(projectId, modifiedProject, principal.getName());
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/projects/{projectId}/likes", method = RequestMethod.POST)
     public void likeProject(@PathVariable("projectId") Long projectId, Principal principal) {
-        projectService.likeProject(projectId, userByPrincipal(principal));
+        projectService.likeProject(projectId, principal.getName());
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/projects/{projectId}/likes", method = RequestMethod.DELETE)
     public void unlikeProject(@PathVariable("projectId") Long projectId, Principal principal) {
-        projectService.unlikeProject(projectId, userByPrincipal(principal));
+        projectService.unlikeProject(projectId, principal.getName());
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/projects/{projectId}/attachments", method = RequestMethod.POST)
-    public Attachment addProjectAttachment(@PathVariable("projectId") String projectId, @RequestParam("file") MultipartFile file, Principal principal) {
-        // FIXME: 18/11/16
-        return null;
+    public Attachment addProjectAttachment(@PathVariable("projectId") Long projectId, @RequestParam("file") MultipartFile file, Principal principal) {
 
-//        if (file.isEmpty()) {
-//            throw InvalidRequestException.fileMustNotBeEmpty();
-//        }
-//        if (!contentTypeAllowed(file.getContentType())) {
-//            throw InvalidRequestException.filetypeNotAllowed();
-//        }
-//
-//        try ( InputStream inputStream = file.getInputStream() ) {
-//            Attachment attachment = Attachment.asCreationCommand(file.getOriginalFilename(), file.getContentType(), inputStream);
-//
-//            return projectService.addProjectAttachment(projectId, attachment, userByPrincipal(principal));
-//
-//        } catch (IOException e) {
-//            log.warn("Couldn' process file input, due to stream threw IOException; ProjectId: {}", projectId, e);
-//            throw new RuntimeException("Internal error, couldn't process file stream", e);
-//        }
+        if (file.isEmpty()) {
+            throw InvalidRequestException.fileMustNotBeEmpty();
+        }
+        if (!contentTypeAllowed(file.getContentType())) {
+            throw InvalidRequestException.filetypeNotAllowed();
+        }
+
+        try ( InputStream inputStream = file.getInputStream() ) {
+            Attachment attachment = Attachment.asCreationCommand(file.getOriginalFilename(), file.getContentType(), inputStream);
+
+            return projectService.addProjectAttachment(projectId, attachment, principal.getName());
+
+        } catch (IOException e) {
+            log.warn("Couldn' process file input, due to stream threw IOException; ProjectId: {}", projectId, e);
+            throw new RuntimeException("Internal error, couldn't process file stream", e);
+        }
     }
 
     @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.GET)
-    public ResponseEntity<InputStreamResource> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference) throws IOException {
+    public ResponseEntity<InputStreamResource> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") Long fileReference) throws IOException {
 
-        // FIXME: 18/11/16
-        return null;
+        final Attachment attachment = projectService.loadProjectAttachment(Attachment.asLookupByIdCommand(fileReference));
 
-//        final Attachment attachment = projectService.loadProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference));
-//
-//        return ResponseEntity.ok()
-//                .contentLength(attachment.getSize())
-//                .contentType(MediaType.valueOf(attachment.getType()))
-//                .body(new InputStreamResource(attachment.getPayload()));
+        return ResponseEntity.ok()
+                .contentLength(attachment.getSize())
+                .contentType(MediaType.valueOf(attachment.getType()))
+                .body(new InputStreamResource(attachment.getPayload()));
     }
 
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.DELETE)
-    public void deleteProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") String fileReference, Principal principal) {
-        // FIXME: 18/11/16
-//        projectService.deleteProjectAttachment(projectId, Attachment.asLookupByIdCommand(fileReference), userByPrincipal(principal));
+    public void deleteProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") Long fileReference, Principal principal) {
+        projectService.deleteProjectAttachment(Attachment.asLookupByIdCommand(fileReference));
     }
 
     private boolean contentTypeAllowed(String contentType) {
@@ -199,21 +187,5 @@ public class ProjectController {
 
         // the creator always may see his project
         return project.getCreator().getEmail().equals(auth.getName());
-    }
-
-    private UserEntity userByPrincipal(Principal principal) {
-        return userService.getUserByEmail(principal.getName());
-    }
-
-    private UserEntity userFromAuthentication(Authentication auth) {
-        UserEntity userEntity = null;
-
-        if (auth != null && auth.isAuthenticated()) {
-            if (auth.getAuthorities().contains(new SimpleGrantedAuthority(Roles.ROLE_TRUSTED_ANONYMOUS))) {
-                return null;
-            }
-            userEntity = userService.getUserByEmail(auth.getName());
-        }
-        return userEntity;
     }
 }
