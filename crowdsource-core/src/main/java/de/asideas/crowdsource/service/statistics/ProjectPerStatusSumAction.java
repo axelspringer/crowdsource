@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectPerStatusSumAction {
@@ -18,6 +19,8 @@ public class ProjectPerStatusSumAction {
     }
 
     public List<BarChartStatisticsResult> getProjectsPerStatus() {
-        return projectRepository.sumProjectsGroupedByStatus();
+        final List<Object[]> projectGroupByStatus = projectRepository.findProjectGroupByStatus();
+
+        return projectGroupByStatus.stream().map(BarChartStatisticsResult::new).collect(Collectors.toList());
     }
 }

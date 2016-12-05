@@ -5,10 +5,11 @@ import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import org.joda.time.DateTime;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface ProjectRepository extends JpaRepository<ProjectEntity, Long>, ProjectRepositoryCustom {
+public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
 
     List<ProjectEntity> findByStatusOrderByCreatedDateDesc(ProjectStatus projectStatus);
 
@@ -16,5 +17,7 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long>, P
 
     List<ProjectEntity> findByCreatedDateBetween(DateTime startDate, DateTime endDate);
 
+    @Query("select p.status, count(p) from ProjectEntity p group by p.status")
+    List<Object[]> findProjectGroupByStatus();
 
 }

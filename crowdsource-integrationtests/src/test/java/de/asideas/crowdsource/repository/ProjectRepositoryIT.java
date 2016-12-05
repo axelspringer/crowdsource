@@ -4,7 +4,6 @@ import de.asideas.crowdsource.AbstractIT;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
-import de.asideas.crowdsource.presentation.statistics.results.BarChartStatisticsResult;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -20,9 +19,9 @@ import static de.asideas.crowdsource.domain.shared.ProjectStatus.*;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-public class ProjectRepositoryImplIT extends AbstractIT {
+public class ProjectRepositoryIT extends AbstractIT {
 
-    private static final Logger log = LoggerFactory.getLogger(ProjectRepositoryImplIT.class);
+    private static final Logger log = LoggerFactory.getLogger(ProjectRepositoryIT.class);
     @Autowired
     ProjectRepository projectRepository;
 
@@ -59,7 +58,7 @@ public class ProjectRepositoryImplIT extends AbstractIT {
         log.info("|-- ALL PROJECTS CURRENTLY IN REPO: ");
         projectRepository.findAll().stream().forEach(e -> log.info(" -- " + e));
 
-        List<BarChartStatisticsResult> aggregationResult = projectRepository.sumProjectsGroupedByStatus();
+        List<Object[]> aggregationResult = projectRepository.findProjectGroupByStatus();
 
         expectAggregatedCount(aggregationResult, PROPOSED, initialCountsByStatus.get(PROPOSED) + addProposed);
         expectAggregatedCount(aggregationResult, PUBLISHED, initialCountsByStatus.get(PUBLISHED) + addPublished);
@@ -77,16 +76,16 @@ public class ProjectRepositoryImplIT extends AbstractIT {
         // Actually the aggregation should return same results as simply doing a count query for each separate status.
         Map<ProjectStatus, Long> initialCountsByStatus = getProjectCountsByStatus();
 
-        List<BarChartStatisticsResult> aggregationResult = projectRepository.sumProjectsGroupedByStatus();
+        List<Object[]> aggregationResult = projectRepository.findProjectGroupByStatus();
 
         expectAggregatedCount(aggregationResult, PROPOSED, initialCountsByStatus.get(PROPOSED));
         expectAggregatedCount(aggregationResult, PUBLISHED, initialCountsByStatus.get(PUBLISHED));
         expectAggregatedCount(aggregationResult, FULLY_PLEDGED, initialCountsByStatus.get(FULLY_PLEDGED));
     }
 
-    private void expectAggregatedCount(List<BarChartStatisticsResult> aggregationResult, ProjectStatus statusToTest, long expectedCount) {
+    private void expectAggregatedCount(List<Object[]> aggregationResult, ProjectStatus statusToTest, long expectedCount) {
         assertThat(
-                aggregationResult.stream().filter(r -> statusToTest.name().equals(r.getId())).findFirst().get().getCount(),
+                aggregationResult.stream().filter(r -> statusToTest.equals(r[0])).findFirst().get()[1],
                 is(expectedCount)
         );
     }
@@ -105,8 +104,8 @@ public class ProjectRepositoryImplIT extends AbstractIT {
         for (int i = 0; i < desiredProjectCount; i++) {
             ProjectEntity project = new ProjectEntity();
             project.setCreator(projectCreator);
-            project.setTitle("project from ProjectRepositoryImplIT idx" + i);
-            project.setDescription("project from ProjectRepositoryImplIT idx" + i);
+            project.setTitle("project from ProjectRepositoryIT idx" + i);
+            project.setDescription("project from ProjectRepositoryIT idx" + i);
             project.setPledgeGoal(BigDecimal.valueOf(1000));
             project.setStatus(desiredStatus);
 
