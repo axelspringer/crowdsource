@@ -109,6 +109,7 @@ public class ProjectController {
         projectService.unlikeProject(projectId, principal.getName());
     }
 
+    @Deprecated
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.OK)
     @RequestMapping(value = "/projects/{projectId}/attachments", method = RequestMethod.POST)
@@ -132,6 +133,7 @@ public class ProjectController {
         }
     }
 
+    @Deprecated
     @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") Long fileReference) throws IOException {
@@ -144,6 +146,7 @@ public class ProjectController {
                 .body(new InputStreamResource(attachment.getPayload()));
     }
 
+    @Deprecated
     @Secured(Roles.ROLE_USER)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.DELETE)

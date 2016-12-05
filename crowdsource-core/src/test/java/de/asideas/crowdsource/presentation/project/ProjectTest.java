@@ -36,7 +36,6 @@ public class ProjectTest {
         activeFinancingRoundEntity.setEndDate(DateTime.now().plusDays(1));
         Project project = new Project();
         projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), activeFinancingRoundEntity, creator);
-//        projectEntity.addAttachment(new AttachmentValue("test_fileRef", "test_contentType", "test_filename", 17, DateTime.now()));
 
         user1 = new UserEntity("user1@xyz.com", "firstname", "lastname");
         user1.setId(1L);
@@ -64,7 +63,6 @@ public class ProjectTest {
         assertThat(res.getPledgeGoal(), is(projectEntity.getPledgeGoal()));
         assertThat(res.getShortDescription(), is(projectEntity.getDescription()));
         assertThat(res.getTitle(), is(projectEntity.getTitle()));
-//        assertThat(res.getAttachments(), is(projectEntity.getAttachments().stream().map(a-> Attachment.asResponseWithoutPayload(a, projectEntity)).collect(Collectors.toList())));
     }
 
     @Test

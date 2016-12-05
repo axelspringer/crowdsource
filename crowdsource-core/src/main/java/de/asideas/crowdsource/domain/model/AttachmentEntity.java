@@ -3,11 +3,13 @@ package de.asideas.crowdsource.domain.model;
 import lombok.Data;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 
 @Data
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class AttachmentEntity {
 
     @Id

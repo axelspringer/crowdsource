@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.util.Assert;
 
 import javax.persistence.*;
@@ -19,6 +20,7 @@ import static java.math.BigDecimal.ZERO;
 
 @Data
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class FinancingRoundEntity {
 
     private static final Logger log = LoggerFactory.getLogger(FinancingRoundEntity.class);

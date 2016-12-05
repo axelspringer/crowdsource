@@ -150,6 +150,7 @@ public class ProjectService {
         }
     }
 
+    @Deprecated
     @Transactional
     public Attachment addProjectAttachment(Long projectId, Attachment attachment, String email) throws IOException {
 
@@ -162,6 +163,7 @@ public class ProjectService {
         return Attachment.withoutPayload(attachmentEntity);
     }
 
+    @Deprecated
     @Transactional
     public Attachment loadProjectAttachment(Attachment attachment) {
 
@@ -169,6 +171,7 @@ public class ProjectService {
         return Attachment.withPayload(attachmentEntity);
     }
 
+    @Deprecated
     @Transactional
     public void deleteProjectAttachment(Attachment attachment) {
         attachmentEntityRepository.delete(attachment.getId());

@@ -157,6 +157,8 @@ public class ProjectServiceTest {
         final ProjectEntity project = projectEntity(user, projectId, "title", BigDecimal.valueOf(44), "short description", "description", ProjectStatus.PUBLISHED, null);
         final Pledge pledge = new Pledge(BigDecimal.valueOf(4));
 
+        when(userRepository.findByEmail(USER_EMAIL)).thenReturn(user);
+
         project.setFinancingRound(null);
         try {
             projectService.pledge(projectId, USER_EMAIL, pledge);
@@ -188,6 +190,7 @@ public class ProjectServiceTest {
     public void pledge_should_Dispatch_To_Pledge_Project_In_Round_If_Most_Recent_Round_Is_Not_Post_Processed() throws Exception {
         final UserEntity user = user(USER_EMAIL);
         final Long projectId = 123L;
+        when(userRepository.findByEmail(USER_EMAIL)).thenReturn(user);
 
         final ProjectEntity project = projectEntity(user, projectId, "title", BigDecimal.valueOf(44), "short description", "description", ProjectStatus.PUBLISHED, null);
         final Pledge pledge = new Pledge(BigDecimal.valueOf(4));
@@ -211,6 +214,8 @@ public class ProjectServiceTest {
         final Pledge pledge = new Pledge(BigDecimal.valueOf(4));
         prepareInactiveFinancingRound(project);
         project.getFinancingRound().setTerminationPostProcessingDone(true);
+
+        when(userRepository.findByEmail(USER_EMAIL)).thenReturn(user);
 
         try {
             projectService.pledge(projectId, USER_EMAIL, pledge);
