@@ -39,6 +39,8 @@ public class ProjectEntity {
     private FinancingRoundEntity financingRound;
     @ManyToOne
     private UserEntity creator;
+    @OneToMany(mappedBy = "project")
+    private List<CommentEntity> comments;
 
     @CreatedDate
     private DateTime createdDate;

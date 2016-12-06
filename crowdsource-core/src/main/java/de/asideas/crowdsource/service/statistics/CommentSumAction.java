@@ -17,7 +17,9 @@ public class CommentSumAction {
     }
 
     public LineChartStatisticsResult getSumComments(TimeRangedStatisticsRequest request) {
-        return commentRepository.sumCommentsGroupByCreatedDate(request);
+//        commentRepository.test(request.getStartDate(), request.getEndDate());
+
+        return null;
     }
 
 }
