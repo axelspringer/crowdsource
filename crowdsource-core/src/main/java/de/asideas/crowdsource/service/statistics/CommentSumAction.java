@@ -6,8 +6,14 @@ import de.asideas.crowdsource.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Service
 public class CommentSumAction {
+
+    static final String CHART_NAME_SUM_COMMENTS = "Summe Kommentare";
 
     private final CommentRepository commentRepository;
 
@@ -17,9 +23,13 @@ public class CommentSumAction {
     }
 
     public LineChartStatisticsResult getSumComments(TimeRangedStatisticsRequest request) {
-//        commentRepository.test(request.getStartDate(), request.getEndDate());
+        final Map<String, Long> aggregateResult = commentRepository.findByCreatedDateBetween(request.getStartDate(), request.getEndDate())
+                .stream()
+                .map(c -> c.getCreatedDate().toString("yyyy-MM-hh"))
+                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        return null;
+
+        return new LineChartStatisticsResult(CHART_NAME_SUM_COMMENTS, StatisticsActionUtil.fillMap(StatisticsActionUtil.getDefaultMap(request), aggregateResult));
     }
 
 }

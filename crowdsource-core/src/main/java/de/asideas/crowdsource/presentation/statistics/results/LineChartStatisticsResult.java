@@ -30,7 +30,7 @@ public class LineChartStatisticsResult {
         return data;
     }
 
-    public class LineChartEntry {
+    public static class LineChartEntry {
         private final Long data;
         private final String label;
 
