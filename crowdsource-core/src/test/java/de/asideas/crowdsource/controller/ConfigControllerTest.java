@@ -57,7 +57,7 @@ public class ConfigControllerTest extends TestCase {
 
         @Bean
         public ConfigController configController() {
-            return new ConfigController("crowd.source.de", Arrays.asList("_extern", "foo"));
+            return new ConfigController(Arrays.asList("_extern", "foo"));
         }
     }
 }

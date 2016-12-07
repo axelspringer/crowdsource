@@ -13,9 +13,6 @@ import java.util.List;
 @Service
 public class EligibleEmailValidator implements ConstraintValidator<EligibleEmail, String> {
 
-    @Value("${de.asideas.crowdsource.content.allowed.email.domain}")
-    private String allowedEmailDomain;
-
     @Value("#{'${de.asideas.crowdsource.content.email.blacklist.patterns}'.split(',')}")
     private List<String> emailBlacklistPatterns;
 
@@ -29,7 +26,7 @@ public class EligibleEmailValidator implements ConstraintValidator<EligibleEmail
 
         email = email.toLowerCase();
 
-        if (email.contains(getEligibleEmailDomain()) && doesNotMatchBlacklistPatterns(email)) {
+        if (doesNotMatchBlacklistPatterns(email)) {
             return true;
         }
 
@@ -45,9 +42,5 @@ public class EligibleEmailValidator implements ConstraintValidator<EligibleEmail
             }
         }
         return true;
-    }
-
-    String getEligibleEmailDomain() {
-        return "@" + allowedEmailDomain;
     }
 }

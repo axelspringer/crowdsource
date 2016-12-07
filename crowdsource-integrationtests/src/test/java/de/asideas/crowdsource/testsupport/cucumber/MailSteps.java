@@ -4,16 +4,15 @@ import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import de.asideas.crowdsource.domain.model.UserEntity;
-import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
+import de.asideas.crowdsource.presentation.project.Project;
+import de.asideas.crowdsource.presentation.user.ProjectCreator;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import de.asideas.crowdsource.testsupport.util.CrowdSourceClient;
 import de.asideas.crowdsource.testsupport.util.MailServerClient;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.math.BigDecimal;
@@ -37,9 +36,6 @@ public class MailSteps {
     @Autowired
     private MailServerClient mailServerClient;
 
-    @Value("${de.asideas.crowdsource.content.allowed.email.domain}")
-    private String allowedEmailDomain;
-
     private String userEmail;
     private Project createdProject;
 
@@ -56,7 +52,7 @@ public class MailSteps {
         final MailServerClient.Message receivedMessage = grabMessage();
 
         assertEquals(UserNotificationService.FROM_ADDRESS, receivedMessage.from);
-        assertThat(receivedMessage.to, is(equalToIgnoringCase(userEmail + "@" + allowedEmailDomain)));
+        assertThat(receivedMessage.to, is(equalToIgnoringCase(userEmail + "@" + "example.com")));
         assertEquals(UserNotificationService.SUBJECT_ACTIVATION, receivedMessage.subject);
         assertThat(receivedMessage.message, containsString("Du hast Dich gerade auf der CrowdSource Platform angemeldet."));
         assertThat(receivedMessage.message, containsString("Um Deine Registrierung abzuschließen, öffne bitte diesen Link und setze Dein Passwort:"));

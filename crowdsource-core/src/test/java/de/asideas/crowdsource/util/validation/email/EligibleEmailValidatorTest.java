@@ -9,7 +9,6 @@ import java.util.Arrays;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 public class EligibleEmailValidatorTest {
@@ -20,7 +19,6 @@ public class EligibleEmailValidatorTest {
     public void beforeMethod() throws Exception {
         eligibleEmailValidator = spy(new EligibleEmailValidator());
         Whitebox.setInternalState(eligibleEmailValidator, "emailBlacklistPatterns", Arrays.asList("_extern"));
-        doReturn("@crowd.source.de").when(eligibleEmailValidator).getEligibleEmailDomain();
     }
 
     @Test

@@ -18,6 +18,36 @@
         </div>
 
         <div class="row">
+            <div class="small-12 columns form-controls-firstname">
+                <label form-group="firstname">
+
+                    <span form-label-valid="firstname">Vorname</span>
+
+                    <span ng-messages="signup.form.firstname.$error">
+                        <span ng-message="required">Bitte gib Dein Vorname ein</span>
+                    </span>
+
+                    <input name="firstname" type="text" ng-model="signup.user.firstname" placeholder="Vorname" required>
+                </label>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="small-12 columns form-controls-lastname">
+                <label form-group="lastname">
+
+                    <span form-label-valid="lastname">Nachname</span>
+
+                    <span ng-messages="signup.form.lastname.$error">
+                        <span ng-message="required">Bitte gib Dein Nachname ein</span>
+                    </span>
+
+                    <input name="lastname" type="text" ng-model="signup.user.lastname" placeholder="Nachname" required>
+                </label>
+            </div>
+        </div>
+
+        <div class="row">
             <div class="small-12 columns form-controls-termsofservice">
                 <label form-group="termsOfServiceAccepted">
 

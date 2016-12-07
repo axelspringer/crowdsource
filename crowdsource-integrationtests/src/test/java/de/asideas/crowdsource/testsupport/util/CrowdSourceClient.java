@@ -15,7 +15,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -48,9 +47,6 @@ public class CrowdSourceClient {
     @Autowired
     private UrlProvider urlProvider;
 
-    @Value("${de.asideas.crowdsource.content.allowed.email.domain}")
-    private String allowedEmailDomain;
-
     public AuthToken authorizeWithDefaultUser() {
         return authorize(DEFAULT_USER_EMAIL, DEFAULT_USER_PASS);
     }
@@ -72,14 +68,14 @@ public class CrowdSourceClient {
     public void registerUser(String emailName) {
         // create a user via the REST API
         UserRegistration userRegistration = new UserRegistration();
-        userRegistration.setEmail(emailName + "@" + allowedEmailDomain);
+        userRegistration.setEmail(emailName + "@" + "example.com");
         userRegistration.setTermsOfServiceAccepted(true);
 
         restTemplate.postForObject(urlProvider.applicationUrl() + "/user", userRegistration, Void.class);
     }
 
     public void activateUser(String emailName, UserActivation userActivation) {
-        restTemplate.postForObject(urlProvider.applicationUrl() + "/user/{email}/activation", userActivation, Void.class, emailName + "@" + allowedEmailDomain);
+        restTemplate.postForObject(urlProvider.applicationUrl() + "/user/{email}/activation", userActivation, Void.class, emailName + "@" + "example.com");
     }
 
     public void recoverPassword(String userEmail) {

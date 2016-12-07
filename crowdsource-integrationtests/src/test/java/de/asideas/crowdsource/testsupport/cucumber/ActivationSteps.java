@@ -5,8 +5,8 @@ import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import de.asideas.crowdsource.presentation.user.UserActivation;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
+import de.asideas.crowdsource.presentation.user.UserActivation;
 import de.asideas.crowdsource.service.UserService;
 import de.asideas.crowdsource.testsupport.CrowdSourceTestConfig;
 import de.asideas.crowdsource.testsupport.pageobjects.ActivationForm;
@@ -20,7 +20,6 @@ import org.openqa.selenium.support.PageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.ContextConfiguration;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -47,9 +46,6 @@ public class ActivationSteps {
 
     @Autowired
     private ActivationForm activationForm;
-
-    @Value("${de.asideas.crowdsource.content.allowed.email.domain}")
-    private String allowedEmailDomain;
 
     private WebDriver webDriver;
     private String emailName;
@@ -183,7 +179,7 @@ public class ActivationSteps {
     }
 
     public String getGeneratedEmail() {
-        return emailName + "@" + allowedEmailDomain;
+        return emailName + "@" + "example.com";
     }
 
     public String getGeneratedEmailName() {
