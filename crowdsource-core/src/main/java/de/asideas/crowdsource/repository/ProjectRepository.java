@@ -22,5 +22,5 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, Long> {
     List<Object[]> findProjectGroupByStatus();
 
     @Query("select p from ProjectEntity p left outer join p.comments c group by p.id order by count(c) DESC")
-    List<ProjectEntity> test(Pageable pageable);
+    List<ProjectEntity> countCommentsGroupingByProject(Pageable pageable);
 }

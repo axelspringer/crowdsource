@@ -28,12 +28,6 @@ public class EligibleEmailValidatorTest {
     }
 
     @Test
-    public void testIsValidNonSpringerEmail() throws Exception {
-
-        assertFalse(eligibleEmailValidator.isValid("test@someHost.de", ValidatorTestUtil.constraintValidatorContext()));
-    }
-
-    @Test
     public void testIsValidConsultantEmail() throws Exception {
 
         assertFalse(eligibleEmailValidator.isValid("test_extern@crowd.source.de", ValidatorTestUtil.constraintValidatorContext()));

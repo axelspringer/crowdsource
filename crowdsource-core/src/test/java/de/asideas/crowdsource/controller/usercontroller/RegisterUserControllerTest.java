@@ -94,17 +94,6 @@ public class RegisterUserControllerTest extends AbstractUserControllerTest {
     }
 
     @Test
-    public void registerUser_shouldReturnErroneouslyWhenEmailNotAxelspringerOnSave() throws Exception {
-
-        userRegistration.setEmail(INVALID_USER_MAIL_ADDRESS);
-        userRegistration.setTermsOfServiceAccepted(true);
-
-        final MvcResult mvcResult = registerUserAndExpect(status().isBadRequest());
-
-        assertEquals("{\"errorCode\":\"field_errors\",\"fieldViolations\":{\"email\":\"eligible\"}}", mvcResult.getResponse().getContentAsString());
-    }
-
-    @Test
     public void registerUser_shouldReturnErroneouslyWhenTocNotAcceptedOnSave() throws Exception {
 
         userRegistration.setEmail(NEW_USER_MAIL_ADDRESS);

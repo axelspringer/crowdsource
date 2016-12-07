@@ -21,7 +21,7 @@ public class CommentCountPerProjectAction {
     }
 
     public List<BarChartStatisticsResult> getCommentCountPerProjectStatistic(int projectCount) {
-        return projectRepository.test(new PageRequest(0, projectCount))
+        return projectRepository.countCommentsGroupingByProject(new PageRequest(0, projectCount))
                 .stream()
                 .map(p -> new BarChartStatisticsResult(p.getStatus(), Integer.valueOf(p.getComments().size()).longValue()))
                 .collect(toList());
