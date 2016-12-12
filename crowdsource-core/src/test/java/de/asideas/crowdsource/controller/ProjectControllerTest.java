@@ -34,6 +34,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -639,7 +640,7 @@ public class ProjectControllerTest {
 
     private Principal anonymousAuthentication() {
         return new AnonymousAuthenticationToken("ANONYMOUS", "ANONYMOUS",
-                Collections.emptyList());
+                Collections.singletonList(new SimpleGrantedAuthority("ANONYMOUS")));
     }
 
     private UserEntity userEntity(String email, String... roles) {
@@ -727,6 +728,11 @@ public class ProjectControllerTest {
         }
 
         @Bean
+        public PasswordEncoder passwordEncoder() {
+            return new BCryptPasswordEncoder();
+        }
+
+        @Bean
         public UserService userService(UserRepository userRepository, PasswordEncoder passwordEncoder, FinancingRoundRepository financingRoundRepository) {
             return new UserService(userRepository, null, passwordEncoder, financingRoundRepository);
         }
@@ -746,6 +752,12 @@ public class ProjectControllerTest {
         public ProjectRepository projectRepository() {
             return mock(ProjectRepository.class);
         }
+
+        @Bean
+        public FinancingRoundRepository financingRoundRepository() {
+            return mock(FinancingRoundRepository.class);
+        }
+
         @Bean
         public LikeRepository likeRepository() {
             return mock(LikeRepository.class);

@@ -7,8 +7,8 @@ import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.presentation.Comment;
 import de.asideas.crowdsource.presentation.project.Project;
-import de.asideas.crowdsource.presentation.user.User;
 import de.asideas.crowdsource.repository.CommentRepository;
+import de.asideas.crowdsource.repository.UserRepository;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -46,11 +46,11 @@ public class CommentServiceTest {
     private UserNotificationService userNotificationService;
 
     @Mock
-    private UserService userService;
+    private UserRepository userRepository;
 
     @Before
     public void init(){
-        reset(projectService, userService, commentRepository);
+        reset(projectService, userRepository, commentRepository);
         Project project = new Project();
         projectEntity = new ProjectEntity(project.getTitle(), project.getShortDescription(), project.getDescription(), project.getPledgeGoal(), new FinancingRoundEntity(), userEntity);
         userEntity = new UserEntity("test.name@test.de", "firstname", "lastname");
@@ -85,7 +85,7 @@ public class CommentServiceTest {
     }
 
     private void prepareUserServiceMock() {
-        when(userService.getUserByEmail(EXISTING_USER_MAIL)).thenReturn(new User(userEntity));
+        when(userRepository.findByEmail(EXISTING_USER_MAIL)).thenReturn(userEntity);
     }
 
     private void prepareCommentRepositoryMock() {
