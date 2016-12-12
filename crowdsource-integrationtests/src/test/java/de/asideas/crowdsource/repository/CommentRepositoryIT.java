@@ -6,6 +6,7 @@ import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.presentation.statistics.requests.TimeRangedStatisticsRequest;
 import de.asideas.crowdsource.presentation.statistics.results.LineChartStatisticsResult;
+import de.asideas.crowdsource.service.statistics.CommentSumAction;
 import de.asideas.crowdsource.service.statistics.StatisticsActionUtil;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -31,6 +32,9 @@ public class CommentRepositoryIT extends AbstractIT {
 
     @Autowired
     private CommentRepository commentRepository;
+
+    @Autowired
+    private CommentSumAction commentSumAction;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -79,7 +83,7 @@ public class CommentRepositoryIT extends AbstractIT {
         createComments(3, dayBefore);
         createComments(1, twoDaysBefore);
 
-        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(
+        LineChartStatisticsResult result = commentSumAction.getSumComments(
                 new TimeRangedStatisticsRequest(twoDaysBefore.withTimeAtStartOfDay(),
                 today.plusDays(1).withTimeAtStartOfDay()));
 
@@ -111,7 +115,7 @@ public class CommentRepositoryIT extends AbstractIT {
         createComments(1, twoDaysBefore);
         createComments(17, threeDaysBefore);
 
-        LineChartStatisticsResult result = commentRepository.sumCommentsGroupByCreatedDate(
+        LineChartStatisticsResult result = commentSumAction.getSumComments(
                 new TimeRangedStatisticsRequest(twoDaysBefore.withTimeAtStartOfDay(),
                 twoDaysBefore.plusDays(2).withTimeAtStartOfDay()));
 
