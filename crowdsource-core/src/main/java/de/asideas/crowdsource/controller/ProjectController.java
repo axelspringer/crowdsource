@@ -46,7 +46,7 @@ public class ProjectController {
     @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowedmediatypes}')}")
     private List<MediaType> attachmentTypesAllowed;
 
-    @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
+    @Secured({Roles.ROLE_USER})
     @RequestMapping(value = "/projects", method = RequestMethod.GET)
     @JsonView(Project.ProjectSummaryView.class)
     public List<Project> getProjects(Authentication auth) {
@@ -56,7 +56,7 @@ public class ProjectController {
         return projects.stream().filter(project -> mayViewProjectFilter(project, auth)).collect(Collectors.toList());
     }
 
-    @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
+    @Secured({Roles.ROLE_USER})
     @RequestMapping(value = "/project/{projectId}", method = RequestMethod.GET)
     public Project getProject(@PathVariable Long projectId, Authentication auth) {
 
@@ -134,7 +134,7 @@ public class ProjectController {
     }
 
     @Deprecated
-    @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
+    @Secured({Roles.ROLE_USER})
     @RequestMapping(value = "/projects/{projectId}/attachments/{fileReference}", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> serveProjectAttachment(@PathVariable("projectId") String projectId, @PathVariable("fileReference") Long fileReference) throws IOException {
 

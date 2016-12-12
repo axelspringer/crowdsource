@@ -639,7 +639,7 @@ public class ProjectControllerTest {
 
     private Principal anonymousAuthentication() {
         return new AnonymousAuthenticationToken("ANONYMOUS", "ANONYMOUS",
-                Collections.singletonList(new SimpleGrantedAuthority(Roles.ROLE_TRUSTED_ANONYMOUS)));
+                Collections.emptyList());
     }
 
     private UserEntity userEntity(String email, String... roles) {

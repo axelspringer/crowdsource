@@ -61,7 +61,7 @@ public class AttachmentController {
         return attachmentService.addProjectAttachment(projectId, attachment, principal.getName());
     }
 
-    @Secured({Roles.ROLE_TRUSTED_ANONYMOUS, Roles.ROLE_USER})
+    @Secured({Roles.ROLE_USER})
     @RequestMapping(value = "/{attachmentId}/content", method = RequestMethod.GET)
     public ResponseEntity<InputStreamResource> serveProjectAttachment(@PathVariable("attachmentId") Long attachmentId) throws IOException {
 

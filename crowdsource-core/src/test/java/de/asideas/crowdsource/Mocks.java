@@ -7,7 +7,6 @@ import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.security.Roles;
 import org.joda.time.DateTime;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -63,11 +62,6 @@ public final class Mocks {
         final Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();
         userEntity.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role)));
         return new UsernamePasswordAuthenticationToken(userEntity.getEmail(), "somepassword", authorities);
-    }
-
-    public static Principal anonymousAuthentication() {
-        return new AnonymousAuthenticationToken("ANONYMOUS", "ANONYMOUS",
-                Collections.singletonList(new SimpleGrantedAuthority(Roles.ROLE_TRUSTED_ANONYMOUS)));
     }
 
     public static Attachment attachment(Optional<String> payload) {
