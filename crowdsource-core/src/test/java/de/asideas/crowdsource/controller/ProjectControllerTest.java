@@ -13,6 +13,7 @@ import de.asideas.crowdsource.presentation.project.Attachment;
 import de.asideas.crowdsource.presentation.project.Project;
 import de.asideas.crowdsource.presentation.project.ProjectStatusUpdate;
 import de.asideas.crowdsource.presentation.user.ProjectCreator;
+import de.asideas.crowdsource.repository.FinancingRoundRepository;
 import de.asideas.crowdsource.repository.LikeRepository;
 import de.asideas.crowdsource.repository.ProjectRepository;
 import de.asideas.crowdsource.repository.UserRepository;
@@ -33,6 +34,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -725,8 +727,8 @@ public class ProjectControllerTest {
         }
 
         @Bean
-        public UserService userService(UserRepository userRepository) {
-            return new UserService(userRepository, null);
+        public UserService userService(UserRepository userRepository, PasswordEncoder passwordEncoder, FinancingRoundRepository financingRoundRepository) {
+            return new UserService(userRepository, null, passwordEncoder, financingRoundRepository);
         }
 
         @Bean

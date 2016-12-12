@@ -12,7 +12,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
 import javax.transaction.Transactional;
 
 import static java.util.stream.Collectors.toList;
@@ -25,22 +24,8 @@ public class CrowdUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private DefaultUsersService defaultUsersService;
-
     @Value("${de.asideas.crowdsource.createusers:false}")
     private boolean createUsers;
-
-    @PostConstruct
-    public void createUsers() {
-
-        if (!createUsers) {
-            LOG.info("not creating or updating any users.");
-            return;
-        }
-
-        defaultUsersService.loadDefaultUsers();
-    }
 
     @Override
     @Transactional
@@ -50,7 +35,8 @@ public class CrowdUserDetailsService implements UserDetailsService {
 
         UserEntity user = userRepository.findByEmail(username);
         if (user == null) {
-            throw new UsernameNotFoundException("No user with username [" + username + "] found");
+            throw new UsernameNotFoundException("No user with username " +
+                    "[" + username + "] found");
         }
 
         if (!user.isActivated()) {

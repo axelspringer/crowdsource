@@ -7,6 +7,7 @@ import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.service.user.UserNotificationService;
 import de.asideas.crowdsource.presentation.Comment;
 import de.asideas.crowdsource.presentation.project.Project;
+import de.asideas.crowdsource.presentation.user.User;
 import de.asideas.crowdsource.repository.CommentRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -84,7 +85,7 @@ public class CommentServiceTest {
     }
 
     private void prepareUserServiceMock() {
-        when(userService.getUserByEmail(EXISTING_USER_MAIL)).thenReturn(userEntity);
+        when(userService.getUserByEmail(EXISTING_USER_MAIL)).thenReturn(new User(userEntity));
     }
 
     private void prepareCommentRepositoryMock() {

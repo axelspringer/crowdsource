@@ -30,6 +30,7 @@ public class UserEntity {
     private List<String> roles = asList(Roles.ROLE_USER);
     private boolean activated;
     private boolean deleted;
+    // TODO: Why is this?
     private BigDecimal budget = BigDecimal.ZERO;
     @ManyToMany(mappedBy = "members")
     private List<OrganisationUnitEntity> organisationUnits;
@@ -57,5 +58,11 @@ public class UserEntity {
         }
 
         budget = budget.subtract(amount);
+    }
+
+    public void activate(String encodedPassword) {
+        activated = true;
+        activationToken = "";
+        password = encodedPassword;
     }
 }
