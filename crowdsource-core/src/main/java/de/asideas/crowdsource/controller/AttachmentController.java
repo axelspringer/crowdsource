@@ -30,11 +30,14 @@ public class AttachmentController {
 
     private final AttachmentService attachmentService;
 
-    @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowedmediatypes}')}")
-    private List<MediaType> attachmentTypesAllowed;
+    private final List<MediaType> attachmentTypesAllowed;
 
     @Autowired
-    public AttachmentController(AttachmentService attachmentService) {
+    public AttachmentController(
+            @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowedmediatypes}')}")
+            List<MediaType> attachmentTypesAllowed,
+            AttachmentService attachmentService) {
+        this.attachmentTypesAllowed = attachmentTypesAllowed;
         this.attachmentService = attachmentService;
     }
 

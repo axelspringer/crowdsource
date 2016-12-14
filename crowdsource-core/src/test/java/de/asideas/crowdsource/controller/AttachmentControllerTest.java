@@ -11,27 +11,20 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
-import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static de.asideas.crowdsource.Mocks.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -226,7 +219,9 @@ public class AttachmentControllerTest {
 
         @Bean
         public AttachmentController attachmentController() {
-            return new AttachmentController(attachmentService());
+            return new AttachmentController(
+                    Arrays.asList(MediaType.ALL),
+                    attachmentService());
         }
 
         @Bean
@@ -237,13 +232,6 @@ public class AttachmentControllerTest {
         @Bean
         public UserRepository userRepository() {
             return mock(UserRepository.class);
-        }
-
-        @Bean
-        public static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
-            PropertyPlaceholderConfigurer configurer = new PropertyPlaceholderConfigurer();
-            configurer.setLocation(new ClassPathResource("application.properties"));
-            return configurer;
         }
     }
 

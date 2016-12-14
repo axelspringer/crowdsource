@@ -25,10 +25,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -719,7 +717,7 @@ public class ProjectControllerTest {
 
         @Bean
         public ProjectController projectController() {
-            return new ProjectController();
+            return new ProjectController(projectService(), Arrays.asList(MediaType.ALL));
         }
 
         @Bean
@@ -742,12 +740,6 @@ public class ProjectControllerTest {
             return mock(UserRepository.class);
         }
 
-        @Bean
-        public static PropertyPlaceholderConfigurer propertyPlaceholderConfigurer() {
-            PropertyPlaceholderConfigurer configurer = new PropertyPlaceholderConfigurer();
-            configurer.setLocation(new ClassPathResource("application.properties"));
-            return configurer;
-        }
         @Bean
         public ProjectRepository projectRepository() {
             return mock(ProjectRepository.class);

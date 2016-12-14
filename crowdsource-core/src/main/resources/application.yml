@@ -1,0 +1,22 @@
+de.asideas.crowdsource:
+  content:
+    company:
+      name: Crowdsource
+    application:
+      name: Crowdsource
+    email:
+      blacklist:
+        patterns: _extern
+  attachment:
+    allowedMediaTypes: image/*,application/pdf,text/plain
+
+management:
+  info:
+    git:
+      mode: full
+
+spring:
+  http:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB

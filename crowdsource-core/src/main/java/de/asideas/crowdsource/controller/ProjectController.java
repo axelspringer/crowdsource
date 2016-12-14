@@ -40,11 +40,19 @@ public class ProjectController {
 
     private static final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
-    @Autowired
-    private ProjectService projectService;
+    private final ProjectService projectService;
 
-    @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowedmediatypes}')}")
-    private List<MediaType> attachmentTypesAllowed;
+    private final List<MediaType> attachmentTypesAllowed;
+
+
+    @Autowired
+    public ProjectController(
+            ProjectService projectService,
+            @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowedmediatypes}')}")
+            List<MediaType> attachmentTypesAllowed) {
+        this.projectService = projectService;
+        this.attachmentTypesAllowed = attachmentTypesAllowed;
+    }
 
     @Secured({Roles.ROLE_USER})
     @RequestMapping(value = "/projects", method = RequestMethod.GET)
