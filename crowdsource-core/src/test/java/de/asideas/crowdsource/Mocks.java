@@ -1,5 +1,6 @@
 package de.asideas.crowdsource;
 
+import de.asideas.crowdsource.domain.model.CommentEntity;
 import de.asideas.crowdsource.domain.model.ProjectEntity;
 import de.asideas.crowdsource.domain.model.UserEntity;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
@@ -27,7 +28,6 @@ public final class Mocks {
 
     public static UserEntity user(String email) {
         UserEntity userEntity = new UserEntity(email, "firstname", "lastname");
-        userEntity.setId(new Random(Long.MAX_VALUE).nextLong());
         userEntity.setBudget(BigDecimal.valueOf(4000));
         return userEntity;
     }
@@ -35,7 +35,6 @@ public final class Mocks {
     public static UserEntity userEntity(String email, String... roles) {
 
         UserEntity userEntity = new UserEntity(email, "firstname", "lastname");
-        userEntity.setId((long) email.hashCode());
         userEntity.setRoles(Arrays.asList(roles));
         userEntity.setBudget(BigDecimal.valueOf(4000));
         return userEntity;
@@ -52,10 +51,27 @@ public final class Mocks {
         return project;
     }
 
-    public static ProjectEntity projectEntity() {
-        final ProjectEntity res = new ProjectEntity();
-        res.setId(150L);
-        return res;
+    public static CommentEntity commentEntity(String text, ProjectEntity project, UserEntity user) {
+        CommentEntity entity = new CommentEntity();
+        entity.setComment(text);
+        entity.setProject(project);
+        entity.setCreator(user);
+        return entity;
+    }
+
+    public static CommentEntity commentEntity(ProjectEntity project, UserEntity user) {
+            return commentEntity("HELLO", project, user);
+    }
+
+    public static ProjectEntity projectEntity(UserEntity creator) {
+        ProjectEntity projectEntity = new ProjectEntity();
+        projectEntity.setTitle("title");
+        projectEntity.setDescription("description");
+        projectEntity.setShortDescription("shortDescription");
+        projectEntity.setPledgeGoal(BigDecimal.ONE);
+        projectEntity.setStatus(ProjectStatus.PROPOSED);
+        projectEntity.setCreator(creator);
+        return projectEntity;
     }
 
     public static Principal authentication(UserEntity userEntity) {

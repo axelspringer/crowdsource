@@ -3,9 +3,11 @@ package de.asideas.crowdsource.config;
 import de.asideas.crowdsource.security.CrowdUserDetailsService;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -31,7 +33,6 @@ import java.io.IOException;
 /**
  * Configuration for Spring Security
  */
-/** Liang **/
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
@@ -86,11 +87,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         @Autowired
         private AuthenticationManager authenticationManager;
 
+        @Value("${de.asideas.crowdsource.security.private-key-location}")
+        private Resource privateKey;
+
+        @Value("${de.asideas.crowdsource.security.public-key-location}")
+        private Resource publicKey;
+
         @Bean
         public AccessTokenConverter accessTokenConverter() throws IOException {
             final JwtAccessTokenConverter jwtTokenEnhancer = new JwtAccessTokenConverter();
-            jwtTokenEnhancer.setSigningKey(IOUtils.toString(getClass().getResourceAsStream("/security/tokensigningkey")));
-            jwtTokenEnhancer.setVerifierKey(IOUtils.toString(getClass().getResourceAsStream("/security/tokensigningkey.pub")));
+            jwtTokenEnhancer.setSigningKey(IOUtils.toString(privateKey.getInputStream(), "UTF-8"));
+            jwtTokenEnhancer.setVerifierKey(IOUtils.toString(publicKey.getInputStream(), "UTF-8"));
             return jwtTokenEnhancer;
         }
 

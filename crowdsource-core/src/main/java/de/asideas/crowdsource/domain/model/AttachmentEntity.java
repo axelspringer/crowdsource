@@ -1,6 +1,7 @@
 package de.asideas.crowdsource.domain.model;
 
 import lombok.Data;
+import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -24,6 +25,7 @@ public class AttachmentEntity {
     @ManyToOne
     private ProjectEntity project;
     @CreatedDate
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime created;
     @ManyToOne
     private UserEntity creator;

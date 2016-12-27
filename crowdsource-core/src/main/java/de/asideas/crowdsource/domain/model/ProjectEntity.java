@@ -6,6 +6,7 @@ import de.asideas.crowdsource.domain.exception.ResourceNotFoundException;
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import de.asideas.crowdsource.security.Roles;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -43,8 +44,10 @@ public class ProjectEntity {
     private List<CommentEntity> comments;
 
     @CreatedDate
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime createdDate;
     @LastModifiedDate
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime lastModifiedDate;
 
     public ProjectEntity() {

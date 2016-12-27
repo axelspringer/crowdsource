@@ -25,7 +25,7 @@ public class CommentSumAction {
     public LineChartStatisticsResult getSumComments(TimeRangedStatisticsRequest request) {
         final Map<String, Long> aggregateResult = commentRepository.findByCreatedDateBetween(request.getStartDate(), request.getEndDate())
                 .stream()
-                .map(c -> c.getCreatedDate().toString("yyyy-MM-hh"))
+                .map(c -> c.getCreatedDate().toString("yyyy-MM-dd"))
                 .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
 

@@ -1,22 +1,61 @@
+---
 de.asideas.crowdsource:
+  baseUrl: http://localhost:8080
+  enforce-https: false
   content:
     company:
       name: Crowdsource
     application:
       name: Crowdsource
+    mail:
+      host: localhost
+      port: 11025
+      username:
+      password:
+      starttls: false
     email:
       blacklist:
         patterns: _extern
   attachment:
-    allowedMediaTypes: image/*,application/pdf,text/plain
+    allowed-media-types: image/*,application/pdf,text/plain
+  security:
+    private-key-location: classpath:/security/tokensigningkey
+    public-key-location: classpath:/security/tokensigningkey.pub
 
 management:
+  security:
+    enabled: true
   info:
     git:
       mode: full
+  health:
+    diskspace:
+      enabled: true
+    mail:
+      enabled: true
+    db:
+      enabled: true
 
 spring:
+  datasource:
+    platform: postgres
+    url: jdbc:postgresql://192.168.99.100:32771/crowdsource
+    username: postgres
+    password:
+    driver-class-name: org.postgresql.Driver
   http:
     multipart:
       max-file-size: 20MB
       max-request-size: 20MB
+  jpa:
+    database: postgresql
+    show-sql: false
+    hibernate:
+      use-new-id-generator-mappings: true
+      ddl-auto: none
+
+liquibase:
+  enabled: true
+  change-log: classpath:db/changelog/db.changelog-master.xml
+
+jadira.usertype.autoRegisterUserTypes: true

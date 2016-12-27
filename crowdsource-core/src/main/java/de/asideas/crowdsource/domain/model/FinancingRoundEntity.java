@@ -2,6 +2,7 @@ package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.shared.ProjectStatus;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +45,10 @@ public class FinancingRoundEntity {
     @ManyToOne
     private OrganisationUnitEntity organisationUnit;
     @CreatedDate
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime createdDate;
     @LastModifiedDate
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime lastModifiedDate;
 
     /**

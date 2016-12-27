@@ -48,7 +48,7 @@ public class ProjectController {
     @Autowired
     public ProjectController(
             ProjectService projectService,
-            @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowedmediatypes}')}")
+            @Value("#{T(org.springframework.http.MediaType).parseMediaTypes('${de.asideas.crowdsource.attachment.allowed-media-types}')}")
             List<MediaType> attachmentTypesAllowed) {
         this.projectService = projectService;
         this.attachmentTypesAllowed = attachmentTypesAllowed;

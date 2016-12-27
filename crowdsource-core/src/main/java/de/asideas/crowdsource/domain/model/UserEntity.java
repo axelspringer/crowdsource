@@ -2,6 +2,7 @@ package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.security.Roles;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -21,6 +22,7 @@ public class UserEntity {
     @Id
     @GeneratedValue
     private Long id;
+    @Column(unique = true)
     private String email;
     private String firstname;
     private String lastname;
@@ -34,8 +36,10 @@ public class UserEntity {
     private BigDecimal budget = BigDecimal.ZERO;
     @ManyToMany(mappedBy = "members")
     private List<OrganisationUnitEntity> organisationUnits;
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     @CreatedDate
     private DateTime createdDate;
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     @LastModifiedDate
     private DateTime lastModifiedDate;
 

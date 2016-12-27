@@ -1,0 +1,19 @@
+---
+liquibase:
+  enabled: true
+  change-log: classpath:db/changelog/db.changelog-master.xml
+
+spring:
+  datasource:
+    generate-unique-name: true
+    platform: h2
+    url: jdbc:h2:mem:testdb;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    database: h2
+    show-sql: true
+    hibernate:
+      use-new-id-generator-mappings: true
+      ddl-auto: none

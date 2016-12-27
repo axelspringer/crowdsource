@@ -156,7 +156,7 @@ public class AttachmentControllerTest {
     public void serveProjectAttachment_ReturnsResponseWithCorrectMediaType() throws Exception {
         final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
         final String expContent = "someContent";
-        final ProjectEntity project = projectEntity();
+        final ProjectEntity project = projectEntity(user);
         final Attachment expectedAttachment = attachment(Optional.of(expContent));
 
         when(attachmentService.getAttachmentWithContent(Attachment.asLookupByIdCommand(expectedAttachment.getId())))
@@ -176,7 +176,7 @@ public class AttachmentControllerTest {
     public void deleteAttachment_callsProjectServiceAndReturnsNoContent() throws Exception {
         final UserEntity user = userEntity("u@s.er", Roles.ROLE_USER);
         final String expContent = "someContent";
-        final ProjectEntity project = projectEntity();
+        final ProjectEntity project = projectEntity(user);
         final Attachment expectedAttachment = attachment(Optional.of(expContent));
 
         mockMvc.perform(delete("/attachments/{attachmentId}", expectedAttachment.getId())

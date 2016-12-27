@@ -2,6 +2,7 @@ package de.asideas.crowdsource.domain.model;
 
 import de.asideas.crowdsource.domain.shared.LikeStatus;
 import lombok.Data;
+import org.hibernate.annotations.Type;
 import org.joda.time.DateTime;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -21,8 +22,10 @@ public class LikeEntity {
     @ManyToOne
     private ProjectEntity project;
     @CreatedDate
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime createdDate;
     @LastModifiedDate
+    @Type(type="org.jadira.usertype.dateandtime.joda.PersistentDateTime")
     private DateTime lastModifiedDate;
     @ManyToOne
     private UserEntity creator;

@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
  * Ensures https by redirecting http requests to https://{@link #applicationUrl}
  */
 @Component
-@ConditionalOnProperty(name = "de.asideas.crowdsource.enforcehttps", matchIfMissing = true)
+@ConditionalOnProperty(name = "de.asideas.crowdsource.enforce-https", matchIfMissing = true)
 public class LBHttpsEnforcerInterceptor extends HandlerInterceptorAdapter {
 
     public static final String X_FORWARDED_PROTO_HEADER = "X-FORWARDED-PROTO";
